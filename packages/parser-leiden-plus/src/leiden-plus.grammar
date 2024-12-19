@@ -1,0 +1,1143 @@
+@external prop unitProp as unit from "./props.js"
+@external prop rendProp as rend from "./props.js"
+
+@precedence {
+  gap,
+  dotToken,
+
+  gapRange,
+  gapCircaLin,
+  gapUnknown,
+  gapLinRange,
+  gapLin,
+  gapChar,
+
+  certLow @left,
+
+  numberSpecialValue @left,
+
+  insertionBelow @cut,
+
+  quot,
+  supralineEnd,
+
+  supralineSic,
+
+  vacDot @left,
+
+  num @left,
+  langId,
+  divAttr @cut,
+
+  eq @cut
+}
+
+@top Document {
+    EditionStart { "<S=" (!langId "." LanguageId )? }?
+    (
+        block
+    )+
+}
+
+// divRef should enforce hash at the beginning but XSugar grammar doesn't
+divRef { !divAttr "." Ref { "#"? divTypeSubtype } }
+divSubtype { !divAttr ("." Subtype { divTypeSubtype } ) }
+divNum { Num { divTypeSubtype} }
+
+block {
+    Ab { "<=" ( block )* "=>" } |
+    Div { "<D=." divNum ( divSubtype divRef? )? ( block )+ "=D>" } |
+    Inline
+}
+
+textInline {
+    Text | Unclear | SupralineSic 
+}
+
+topLevelInline[@isGroup=topLevel] {
+    Foreign |
+    LineBreak | (LineBreakWrapped ~diacrit) |
+    LineBreakSpecial |
+    LineBreakSpecialWrapped |
+    Number |
+    AbbrevUnresolved |
+    NumberSpecial |
+    NumberSpecialTick |
+    OrthoReg |
+    AlternateReading |
+    ScribalCorrection |
+    SpellingCorrection |
+    EditorialCorrection |
+    SuppliedOmitted |
+    GapOmitted |
+    // diacritical |
+    // deletion |
+    InsertionAbove |
+    InsertionBelow |
+    InsertionMargin |
+    InsertionMarginSling |
+    InsertionMarginUnderline |
+    TextInBox |
+    Paragraphos |
+    HorizontalRule |
+    WavyLine |
+    DipleObelismene |
+    Coronis |
+    TextTall |
+    TextSuperscript |
+    TextSubscript |
+    SupralineSpan |
+    SupralineUnderline |
+    Surplus |
+    SuppliedParallel |
+    SuppliedParallelLost |
+    Handshift |
+    EditorialNote |
+    Quotation |
+    Glyph |
+    Filler |
+    Figure |
+    // omittedLanguage |
+    // untranscribed |
+    SuppliedLost |
+    Gap |
+    Vacat | VacatInvalid |
+    LostLines | LostLinesInvalid |
+    Illegible | IllegibleInvalid |
+    Vestige | VestigeInvalid |
+    Orig |
+    Abbrev
+
+}
+
+Inline { textInline | topLevelInline | diacritical | deletion | omittedLanguage | untranscribed }
+
+Text {
+    chars | QuestionMark | (space ~diacrit) | newLine  | "." | ("=" ~eq) | "-"  ~lb | "," | ":" | "+" | "'"
+    | ".-"  | digits ~lb | "frac"
+
+    // TODO: below rules just makes strange IDP data pass the tests
+    | "lin" | "char"
+    | inlineCirca[@dynamicPrecedence=-3] { circaPrefix }
+}
+
+
+// ANNOTATIONS / EMENDATIONS in <: tags :> with |infix|
+// ----------------------------------------------------
+
+// -- Orthographic Regularization
+// https://papyri.info/docs/leiden_plus#orthographic-regularization
+//
+// e.g.: <:regularization=lang|reg|original form:>, <:one reg|another reg||reg||original form:>
+//
+// - Regularization can specify language (e.g. =grc)
+// - Multiple regularizations alllowed (separated by |, with ||reg|| infix)
+// - (?) allowed for both regularization and original form (<:reg(?)=grc|reg|orig(?):>
+
+OrthoReg {
+    ("<:" OrthoRegReg Infix<"|reg|"> OrthoRegOrig ":>" ) |
+    ("<:" OrthoRegReg ("|" OrthoRegReg)+ MultiInfix<"||reg||"> OrthoRegOrig ":>" )
+}
+
+OrthoRegReg {
+     Inline+ ~certLow CertLow? LanguageIdSpec { !eq "=" CitationWords }?
+}
+
+OrthoRegOrig {
+    Inline+ ~certLow CertLow?
+}
+
+
+// -- Alternate Reading
+// https://papyri.info/docs/leiden_plus#alternate-reading
+//
+// e.g.: <:lemma|alt|reading:>, <:lemma||alt||one reading|another reading:>
+//
+// - Either empty lemma or empty reading allowed, bot not both
+// - Multiple readings alllowed (separated by |, with ||alt|| infix)
+// - (?) allowed for both lemmata and readings: <:lemma(?)|alt|reading(?):>
+
+
+AlternateReading {
+    ("<:" (AlternateReadingLemma | AlternateReadingLemmaEmpty) Infix<"|alt|"> AlternateReadingReading ":>") |
+    ("<:" AlternateReadingLemma Infix<"|alt|"> (AlternateReadingReading | AlternateReadingReadingEmpty) ":>") |
+
+    ("<:" AlternateReadingLemma MultiInfix<"||alt||"> AlternateReadingReading ( "|" AlternateReadingReading)+ ":>")
+}
+
+AlternateReadingLemma { Inline+ ~certLow CertLow? }
+AlternateReadingLemmaEmpty { }
+AlternateReadingReading { Inline+ ~certLow CertLow? }
+AlternateReadingReadingEmpty { }
+
+
+// -- Scribal Correction
+// https://papyri.info/docs/leiden_plus#scribal-correction
+//
+// e.g.: <:addition|subst|deletion:>
+//
+// - Empty addition allowed: <:|subst|deletion:>
+// - (?) allowed for both addition and deletion: <:addition(?)|subst|deletion(?):>
+
+ScribalCorrection {
+    "<:" (ScribalCorrectionAdd | ScribalCorrectionAddEmpty) Infix<"|subst|"> ScribalCorrectionDel ":>"
+}
+ScribalCorrectionAdd { Inline+ ~certLow CertLow? }
+ScribalCorrectionAddEmpty { }
+ScribalCorrectionDel { Inline+ ~certLow CertLow? }
+
+
+// -- Spelling Correction
+// https://papyri.info/docs/leiden_plus#spelling-correction
+//
+// e.g.: <:addition|corr|deletion:>
+//
+// - (?) allowed for both addition and deletion: <:correction(?)|corr|sic(?):>
+
+SpellingCorrection {
+    "<:" SpellingCorrectionCorr Infix<"|corr|"> SpellingCorrectionSic ":>"
+}
+SpellingCorrectionCorr { Inline+ ~certLow CertLow? }
+SpellingCorrectionSic { Inline+ ~certLow CertLow? }
+
+
+// -- Editorial Correction
+// https://papyri.info/docs/leiden_plus#editorial-correction
+//
+// e.g.: <:lemma|ed|reading:>
+//
+// - Lemmmata and readings can both have citations: <:lemma=cit.a|ed|reading(?)=cit.b:>
+// - Multiple readings alllowed (separated by |, with ||ed|| infix): <:lemma||ed||first reading|second reading:>
+// - Both empty lemma and reading allowed: <:|ed|reading=cit.b:> (also multiple empty readings: <:lem||ed||rdg1|rdg2|||:>)
+// - (?) allowed for both lemma and reading: <:lemma(?)|ed|reading(?):>
+
+// TODO:    XSugar doesn't allow <:=|ed|:> or <:|ed|=:> or <:=|ed|=:> but in this grammar, the = is treated as inline text
+//          and yields no error. The latter  is a better behaviour in my opinion, but maybe disallow it for compatibility?
+EditorialCorrection {
+    ("<:" editorialCorrectionLemmaContent Infix<"|ed|"> editorialCorrectionReadingContent ":>") |
+    "<:" editorialCorrectionLemmaContent MultiInfix<"||ed||"> editorialCorrectionReadingContent ( "|" editorialCorrectionReadingContent )+ ":>"
+}
+
+editorialCorrectionCitation[@name="Citation"] { !eq "=" CitationWords }
+
+EditorialCorrectionLemma {  editorialCorrectionCitation | (Inline+ CertLow? editorialCorrectionCitation?) }
+EditorialCorrectionReading { editorialCorrectionCitation | (Inline+ CertLow? editorialCorrectionCitation?) }
+editorialCorrectionLemmaContent { EditorialCorrectionLemma | EditorialCorrectionLemmaEmpty { } }
+editorialCorrectionReadingContent { EditorialCorrectionReading | EditorialCorrectionReadingEmpty { } }
+
+
+// WRAPPED INLINE CONTENT RULES
+// ----------------------------------------------------
+
+
+// -- Foreign / Non-default language
+// https://papyri.info/docs/leiden_plus#non-default-language
+//
+// e.g.:  "~|γενήσεται|~grc " (space after language id required)
+// 
+// - ForeignEnd is defined in the @tokens section
+
+Foreign { "~|" Inline+ ForeignEnd space }
+
+
+// Note: XSugar does not recognize line breaks (1. ) or Gaps (.4) inside SuppliedOmitted,
+// parses them as text
+
+
+// -- Supplied text by transcriber or editor, reason: omitted in original ("Leiden Angle Brackets")
+// https://papyri.info/docs/leiden_plus#leiden-angle-brackets--
+//
+// e.g.: <ἀπεγραψάμην>, <οὐκ(?)>
+//
+// - (?) before closing bracket allowed
+
+SuppliedOmitted { "<"  Inline+ ~certLow CertLow? ">" }
+
+
+// -- Gap, reason: omitted in original
+// Not officially documented.
+// XSugar grammar reference: https://github.com/papyri/xsugar/blob/96f79e62ce4d62e223faab8fe8ba8989de1aa4bc/epidoc.xsg#L941
+//
+// Special case of the Leiden Angle Brackets where only content is one of
+// the following missing number patterns:
+// .5 (known number of characters) or .? (unknown number of characters)
+//
+// e.g.: <.?>, <.3>
+
+GapOmitted { "<" ( "." !dotToken ( GapNumber | GapNumberUnknown )) ~certLow CertLow? ">" }
+
+
+// -- Supplied by editor based on parallel evidence ("Leiden Underscore"), missing for unknown reason
+// https://papyri.info/docs/leiden_plus#leiden-underline-___ (Supplied parallel)
+//
+// e.g. |_Πόσεις_|, |_Πόσεις(?)_|
+//
+// - (?) before closing bracket allowed
+
+SuppliedParallelStart[group=Delims, closedBy=SuppliedParallelEnd] { "|_" }
+SuppliedParallelEnd[group=Delims, openedBy=SuppliedParallelStart] { "_|" }
+SuppliedParallel {
+    SuppliedParallelStart Inline+ ~certLow CertLow? SuppliedParallelEnd
+}
+
+
+// -- Supplied by editor based on parallel evidence ("Leiden Underscore"), reason: lost
+// https://papyri.info/docs/leiden_plus#leiden-underline-___ (Supplied parallel, lost)
+//
+// e.g. _[abc]_, _[abc(?)]_
+//
+// - (?) before closing bracket allowed
+
+SuppliedParallelLostStart[group=Delims,closedBy=SuppliedParallelLostEnd] { "_" ~underscore "[" }
+SuppliedParallelLostEnd[group=Delims,openedBy=SuppliedParallelLostStart] { "]" "_" }
+SuppliedParallelLost {
+      SuppliedParallelLostStart Inline+ ~certLow CertLow? SuppliedParallelLostEnd
+}
+
+// -- Supplied words by editor, reason: lost in lacuna ("Leiden Square Brackets")
+// https://papyri.info/docs/leiden_plus#leiden-square-brackets-- (Supplied lost words)
+//
+// e.g. [ὁμο], [α μήτηρ (?)]
+//
+// - (?) before closing bracket allowed
+
+SuppliedLost {  "[" (Inline)+ ~lostWord CertLowHighPrecedence? "]" ~suppliedParallel }
+
+
+// -- Lost characters
+// https://papyri.info/docs/leiden_plus#leiden-square-brackets--
+//
+// Special case of the Leiden Square Brackets where the only content is one of the
+// following missing number patterns: .5, .5-6, .?, .ca.3
+//
+// e.g. [.1], [.2(?)], [ca.3], [ca.4(?)], [.1-3], [.1-3(?)], [.?], [.?(?)]
+//
+// - (?) before closing bracket allowed
+
+Gap { "[" ( ("." !gap (GapNumber | GapNumberRange | GapNumberUnknown)) | !gap GapNumberCirca ) CertLow? "]" }
+
+
+// -- Deletion ("Leiden Double Square Brackets 〚 〛")
+// https://papyri.info/docs/leiden_plus#leiden-double-square-brackets--
+//
+// e.g. 〚τοῖς κορασίοις〛, 〚/ τραπέζης Φρέμει. 〛, 〚X $m4 lost.?lin 〛
+//
+// - (?) before closing bracket allowed
+
+// TODO: support [[ double brackets ]] for easier typing?
+DeletionSlashStart[group=Delims, closedBy="〛"] { "〚" "/" ~editorialNote }
+deletion[@isGroup=topLevel] {
+    Deletion[rend=erasure]       { "〚"  Content { Inline+ } ~certLow CertLow?  "〛"}  |
+    Deletion[rend=slashes]       { DeletionSlashStart  Content { Inline+ } ~certLow CertLow?  "〛"} |
+    Deletion[rend=cross-strokes] { "〚X"  Content { Inline+ } ~certLow CertLow?  "〛"}
+
+}
+
+
+// -- Abbreviation, not expanded ("Leiden Parentheses")
+// https://papyri.info/docs/leiden_plus#leiden-parentheses--
+//
+// e.g. (|ομυο|), (|ομυο(?)|)
+//
+// - (?) before closing bracket allowed
+
+AbbrevUnresolvedStart[group=Delims, closedBy=AbbrevUnresolvedEnd] {"(" "|" }
+AbbrevUnresolvedEnd[group=Delims, openedBy=AbbrevUnresolvedStart] { "|)" }
+AbbrevUnresolved { AbbrevUnresolvedStart Inline+ ~certLow CertLow? AbbrevUnresolvedEnd }
+
+// -- Abbreviation, expanded ("Leiden Parentheses")
+// https://papyri.info/docs/leiden_plus#leiden-parentheses--
+//
+// e.g.
+// - one or multiple expansions:
+//   (στρατηγ(ός)), (Καρ(ανίδι?)), ((ἔτους)), (Καρ(ανίδι?)abc(de)f)
+// - expansions as "supplied, lost" and optional inner expansion:
+//   (abc[de]f), (abc[de(?)]f), (abc[de(fg)]hi)
+// - expansion as "supplied, parallel": with required inner expansion
+//   (κ̣οί̣|_κ(ων)_|)
+// - mixed:
+//   (abc(de)fg[hi(jk)]lm|_no(p)q_|rs)
+//
+// - An abbreviation must always have EITHER
+//   - at least one inner expansion in parentheses () with only simple charcter and whitespace
+//    content (no nested inline elements!)
+//       - e.g. (abc(de)f) but NOT (abc(de[.5]f) or (abc(κ̣οί̣)) [unclear characters]
+//   - or at least one inner supplied/lost expansion in brackets [] with only simple character
+//     and whitespace content (no nested inline elements!)
+//      - e.g. (abc[de]f) but NOT (abc[de<de>f]) 
+//   - or at least one supplied/parallel expansion in |__| with an inner expansion with simple content 
+//      - e.g. (κ̣οί̣|_κ(ων)_|) but NOT (κ̣οί̣|_κ_|) or (κ̣οί̣|_κ(ων[.5])_|)
+// - As soon as one of the above simple inner elements (expansion, supplied/lost, supplied/omitted)
+//   is present, other nested supplied/lost or supplied/omitted elements CAN have complex inline content
+//   - e.g.  (abc(de)fg[h.5]), (abc[de.5]fg(hi)), (abc[de.5]fg[hi(j)])
+// - Inline content is always allowed outside the nested expansions
+//   - e.g. (lost.3lin abc[de]fg {hi} .5)
+//
+// Most of the above rules are undocumented, grammar reference:
+// https://github.com/papyri/xsugar/blob/96f79e62ce4d62e223faab8fe8ba8989de1aa4bc/epidoc.xsg#L959
+//
+// Also, many of the above limitations might be XSugar specific and could be removed / regularized
+// in future versions.
+//
+// Note: The XSugar grammar allows abbreviations to nest inside themselves, e.g.: 
+// (abc(de)fg (hi(jk))). This might not make too much sense (?) and should probably be
+// disallowed (?).
+
+// Outer abbreviation parentheses
+Abbrev { "(" (Inline)* ~abbr abbrevInner (Inline* abbrevInner)* Inline* ")" }
+
+// One of these is at least required inside the Abbrev expression
+abbrevInner {
+    AbbrevInnerEx |                 // (an) as in (exp(an)sion)
+    AbbrevInnerSuppliedLost |       // [an] as in (exp[an]sion)
+    AbbrevInnerSuppliedLostEx |     // [an(si)] as in (exp[an(si)]on)
+    AbbrevInnerSuppliedParallel     // |_an(si)_| as in (exp|_an(si)_|on)
+}
+
+// (an) as in (exp(an)sion)
+AbbrevInnerEx { "(" AbbrevInnerExContent { Expansion { (chars | space ~diacrit | newLine  | Number | "/" ~editorialNote | "-" | "vac" | "lost" | "vestig" | "lin")+ } ~abbr QuestionMark? }  ")" }
+
+// Variant of the general inline SuppliedLost rule that only allows simple character/whitespace content
+// and no nested inline elements: [an] as in (exp[an]sion)
+AbbrevInnerSuppliedLost[@name=SuppliedLost] { "[" Text { chars } ~lostWord "]" }
+
+// Variant of the general inline SuppliedLost that allows complex inline content and requires an inner
+// expansion in parentheses: [an(si)] as in (exp[an(si)]on)
+AbbrevInnerSuppliedLostEx[@name=SuppliedLost]  { "[" (Inline* AbbrevInnerEx )+ Inline* ~certLow CertLow? "]" }
+
+// Variant of the general inline SuppliedParallel that allows complex inline content and requires an inner
+// expansion in parentheses: |_an(si)_| as in (exp|_an(si)_|on)
+AbbrevInnerSuppliedParallel[@name=SuppliedParallel] { SuppliedParallelStart ( Inline* AbbrevInnerEx )+ Inline* SuppliedParallelEnd }
+
+
+
+// -- Surplus text ("Leiden Braces")
+// https://papyri.info/docs/leiden_plus#leiden-braces--
+//
+// e.g. {ὀνόματος}, {ὀνόματος(?)}
+//
+// - (?) before closing bracket allowed
+
+Surplus {
+    "{" Inline+ ~certLow CertLow? "}"
+}
+
+
+// -- Text inserted / added above the line
+// https://papyri.info/docs/leiden_plus#marginalia
+//
+// e.g. \ὅλων/, \ὅλων(?)/
+//
+// - (?) before closing bracket allowed
+
+InsertionAbove {
+     "\\" Inline+ ~certLow CertLow?  "/" ~editorialNote
+}
+
+
+// -- Text inserted / added below the line
+// https://papyri.info/docs/leiden_plus#marginalia
+//
+// e.g. //abc\\, //abc(?)\\
+//
+// - (?) before closing bracket allowed
+
+InsertionBelowStart[group=Delims, closedBy=InsertionBelowEnd] { "/" ~editorialNote "/" }
+InsertionBelowEnd[group=Delims, openedBy=InsertionBelowStart] { !insertionBelow "\\"  "\\" }
+InsertionBelow {
+    InsertionBelowStart Inline+ ~certLow CertLow?  InsertionBelowEnd
+}
+
+
+// -- Text inserted / added at a specific place in the margins or between lines
+// https://papyri.info/docs/leiden_plus#marginalia
+//
+// pattern: ||place:content|| (for allowed places see InsertionMarginStart token below)
+// Note: only "left", "right" and "interlin" are officially documented, "bottom", "top",
+// and "margin" are taken from the XSugar grammar: 
+// https://github.com/papyri/xsugar/blob/96f79e62ce4d62e223faab8fe8ba8989de1aa4bc/epidoc.xsg#L112
+// https://github.com/papyri/xsugar/blob/96f79e62ce4d62e223faab8fe8ba8989de1aa4bc/epidoc.xsg#L605
+// 
+// e.g. ||interlin:abc||, ||top:abc||, ||bottom:abc(?)||
+//
+// - (?) before closing bracket allowed
+
+InsertionMargin {
+   InsertionMarginStart  Inline+ ~certLow CertLow? "||"
+}
+
+
+// -- Text added in margin, with a sling mark
+// https://papyri.info/docs/leiden_plus#marginalia
+//
+// e.g. <|ν|>, <|ν(?)|>
+//
+// - (?) before closing bracket allowed
+
+InsertionMarginSlingStart[group=Delims, closedBy="|>"] { "<" "|" }
+InsertionMarginSling {
+    InsertionMarginSlingStart Inline+ ~certLow CertLow? "|>"
+}
+
+
+// -- Text added in margin with underline
+// https://papyri.info/docs/leiden_plus#marginalia
+//
+// e.g. <_οὕτως ἔχει_>, <_οὕτως ἔχει(?)_>
+// 
+// - (?) before closing bracket allowed
+
+InsertionMarginUnderline {
+    "<_" Inline+ ~certLow CertLow? "_>"
+}
+
+
+// -- Tall text
+// https://papyri.info/docs/leiden_plus#special-formatting
+//
+// e.g. ~||text||~tall 
+
+TextTall {
+    "~||" Inline+ "||~tall"
+}
+
+
+// -- Superscripted text
+// https://papyri.info/docs/leiden_plus#special-formatting
+//
+// e.g. |^Ἡρωνείνῳ^|
+
+TextSuperscript { "|^" Inline+ "^|" }
+TextSubscriptStart[group=Delims, closedBy="|/"] { "\\" "|"  }
+
+
+// -- Subscripted text
+// https://papyri.info/docs/leiden_plus#special-formatting
+//
+// e.g.  \|τα|/, \|τα(?)|/
+//
+// - (?) before closing bracket allowed
+
+TextSubscript {
+    TextSubscriptStart Inline+  ~certLow CertLow? "|/"
+}
+
+
+// -- Supraline text, wrapped in non-combining macrons
+// https://papyri.info/docs/leiden_plus#special-formatting
+//
+// e.g. ¯νο.1¯
+
+SupralineSpan[@name=Supraline] {
+    "¯" ~macron Inline+ !supralineEnd "¯"
+}
+
+// -- Supralined text, as seqence of characters with combining macrons
+//
+// e.g. w̄ōr̄d̄s̄ ̄s̄īc̄
+//
+// Not officially documented but widely used.
+// https://github.com/papyri/xsugar/blob/96f79e62ce4d62e223faab8fe8ba8989de1aa4bc/epidoc.xsg#L416
+//
+// Can also have characters with supraline and underdot which represent unclear supralined
+// characters. In this case, we want them to appear as Unclear nodes inside of Supraline nodes.
+//
+// The tokens supralineSic (macrons only) and supralineSicUnclear are supplied by external
+// tokenizers.
+
+
+SupralineSic[@name=Supraline] {
+  supralineSicItem (!supralineSic supralineSicItem)*
+}
+
+supralineSicItem {
+  SupralineSicContent | supralineSicUnclear
+}
+
+
+// -- Supralined and underline text 
+// https://papyri.info/docs/leiden_plus#special-formatting
+//
+// e.g. ¯_εὐτύχει_¯
+
+SupralineUnderlineStart[group=Delims, closedBy="_¯"] { "¯" "_" ~underscore }
+SupralineUnderline {
+    SupralineUnderlineStart Inline+ "_¯"
+}
+
+
+
+// -- Editorial Note
+// https://papyri.info/docs/leiden_plus#editorial-note
+//
+// e.g. /*BGU 1,108,r reprinted in WChr 227*/
+// 
+// - Allows to specify a reprint reference, format: (ref=reference_id=reference text)
+//   e.g. /*PFlor 1,104,r reprinted in (ref=p.vind.pher;;Anhang=PVindPherAnhang)*/
+
+// Note: XSugar doesn't expand inline content with dots (.3, [.5], vac.5lin etc.) but treats them as text
+// when the note content does not contain a newline.
+EditorialNoteStart[group=Delims, closedBy=EditorialNoteEnd] { "/" ~editorialNote  "*" }
+EditorialNoteEnd[group=Delims, openedBy=EditorialNoteStart] { "*" "/" }
+EditorialNote {
+   EditorialNoteStart  Inline+ EditorialNoteRef { ( "(ref=" NoteRef "=" NoteRef ")") }? EditorialNoteEnd
+}
+
+
+// -- Quotation
+// https://papyri.info/docs/leiden_plus#quotation
+//
+// e.g. "ὁ γὰ̣ρ̣ ἐ̣λ̣εῶ̣ν̣"
+Quotation { "\"" Inline+ !quot "\"" }
+
+
+// -- Clear but incrompehensible letters
+//
+// e.g. !abc!
+//
+// Not officially documented, grammar reference:
+// https://github.com/papyri/xsugar/blob/96f79e62ce4d62e223faab8fe8ba8989de1aa4bc/epidoc.xsg#L1068
+// see also: https://github.com/DCLP/dclpxsltbox/issues/141
+
+Orig { "!" OrigContent { origWord } "!" }
+
+
+// -- Numbers
+// https://papyri.info/docs/leiden_plus#numbers-and-special-characters
+//
+// <#number symbol=value#>, e.g.: <#ιϛ=1/16#>
+//
+// - Either symbol or value can be empty: <#ιϛ=#>, <#=1/16#>
+// - Possible value variants:
+//   - Number: <#ιϛ=1#>   
+//   - Fraction: <#ιϛ=1/16#>
+//   - Uncertain fraction: <#ιϛ=1/16(?)#>
+//   - Unknown fraction (?): <#ιϛ=frac#> 
+//   - Ranges: <#ιϛ=1-3#>
+//   - Ranges with unknown end: <#ιϛ=1-?=#>
+// - Tick variant:
+//   - The sequence " '=" (space required) can be used instead of "=" to indicate that
+//     the number is marked with a tick
+//   - e.g.: <#ιϛ '=1#>
+//   - Supported for all value variants except for ranges (per XSugar grammar)
+//
+// Some of the variants are undocumented, grammar reference:
+// https://github.com/papyri/xsugar/blob/96f79e62ce4d62e223faab8fe8ba8989de1aa4bc/epidoc.xsg#L670
+
+NumberSpecialValue { "=" !numberSpecialValue Number }
+
+// pattern rule with arguments for prefix before the equals sign (empty or "'") and symbol (inline content)
+numberSpecialBase<prefix, symbol> {
+    // <#ιϛ=1#>, <#ιϛ '=1#>, <#ιϛ=1/16(?)#>, <#ιϛ '=1/16(?)#>
+    ("<#" symbol prefix NumberSpecialValue FracPart { ( "/"  Number ) }? CertLow? "#>") |
+    // <#ιϛ=frac#>, <#ιϛ '=frac#> 
+    ("<#" symbol prefix FracNoValue { "=" ~eq "frac" } "#>")  |
+    // <#ιϛ=#> 
+    ("<#" symbol prefix "=" "#>")
+}
+
+NumberSpecial {
+    // invokes the pattern with no prefix before = for non-tick numbers
+    numberSpecialBase<(), Inline*> |
+    // no ticks for ranges :(
+    // <#ιϛ=1-3#>, <#ιϛ=1-?=#>
+    ("<#" Inline* NumberSpecialValue "-" RangePart {  (Number | QuestionMark) } "#>")
+}
+
+tick { space ~tick "'" }
+NumberSpecialTick[@dynamicPrecedence=1] {
+    // invokes the pattern with ' before = for tick numbers
+    numberSpecialBase<~tick tick, Inline+> |
+
+    // workaround for XSugar peculiarity: <# '=3#> is parsed as non-tick number with symbol " '"
+    numberSpecialTickNoSymbol { numberSpecialBase<tick, ()> }
+}
+
+
+
+// NON-WRAPPING RULES
+// ----------------------------------------------------
+
+
+// -- Unclear text
+// Sequence of characters with a combining underdot each. 
+// papyri.info Documentation entry missing.
+//
+// e.g. ἔ̣τ̣ο̣υ̣ς̣
+//
+// multiUnclear / singleUnclear are supplied by an external tokenizer.
+// A specialized single character unclear token is needed because it can
+// be a prefix for a Diacritical.
+
+Unclear { multiUnclear | singleUnclear }
+
+
+// -- Diacriticals
+// https://papyri.info/docs/leiden_plus#diacriticals
+//
+// Combination of a space-prefixed single char, space, unclear char or illegible/lost pattern and a diacritic
+// symbol in parentheses.  
+// 
+// XSugar grammar doesn't allow:
+//      - Char with combined diacritic with underdot
+//      - Illegible and lost double diacritic
+//      - Char with underdot double diacritic
+//
+// XSugar grammar allows CertLow only for diaeresis - on purpose?: " a(¨)(?)""
+//    - Implemented preliminarily in the current Diacritical rule which makes it so complex
+
+DiacritChar { single_char | single_latinChar | single_num | space }
+diacritical[@dynamicPrecedence=1] { // without @dynamicPrecedence this interferes with abbrev expansions e.g. "(abc d(¨) ef(g)) "
+    (LineBreakWrapped | space) Diacritical[@isGroup=topLevel] {
+        // single char with single or double diacritic: " x(^)" or " x(^`)"
+        ( ~diacrit DiacritChar  "("
+           (
+                // one diaeresis and one other
+                (DiacriticSymbol { diacriticDiaeresis | diacriticBase } DiacriticSymbol { diacriticDiaeresis | diacriticBase } ) |
+                // single other
+                DiacriticSymbol { diacriticBase }
+            )
+        ")" ) |
+
+      // single char with diaeresis: a(¨)
+      ( ~diacrit DiacritChar  "(" DiacriticSymbol { diacriticDiaeresis } ")" ~certLow certLow[@dynamicPrecedence=1]{ CertLow }?) |
+
+      // single unclear char (with underdot) (diaeresis can have CertLow): " ạ(¨)", " ạ(¨)(?)"
+      ( ~diacrit DiacriticUnclear { singleUnclear } "(" (
+        ( DiacriticSymbol { diacriticBase } ")") |
+        ( DiacriticSymbol { diacriticDiaeresis } ")" ~certLow certLow[@dynamicPrecedence=1]{ CertLow }? )
+      )
+      ) |
+
+      // illegible diacritic: " .4(^)" (only single diacritics allowed per XSugar grammar)
+      ( ~diacrit "." GapNumber "("  DiacriticSymbol { diacriticBase | diacriticDiaeresis } ")" ) |
+
+      // lost diacritic: " [.5](^)" (only single diacritics allowed per XSugar grammar)
+      ( ~diacrit "[" LostNumber { "." GapNumber } ~lostWord "]" "(" DiacriticSymbol { diacriticBase | diacriticDiaeresis } ")" )
+  }
+}
+
+// -- Glyph (non-alphabetical characters or symbols)
+// https://papyri.info/docs/leiden_plus#special-characters
+// 
+// *glyph-type* or *glyph-type,description* (or is it a glyph symbol after the comma?)
+//
+// e.g. *chirho*, *chirho?*, *stauros?,♱*
+// Note: The XSugar allows any inline content after the comma, but the EpiDoc schema only character content
+
+Glyph {  "*" GlyphWord { (chars | "-" | "lin" | "char")+ } QuestionMark? ("," (Text)+)?  "*" }
+
+
+// Filler stroke
+// https://papyri.info/docs/leiden_plus#special-characters
+//
+// e.g. *filler(extension)*, *filler(extension content)?*
+
+Filler { "*filler(" GlyphWord ")" QuestionMark? "*" }
+
+
+// -- Handshift
+// https://papyri.info/docs/leiden_plus#handshift
+//
+// e.g. $m3, $m4a, "$m3b(?) "
+//
+// Hand ID needs to start with "m", optionally followed by a number, which is optionally
+// followed by astring of alphanumerical characters.
+//
+// " (?)" annotation allowed as suffix (space required after).
+ 
+Handshift {
+    "$" HandshiftHand CertLow? space
+}
+
+
+// -- Figure
+// https://papyri.info/docs/leiden_plus#special-characters (Figure on papyri)
+//
+// e.g. "#seal ", "#stamp ", "#drawing "
+//
+// Figure description is an alphanumeric string. 
+// Space required after.
+
+Figure {
+    "#" FigureDesc space
+}
+
+
+// --- Omitted lines or chars in a specific Language
+// https://papyri.info/docs/leiden_plus#omitted ("Omitted language")
+//
+// e.g. (Lang: Demotic 1 lines), (Lang: Coptic ? lines), (Lang: Coptic ca.2 lines), (Lang: Demotic 2 char), (Lang: Demotic ? char)
+//
+// - XSugar Grammar allows ca. for lines, but not for chars
+//   https://github.com/papyri/xsugar/blob/96f79e62ce4d62e223faab8fe8ba8989de1aa4bc/epidoc.xsg#L536
+// - (?) allowed after "lines" or "char" vor all valid variants: (Lang: Demotic 1 lines(?))
+
+omittedLanguage[@isGroup=topLevel] {
+    OmittedLanguage[unit=line] { "(Lang: " Language { latinChars } ~charsOrLines space ( GapNumberCirca | Number | QuestionMark) space "lines" CertLow? ")" } |
+    OmittedLanguage[unit=character] { "(Lang: " Language { latinChars } ~charsOrLines  space (Number | QuestionMark) space "char" CertLow? ")" }
+}
+
+
+// -- Untranscribed lines, chars or columns
+// https://papyri.info/docs/leiden_plus#omitted ("Untranscribed")
+//
+// e.g. (Lines: 19 non transcribed), (Chars: ? non transcribed), (Column: 1-3 non transcribed), (Lines: ca.7 non transcribed)
+//
+// - All gap number variants are possible for all units (Lines, Chars, Column)
+// - (?) allowed after "transcriped": (Lines: 19 non transcribed(?))
+// - "Column" unit is undocumented, grammar reference:
+//   https://github.com/papyri/xsugar/blob/96f79e62ce4d62e223faab8fe8ba8989de1aa4bc/epidoc.xsg#L905
+
+untranscribedBase<start> {
+   start ( GapNumber | GapNumberRange | GapNumberCirca | QuestionMark ) " non transcribed" CertLow? ")"
+}
+
+untranscribed[@isGroup=topLevel] {
+    Untranscribed[unit=line] { untranscribedBase<"(Lines: "> } |
+    Untranscribed[unit=character] { untranscribedBase<"(Chars: "> } |
+    Untranscribed[unit=column] { untranscribedBase<"(Column: "> }
+}
+
+
+// LINE BREAKS / NUMBERS
+// ----------------------------------------------------
+
+// -- Line break / number, non-standard position 
+// https://papyri.info/docs/leiden_plus#non-standard
+//
+// e.g. (2, perpendicular), (1,ms, perpendicular), (1/inverse, perpendicular)
+//
+// - Supports wrapped variants with ".-" suffix after line number: (3.-, inverse)
+// - For the line number format, see the lineNum rule
+
+LineBreakSpecial {
+    "(" lineNum<""> "," space LineBreakSpecialRend { ( divTypeSubtype )+ } ")"
+}
+
+LineBreakSpecialWrapped {
+    "(" lineNum<""> ~lbSpecial ".-," space LineBreakSpecialRend { ( divTypeSubtype )+ } ")"
+}
+
+
+// -- Line break / number
+// https://papyri.info/docs/leiden_plus#line-number
+//
+// e.g. "1. ",  "5/6. ", "2/3,ms. ", "396/397,minf. ", "18,ms7. ", "3,4. "
+// (space always required after the dot) 
+
+LineBreak { lineNum<"."> space }
+
+// -- Line break, with word wrapping across lines
+// https://papyri.info/docs/leiden_plus#line-number
+//
+// e.g. "1.- ",  "5/6.- ", "2/3,ms.- ", "396/397,minf.- ", "18,ms7.- ", "3,4.- "
+// (space always required after the dash) 
+
+LineBreakWrapped{ lineNumWrapped space }
+
+// A line number consists of 
+// - a leading number
+// - followed by a sequence of latin chars, "/", or ","
+//
+// Note: The implementation of this rule is a little complicated to allow to re-create 
+// a behavior of the XSugar grammar: When wrapped line break with a number ending with more 
+// than one digit (123.- ) is following an illegilbe number pattern (.42), such as:
+// ".42123.- ", only the last digit is parsed as part of the line break and the preceding 
+// ones parsed as an illegible pattern: ".4212" and "3.- ". 
+// In this implementation, this behavior is enabled by having the external tokenizer for
+// the "num" token break up sequences of numbers before the last digit.
+lineNum[@dynamicPrecedence=1]<suffix> {
+    Num {
+        (num  | num !num digits | digits) ~lb LineNumMore[@dynamicPrecedence=1] {
+            (latinChars | single_latinChar | num | num !num digits | digits | "/" | ~lbSpecial "," ~lbSpecial )
+        }*
+    } suffix
+}
+lineNumWrapped {  lineNum<".-"> }
+
+
+// PREFIXED MISSING CHAR/LINE PATTERNS 
+// ----------------------------------------------------
+
+// A pattern rule for prefixed "missing" patterns such as .4, .5-9, .vestig.ca.5lin(?).
+// - "(?) " allowed for each variant (space after required, e.g. ".1-3(?) ")
+prefixPattern<prefix, content> {
+    prefix content ~certLow (CertLow space)?
+}
+
+// -- Illegible characters
+// https://papyri.info/docs/leiden_plus#illegible
+//
+// e.g. .4, .?, .1-3, .1lin, .1-2lin, ca.4, ca.4lin
+//
+// NOT allowed per XSugar grammar: ca.?, .?lin
+
+Illegible { 
+    // .4, .?, .1-3, .1lin, .1-2lin
+    prefixPattern<"." !dotToken, GapNumber 
+                                 | GapNumberUnknown
+                                 | GapNumberRange
+                                 | GapNumberLines
+                                 | GapNumberRangeLines> | 
+    // ca.4, ca.4lin
+    prefixPattern<"" , GapNumberCirca | GapNumberCircaLines> 
+}
+
+// When converting to XML, this rule allows to recreate the XSugar behavior for the 
+// disallowed input ca.? (treat "ca" as text and make .? an Illegible with GapNumberUnknown)
+IllegibleInvalid[@name=IncompletePattern] {
+    "ca" Illegible { prefixPattern<"." !dotToken, GapNumberUnknown> }
+}
+
+
+// -- Vestiges 
+// https://papyri.info/docs/leiden_plus#vestiges
+//
+// e.g. "vestig ", vestig.4lin, vestig.4char, vestig.?lin, vestig.1-3lin, vestig.1-3char,
+//      vestig.ca.3lin, vestig.ca.3char
+//
+// NOT allowed per XSugar grammar: vestig.4, vestig.1-3, vestig.ca.4, vestig.?char
+
+vestigPrefix { "vestig" "." ~vestig }
+Vestige {
+    // "vestig " (space after required)
+    standalone { VestigStandalone[unit=character] { "vestig " } } |
+    // "vestig(?) " 
+    standalone { VestigStandalone[unit=character] { "vestig" } CertLow space } |
+    // the rest of the vestig patterns
+    prefixPattern<vestigPrefix, GapNumberLines
+                                    | GapNumberChars
+                                    | GapNumberUnknownLines
+                                    | GapNumberRangeLines
+                                    | GapNumberRangeChars
+                                    | GapNumberCircaLines
+                                    | GapNumberCircaChars>
+}
+
+// When converting to XML, this rule allows to recreate the XSugar behavior for the 
+// disallowed inputs "vestig" (without space after), vestig.4, vestig.1-3, vestig.ca.4
+// (treat the part after the dot as Illegible, the rest as text)
+VestigeInvalid[@name=IncompletePattern, @dynamicPrecedence=-1] {
+    "vestig"
+    ("." ~vestig | Illegible { prefixPattern<"." !dotToken, GapNumber | GapNumberUnknown | GapNumberRange > } )
+}
+
+
+// -- Lost Lines 
+// https://papyri.info/docs/leiden_plus#lines-lost
+//
+// e.g. lost.4lin, lost.?lin, lost.1-3lin, lost.ca.3lin
+//
+// NOT allowed per XSugar grammar: lost.3, lost.?, lost.1-3, lost.ca.3
+
+lostPrefix { "lost" "." ~lost }
+LostLines {
+        prefixPattern<lostPrefix, GapNumberLines
+                                    | GapNumberUnknownLines
+                                    | GapNumberRangeLines
+                                    | GapNumberCircaLines>
+}
+
+// When converting to XML, this rule allows to recreate the XSugar behavior for the 
+// disallowed inputs "lost" (without . pattern after) and lost.3, lost.?, lost.1-3
+// (treat the part after the dot as Illegible, the rest as text)
+LostLinesInvalid[@name=IncompletePattern, @dynamicPrecedence=-1] {
+        "lost"
+        ("." ~lost | Illegible { prefixPattern<"." !dotToken, GapNumber  | GapNumberUnknown | GapNumberRange >  } )
+}
+
+
+// -- Vacat (Character space)
+// https://papyri.info/docs/leiden_plus#vacat
+//
+// e.g. vac.5, vac.?, vac.1-3, vac.ca.2, vac.4lin, vac.?lin, vac.1-3lin, vac.ca.3lin
+// 
+
+Vacat { prefixPattern<"vac." !dotToken,  GapNumber 
+                                                | GapNumberUnknown
+                                                | GapNumberRange
+                                                | GapNumberCirca
+                                                | GapNumberLines 
+                                                | GapNumberUnknownLines 
+                                                | GapNumberRangeLines
+                                                | GapNumberCircaLines>
+}
+
+// Workaround needed so "vac. \n  x" won't interfere with Diacritical
+// (vac., one space, newline, two spaces, x --> it thinks x is a DiacritChar)
+VacatInvalid[@name=IncompletePattern] { "vac." !vacDot space? }
+
+
+// REUSABLE HELPER RULES 
+// ----------------------------------------------------
+
+// -- Rules for use in missing char / number patterns (.5, lost.6lin, vestig.ca.4char etc.)
+
+circaPrefix { "ca" "." ~ca }
+
+GapNumber[group=GapNums,unit=character]             { Number }                              // 5
+GapNumberUnknown[group=GapNums,unit=character]      { QuestionMark }                        // ?
+GapNumberUnknownLines[group=GapNums,unit=line]      { QuestionMark !gapUnknown "lin"}       // ?lin
+
+GapNumberRange[group=GapNums,unit=character]        { GapNumber !gapRange "-" GapNumber}    // 3-4
+GapNumberLines[group=GapNums,unit=line]             { GapNumber !gapLin "lin" }             // 3lin
+GapNumberChars[group=GapNums,unit=character]        { GapNumber !gapChar "char" }           // 3char
+
+GapNumberRangeLines[group=GapNums,unit=line]        { GapNumberRange !gapLinRange "lin" }   // 3-4lin
+GapNumberRangeChars[group=GapNums,unit=character]   { GapNumberRange !gapChar "char" }      // 3-4char
+
+GapNumberCirca[group=GapNums,unit=character]        { circaPrefix GapNumber }               // ca.3
+GapNumberCircaLines[group=GapNums,unit=line]        { GapNumberCirca !gapCircaLin "lin" }   // ca.3lin
+GapNumberCircaChars[group=GapNums,unit=character]   { GapNumberCirca  "char" }              // ca.3char
+
+
+CertLowHighPrecedence[@name=CertLow,@dynamicPrecedence=2]{ !certLow CertLow }
+
+
+Number { num ~lb }
+
+Infix[group=Delims]<infix> { infix }
+MultiInfix[group=Delims]<infix> { infix }
+
+@external tokens supralineUnclearToken from "./tokens.js" { supralineSicUnclear[@name=Unclear] }
+@external tokens supralineToken from "./tokens.js" { SupralineSicContent }
+@external tokens unclearToken from "./tokens.js" { multiUnclear, singleUnclear }
+@external tokens charsToken from "./tokens.js" { chars, num  }
+@external extend { chars } specializeChars from "./tokens.js" { single_char, single_latinChar, latinChars }
+@external extend { num } specializeNum from "./tokens.js" { single_num }
+
+@tokens {
+
+    // Complex delimiters are defined here to assign openBy and closeBy properties
+    // that enable bracket matching in the codemirror editor
+    
+    "<D=."[group=Delims, closedBy="=D>"]
+    "=D>"[group=Delims, openedBy="<D=.>"]
+
+    "<="[group=Delims, closedBy="=>"]
+    "=>"[group=Delims, openedBy="=>"]
+
+    "¯"[group=Delims, closedBy="¯", openedBy="¯"]
+
+    "_¯"[group=Delims, openedBy=SupralineUnderlineStart]
+
+    "<:"[group=Delims, closedBy=":>"]
+    ":>"[group=Delims, openedBy="<:"]
+
+    "<"[group=Delims, closedBy=">"]
+    ">"[group=Delims, openedBy="<"]
+
+    "<#"[group=Delims, closedBy="#>"]
+    "#>"[group=Delims, openedBy="<#"]
+
+    "〚"[group=Delims, closedBy="〛"]
+    "〚X" [group=Delims, closedBy="〛"]
+    "〛"[group=Delims, openedBy="〚X 〚 DeletionSlashStart"]
+
+    "\\"[group=Delims, closedBy="/"]
+    "/"[group=Delims, openedBy="\\"]
+
+    "||"[group=Delims,openedBy=InsertionMarginStart]
+    InsertionMarginStart[closedBy="||"] {
+        "||" ("bottom" | "left" | "right" | "top" | "margin" | "interlin") ":"
+    }
+
+    "|>"[group=Delims, openedBy=InsertionMarginSlingStart]
+
+    "<_"[group=Delims, closedBy="_>"]
+    "_>"[group=Delims, openedBy="<_"]
+
+    "~||"[group=Delims, closedBy="||~tall"]
+    "||~tall"[group=Delims, openedBy="~||"]
+
+    "|^"[group=Delims, closedBy="^|"]
+    "^|"[group=Delims, openedBy="|^"]
+
+    "|/"[group=Delims, openedBy=TextSubscriptStart]
+
+    "!"[group=Delims, closedBy="!", openedBy="!"]
+    "*"[group=Delims, closedBy="*", openedBy="* *filler("]
+    "*filler("[group=Delims, closedBy="*"]
+
+    "~|"[group=Delims, closedBy=ForeignEnd]
+    ForeignEnd[group=Delims, openedBy="~|"] {
+        "|~" LanguageId
+    }
+
+    @precedence {  ForeignEnd, "|" }
+
+    @precedence { "/", "lost", "vac", ",", digits }
+
+    space { " " }
+    newLine  { "\n" }
+
+    CertLow { "(?)" }
+    QuestionMark { "?" }
+
+    digits { $[0-9]+ }
+
+    // infix { "|" $[a-z]+ "|" }
+    // multiInfix { "||" $[a-z]+ "||" }
+    // @precedence { infix, multiInfix, "|" }
+
+//    @precedence { "ca", "char", "lin", "lost", "vac.", "vac", "vestig ", "vestig", alphaNum }
+
+
+
+    // TODO: really limit languages in grammar like XSugar does?
+    // Better on XML validation level?
+    //LanguageSpec {
+    //    "=" ("grc"|"la"|"ara"|"la-Grek"|"grc-Latn"|"cop"|"egy-Egyd")
+    //}
+
+    LanguageId { $[a-zA-Z\-]+ }
+
+
+
+    // Allowed characters for citation taken from XSugar spec to ensure compatibility:
+    // https://github.com/papyri/xsugar/blob/96f79e62ce4d62e223faab8fe8ba8989de1aa4bc/epidoc.xsg#L68C15-L68C81
+    CitationWords { ![\/\\[\]^<>_#@~〚〛$*&:=|'!{}?"¯\u0304\u0323]+ }
+    NoteRef { ![/\\\[\]^<>_#@~〚〛*&=|'!(){}"¯\u0304\u0323]+ }
+
+    @precedence { ".", "(", NoteRef, "=", digits }
+
+    TextInBox[@name=Milestone,rend=box] { "###" }
+    WavyLine[@name=Milestone,rend=wavy-line] { "~~~~~~~~" }
+    DipleObelismene[@name=Milestone,rend=diple-obelismene] { ">---" }
+    Paragraphos[@name=Milestone,rend=paragraphos] { "----" }
+    HorizontalRule[@name=Milestone,rend=horizontal-rule] { "--------" }
+    Coronis[@name=Milestone,rend=coronis] { "-$$-" }
+
+    // mirrors WORD in https://github.com/papyri/xsugar/blob/96f79e62ce4d62e223faab8fe8ba8989de1aa4bc/epidoc.xsg#L39C7-L39C84
+    // (without - to enable Paragraphos/Horizontal Rule
+    LeidenWord { ![ 0-9/\\\n\r\t[\]^<>_#@~〚〛$*&,.:=|'!(){}?"¯+\u0304\u0323]+ }
+    FigureDesc { LeidenWord }
+    HandshiftHand { "m" $[0-9] ![ /\\\[\]^<>_#@~〚〛$*&:=|'!(){}?"¯+\u0304\u0323]? }
+
+    origWord { ![\\\[\]\^<>_#@~〚〛$*&,.:=|'!(){}?"¯+\u0304\u0323]+ }
+
+    // DIVWORD
+    divTypeSubtype { ![ \n\r\t\[\]^<>_#@~〚〛$*&.:=|'!(){}?"¯\u0304\u0323]+ }
+
+    diacriticBase { " ῾" | " ᾿" | $[´`^]  }
+    diacriticDiaeresis { "¨" }
+
+    @precedence { diacriticDiaeresis, diacriticBase }
+
+
+    @precedence {"/", GlyphWord }
+    @precedence {".-", ".", GlyphWord}
+
+    @precedence {
+         HorizontalRule, Paragraphos, Coronis, space, "-",
+         "lost", "vac", GlyphWord
+    }
+
+
+     GlyphWord { LeidenWord }
+
+
+}
+
+@detectDelim

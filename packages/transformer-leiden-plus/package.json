@@ -1,0 +1,20 @@
+{
+  "name": "@leiden-plus/transformer-leiden-plus",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsup src/index.ts --format cjs,esm --dts",
+    "watch": "tsup src/index.ts --format cjs,esm --dts --watch"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "tsup": "^8.3.5"
+  },
+  "dependencies": {
+    "@lezer/common": "^1.2.3",
+    "@leiden-plus/parser-leiden-plus": "workspace:*"
+  }
+}

@@ -1,0 +1,98 @@
+@precedence { termEquals @cut, inlineEquals }
+
+@top Document {
+    (Whitespace | Translation)+
+}
+
+Translation {
+    TranslationStart[group=Delims, closedBy=TranslationEnd] {
+        "<T=" ( "." LanguageId )?
+    }
+    ( block | Whitespace )*
+    TranslationEnd[group=Delims, openedBy=TranslationStart] {
+        "=T>"
+    }
+}
+
+block {
+    P { "<=" ( block | Inline )* "=>" } |
+    Div { "<D=." N { divWord } ( "." Subtype { divWord } )? space ( block | Whitespace )+ "=D>" }
+}
+
+Inline { Text | LineNum | LineNumBreak | Erasure | Note | Foreign | Term | App | Gap }
+Text { words | Whitespace | "." | ":" | "," | "/" | "[" | "]" | "(" | ")" | "?" | ( ~eq "=") }
+LineNum { "((" Number { number } "))" }
+LineNumBreak { "(((" Number { number } ")))" }
+
+Erasure { "〚"  Content { Inline+ } "〛"}
+
+// Found erroneous unicode ellipsis … in P.Cair. Zen. 1, 59058 (716.xml) so why not support it :)
+// Wait... Gap is in the XSugar grammar and docs but it doesn't work??
+// Okay, it works if only surrounded by Tab or Newline (???)
+// --> temporary workaround in converters
+Gap {
+   Illegible { "..." | "…"} |
+   Lost { "[...]" | "[…]" }
+}
+
+Note { "/*" Content { noteWords+ } "*/" }
+
+Term { "<" Content { Inline+ } ("~" LanguageId)? ~eq "=" Definition { termWords+ } ">"}
+
+ForeignEnd[group=Delims, openedBy="~|"] {
+   "|~" LanguageId space
+}
+Foreign { "~|" Content { Inline+ } ForeignEnd }
+
+App { "<:" Content { Inline+ } "|" AppType? ":" AppResp { looseWords+ }? "|" ":>" }
+
+@tokens {
+
+    Whitespace { (space | newLine | tab )+ }
+
+    space { " " }
+    newLine { "\n" }
+    tab { "\t" }
+
+    "<D=."[group=Delims, closedBy="=D>"]
+    "=D>"[group=Delims, openedBy="<D=."]
+    "<="[group=Delims, closedBy="=>"]
+    "=>"[group=Delims, openedBy="<="]
+
+    // "(("[group=Delims, closedBy="))"]
+    // "))"[group=Delims, openedBy="(("]
+    // "((("[group=Delims, closedBy=")))"]
+    // ")))"[group=Delims, openedBy="((("]
+
+     "〚"[group=Delims, closedBy="〛"]
+     "〛"[group=Delims, openedBy="〚"]
+
+     "/*"[group=Delims, closedBy="*/"]
+     "*/"[group=Delims, openedBy="/*"]
+
+     "<"[group=Delims, closedBy=">"]
+     ">"[group=Delims, openedBy="<"]
+
+     "~|"[group=Delims, closedBy=ForeignEnd]
+
+    "<:"[group=Delims, closedBy=":>"]
+    ":>"[group=Delims, openedBy="<:"]
+
+     // "|"[group=Delims, closedBy="|", openedBy="|"]
+
+     LanguageId { $[a-zA-Z\-]+ }
+
+     divWord { ![ \n\r\t\[\]^<>_#@~〚〛$*&.:=|'!(){}?"¯\u0304\u0323]+ }
+     // words { ![/\n\r\t^<>_#@~〚〛$*&,=|'(){}?"¯≡+\u0323.:\[\]…]+ } (original WORDS)
+     words { ![/\n\r\t^<>_#@~〚〛$*&,=|(){}?"¯≡+\u0323.:\[\]…]+ }
+     noteWords { ![^<>#@~〚〛$*&=|{}¯≡\u0323]+ }
+     termWords { ![\n\r\t^<>#@~〚〛$*&=|{}¯≡+\u0323]+ } // WORDSTERM
+     looseWords { ![\n\r\t^<>#@~〚〛$*&=|\¯≡+\u0323]+ } // WORDSLOOSE
+
+     @precedence { termWords, words, Whitespace }
+
+     AppType { $[a-zA-Z_]+ }
+
+     number { @digit+ }
+}
+

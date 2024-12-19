@@ -1,0 +1,42 @@
+{
+  "name": "@leiden-plus/parser-leiden-trans",
+  "version": "1.0.0",
+  "description": "",
+  "type": "module",
+  "main": "dist/index.cjs",
+  "module": "dist/index.js",
+  "exports": {
+    "import": "./dist/index.js",
+    "require": "./dist/index.cjs"
+  },
+  "types": "dist/index.d.ts",
+  "sideEffects": false,
+  "scripts": {
+    "build": "pnpm run build:grammar && rollup -c",
+    "watch:rollup": "rollup -c -w",
+    "build-debug": "lezer-generator src/leiden-trans.grammar --names -o src/parser && rollup -c",
+    "build:grammar": "lezer-generator src/leiden-trans.grammar -o src/parser",
+    "watch:grammar": "chokidar src/leiden-trans.grammar -c \"pnpm build:grammar\"",
+    "watch": "pnpm --parallel --filter {.} run /^watch:/"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@lezer/common": "^1.2.3",
+    "@lezer/lr": "^1.4.2",
+    "rollup-plugin-typescript2": "^0.36.0"
+  },
+  "devDependencies": {
+    "@lezer/generator": "^1.7.2",
+    "@rollup/plugin-typescript": "^12.1.2",
+    "chokidar-cli": "^3.0.0",
+    "rollup": "^4.28.1",
+    "rollup-plugin-dts": "^6.1.1",
+    "tslib": "^2.8.1",
+    "typescript": "^5.7.2"
+  },
+  "publishConfig": {
+    "registry": "https://gitlab.dh.uni-koeln.de/api/v4/projects/726/packages/npm/"
+  }
+}

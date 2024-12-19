@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Leiden+ Dev</title>
+    <style>
+      body { 
+        margin: 0;
+        height: 100vh;
+        display: flex;
+      }
+      .language-select {
+        border-bottom: 1px solid #ddd;
+      }
+      .editor-pane {
+        display: flex;
+        flex-direction: column;
+        justify-content: stretch;
+        width: 50%;
+        height: 100%;
+        border-right: 1px solid #ddd;
+      }
+      .leiden-pane, .xml-pane {
+        display: flex;
+        flex-direction: column;
+        flex: 1 1 0;
+        min-height: 0;
+        border-bottom: 1px solid #ddd;
+      }
+
+      .debug-pane {
+        width: 50%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+      }
+      .parse-tree {
+        height: 70%;
+        overflow: auto;
+        padding: 1rem;
+        border-bottom: 1px solid #ddd;
+        font-family: monospace;
+      }
+      .debug-info {
+        height: 30%;
+        padding: 1rem;
+        overflow: auto;
+      }
+      .cm-editor {
+        height: 100%;
+      }
+      .debug-label {
+        font-weight: bold;
+        margin-right: 0.5rem;
+      }
+
+      /* Tree view styles */
+      .tree-node {
+        position: relative;
+        padding-left: 1.2em;
+        cursor: pointer;
+      }
+      .tree-node::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 0.7em;
+        width: 0.8em;
+        height: 1px;
+        background: #666;
+      }
+      .tree-node::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 1px;
+        background: #666;
+      }
+      .tree-node:last-child::after {
+        height: 0.7em;
+      }
+      .tree-node > .node-content {
+        display: flex;
+        align-items: center;
+        gap: 0.5em;
+      }
+      .tree-node > .node-content > .toggle {
+        width: 1em;
+        height: 1em;
+        line-height: 1em;
+        text-align: center;
+        cursor: pointer;
+      }
+      .tree-node.collapsed > .children {
+        display: none;
+      }
+      .tree-node.highlighted {
+        background: #e6f3ff;
+      }
+      .tree-node.highlighted > .node-content {
+        font-weight: bold;
+      }
+
+      .language-select {
+        margin: 4px 0 4px 4px;
+        padding: 2px;
+      }
+
+      .language-select label {
+        margin-right: 0.5rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="editor-pane">
+      <div class="language-select">
+        <label for="language-select">Language variant: </label>
+        <select id="language-select">
+          <option value="leiden-plus">Leiden+</option>
+          <option value="leiden-trans">Leiden Translation</option>
+        </select>
+      </div>
+      <div class="leiden-pane">
+      </div>
+      <div class="xml-pane">
+      </div>
+    </div>
+    <div class="debug-pane">
+      <div class="parse-tree">
+        <h3>Parse Tree</h3>
+        <div id="parse-tree-content"></div>
+      </div>
+      <div class="debug-info">
+        <h3>Debug Info</h3>
+        <div id="debug-info-content"></div>
+      </div>
+    </div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

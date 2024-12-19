@@ -1,0 +1,36 @@
+{
+  "name": "@leiden-plus/codemirror-lang-leiden-trans",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "build": "rollup -c",
+    "watch": "rollup -c -w"
+  },
+  "type": "module",
+  "main": "dist/index.cjs",
+  "module": "dist/index.js",
+  "exports": {
+    "import": "./dist/index.js",
+    "require": "./dist/index.cjs"
+  },
+  "types": "dist/index.d.ts",
+  "sideEffects": false,
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@rollup/plugin-typescript": "^12.1.2",
+    "rollup": "^4.28.1",
+    "rollup-plugin-dts": "^6.1.1",
+    "typescript": "^5.7.2"
+  },
+  "dependencies": {
+    "@codemirror/language": "^6.10.7",
+    "@leiden-plus/parser-leiden-trans": "workspace:*",
+    "@lezer/common": "^1.2.3",
+    "@lezer/highlight": "^1.2.1"
+  },
+  "publishConfig": {
+    "registry": "https://gitlab.dh.uni-koeln.de/api/v4/projects/726/packages/npm/"
+  }
+}
