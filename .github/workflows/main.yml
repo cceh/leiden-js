@@ -60,8 +60,13 @@ jobs:
 
       # Pre-build the Docker image
       - name: Pre-build xsugar Docker image
-        run: docker compose --progress=plain -f ./test/docker-compose.yml build xsugar
-        env:
+        run: |
+          docker buildx build \
+            --cache-from type=local,src=/tmp/.buildx-cache \
+            --cache-to type=local,dest=/tmp/.buildx-cache \
+            -f ./test/docker-compose.yml \
+            --target xsugar \
+            --load .        env:
           DOCKER_BUILDKIT: 1
 
 
