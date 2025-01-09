@@ -62,7 +62,7 @@ jobs:
         run: |
           echo '{
             "target": {
-              "service-name": {
+              "xsugar": {
                 "cache-from": [
                   "type=local,src=/tmp/.buildx-cache"
                 ],
