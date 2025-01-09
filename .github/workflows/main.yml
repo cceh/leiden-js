@@ -60,19 +60,16 @@ jobs:
 
       # Pre-build the Docker image
       - name: Pre-build xsugar Docker image
-        run: docker compose -f ./test/docker-compose.yml build --progress=plain xsugar
+        run: docker compose --progress=plain -f ./test/docker-compose.yml build xsugar
         env:
           DOCKER_BUILDKIT: 1
 
-      # Prepare test environment
-      - name: Prepare test environment
-        run: pnpm test:idp:prepare
-        env:
-          DOCKER_BUILDKIT: 1
 
       # Run tests
       - name: Run IDP tests
         run: pnpm test:idp
-
+        env:
+          DOCKER_BUILDKIT: 1
+          
       - name: Cleanup
         run: pnpm test:idp:xsugar:down
