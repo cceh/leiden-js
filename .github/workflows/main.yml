@@ -127,7 +127,7 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: |
-            test/data/idp.data
+            test/data/roundtrips
           key: ${{ steps.cache-test-data-restore.outputs.cache-primary-key }}
               
       - name: Xsugar cleanup
