@@ -82,6 +82,10 @@ jobs:
 
 
       # IDP data
+      - name: Get submodule hash
+        id: submodule-hash
+        run: |
+          echo "hash=$(git ls-tree HEAD test/data/idp.data | awk '{print $3}')" >> $GITHUB_OUTPUT
 
       - name: Restore IDP data cache
         id: cache-idp-data-restore
@@ -90,7 +94,7 @@ jobs:
           path: |
             test/data/idp.data
           # invalid if idp data changed  
-          key: ${{ runner.os }}-idp-data-${{ hashFiles('test/data/idp.data/.git') }}
+          key: idp-data-${{ steps.submodule-hash.outputs.hash }}
 
       - name: Get IDP Data
         run: pnpm test:idp:get-data
