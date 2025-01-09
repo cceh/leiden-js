@@ -1,0 +1,49 @@
+name: IDP Tests
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  idp-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout the code
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # Setup Node.js
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18 # Use your project's Node.js version
+          cache: 'pnpm'
+
+      # Install dependencies
+      - name: Install dependencies
+        run: pnpm install
+
+      # Cache test data
+      - name: Cache test data
+        uses: actions/cache@v3
+        with:
+          path: |
+            test/data/roundtrips
+            test/data/idp.data
+          key: ${{ runner.os }}-test-data-${{ hashFiles('test/data/idp.data/.git') }}-${{ hashFiles('test/docker-compose.yml') }}
+          restore-keys: |
+            ${{ runner.os }}-test-data-
+
+      # Prepare test environment
+      - name: Prepare test environment
+        run: pnpm test:idp:prepare
+
+      # Run tests
+      - name: Run IDP tests
+        run: pnpm test:idp
+
+      - name: Cleanup
+        run: pnpm test:idp:xsugar:down
