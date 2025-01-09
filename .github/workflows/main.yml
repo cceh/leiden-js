@@ -58,15 +58,29 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
+      # Create docker-compose-cache.json
+      - name: Create docker-compose-cache.json
+        run: |
+          echo '{
+            "target": {
+              "service-name": {
+                "cache-from": [
+                  "type=local,src=/tmp/.buildx-cache"
+                ],
+                "cache-to": [
+                  "type=local,dest=/tmp/.buildx-cache"
+                ],
+                "output": [
+                  "type=docker"
+                ]
+              }
+            }
+          }' > ./tmp/docker-compose-cache.json
+          
       # Pre-build the Docker image
       - name: Pre-build xsugar Docker image
         run: |
-          docker buildx build \
-            --cache-from type=local,src=/tmp/.buildx-cache \
-            --cache-to type=local,dest=/tmp/.buildx-cache \
-            -f ./test/docker-compose.yml \
-            --target xsugar \
-            --load .
+          docker buildx bake --file test/docker-compose.yml --file /tmp/docker-compose-cache.json
         env:
           DOCKER_BUILDKIT: 1
 
