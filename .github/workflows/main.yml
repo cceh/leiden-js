@@ -97,6 +97,7 @@ jobs:
           key: idp-data-${{ steps.submodule-hash.outputs.hash }}
 
       - name: Get IDP Data
+        if: steps.cache-idp-data-restore.outputs.cache-hit != 'true'
         run: pnpm test:idp:get-data
 
       - name: Save IDP data cache
