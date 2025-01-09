@@ -9,7 +9,7 @@
 
     "test:idp:get-data": "git submodule update --init --depth 1 test/data/idp.data",
 
-    "test:idp:xsugar:up": "docker compose -f ./test/docker-compose.yml up xsugar -d",
+    "test:idp:xsugar:up": "docker compose -f ./test/docker-compose.yml up --wait xsugar",
     "test:idp:xsugar:down": "docker compose -f ./test/docker-compose.yml down --volumes --remove-orphans",
 
     "test:idp:prepare:edition": "pnpm test:idp:xsugar:up && tsx ./test/scripts/idp-prepare-data.ts edition",

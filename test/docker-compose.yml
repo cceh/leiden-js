@@ -3,6 +3,11 @@ services:
     build:
       context: https://github.com/papyri/xsugar.git
       dockerfile: ./Dockerfile
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8080" ]
+      interval: 1s
+      timeout: 5s
+      retries: 20
     image: xsugar
     container_name: leiden-test-xsugar
     ports:
