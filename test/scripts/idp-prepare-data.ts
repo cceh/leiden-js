@@ -51,9 +51,7 @@ async function xsugarConvert(input: string, direction: 'xml2nonxml' | 'nonxml2xm
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded'
         },
-        body: postData,
-        // signal: AbortSignal.timeout(10000),
-        dispatcher: new Agent({ timeout: 10000000})
+        body: postData
     });
 
     if (!response.ok) {

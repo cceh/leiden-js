@@ -118,7 +118,7 @@ jobs:
           key: test-data-${{ hashFiles('test/data/idp.data/.git') }}-${{ hashFiles('test/docker-compose.yml') }}
 
       - name: Prepare test data
-        run: pnpm test:idp:prepare:translation
+        run: pnpm test:idp:prepare
         env:
           DOCKER_BUILDKIT: 1
 
@@ -136,6 +136,9 @@ jobs:
 
       # - name: Test edition
       #  run: pnpm test:idp:edition
+
+      - name: Test edition
+        run: pnpm test:idp:edition
 
       - name: Test translation
         run: pnpm test:idp:translation

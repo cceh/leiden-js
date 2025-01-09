@@ -14,7 +14,7 @@
 
     "test:idp:prepare:edition": "pnpm test:idp:xsugar:up && tsx ./test/scripts/idp-prepare-data.ts edition",
     "test:idp:prepare:translation": "pnpm test:idp:xsugar:up && tsx ./test/scripts/idp-prepare-data.ts translation",
-    "test:idp:prepare": "pnpm test:idp:prepare:edition && pnpm test:idp:prepare:translation && test:idp:xsugar:down",
+    "test:idp:prepare": "pnpm test:idp:prepare:edition && pnpm test:idp:prepare:translation",
 
     "test:idp:edition": "TS_NODE_PROJECT=./tsconfig.test.json mocha test/idp-edition.test.ts",
     "test:idp:translation": "TS_NODE_PROJECT=./tsconfig.test.json mocha test/idp-translation.test.ts",
