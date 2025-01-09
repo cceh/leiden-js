@@ -1,6 +1,9 @@
 import { promises as fs } from 'fs';
 import { dirname, join } from 'path';
 import { JSDOM } from 'jsdom';
+import { Agent } from 'http';
+
+
 
 const configs = {
     edition: {
@@ -49,7 +52,8 @@ async function xsugarConvert(input: string, direction: 'xml2nonxml' | 'nonxml2xm
             'Content-Type': 'application/x-www-form-urlencoded'
         },
         body: postData,
-        signal: AbortSignal.timeout(10000)
+        // signal: AbortSignal.timeout(10000),
+        dispatcher: new Agent({ timeout: 10000000})
     });
 
     if (!response.ok) {

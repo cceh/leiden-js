@@ -11,6 +11,8 @@ interface IgnoreReasons {
 export type BeforeProcessHook = (this: Mocha.Context, textFilePath: string, textFileContent: string) => void;
 export type BeforeXmlCompareHook = (this: Mocha.Context, textFilePath: string, myXml: string, origXml: string) => void;
 
+
+
 function getTextFiles(dir: string): string[] {
     const textPaths: string[] = [];
 
