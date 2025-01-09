@@ -42,9 +42,33 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-test-data-
 
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      # Cache Docker layers
+      - name: Cache Docker layers
+        uses: actions/cache@v3
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-docker-${{ hashFiles('test/docker-compose.yml') }}
+          restore-keys: |
+            ${{ runner.os }}-docker-
+
+      # Set up Docker Buildx
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      # Pre-build the Docker image
+      - name: Pre-build xsugar Docker image
+        run: docker compose -f ./test/docker-compose.yml build --progress=plain xsugar
+        env:
+          DOCKER_BUILDKIT: 1
+
       # Prepare test environment
       - name: Prepare test environment
         run: pnpm test:idp:prepare
+        env:
+          DOCKER_BUILDKIT: 1
 
       # Run tests
       - name: Run IDP tests
