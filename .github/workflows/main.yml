@@ -31,17 +31,6 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-      # Cache test data
-      - name: Cache test data
-        uses: actions/cache@v3
-        with:
-          path: |
-            test/data/roundtrips
-            test/data/idp.data
-          key: ${{ runner.os }}-test-data-${{ hashFiles('test/data/idp.data/.git') }}-${{ hashFiles('test/docker-compose.yml') }}
-          restore-keys: |
-            ${{ runner.os }}-test-data-
-
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
 
@@ -84,18 +73,67 @@ jobs:
           DOCKER_BUILDKIT: 1
 
       # Cache Docker layers
-      - name: Restore Docker layers
+      - name: Save Docker layers
         id: cache-docker-layers-save
         uses: actions/cache/save@v4
         with:
           path: /tmp/.buildx-cache
           key: ${{ steps.cache-docker-layers-restore.outputs.cache-primary-key }}
 
-      # Run tests
-      - name: Run IDP tests
-        run: pnpm test:idp
+
+      # IDP data
+
+      - name: Restore IDP data cache
+        id: cache-idp-data-restore
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            test/data/idp.data
+          # invalid if idp data changed  
+          key: ${{ runner.os }}-idp-data-${{ hashFiles('test/data/idp.data/.git') }}
+
+      - name: Get IDP Data
+        run: pnpm test:idp:get-data
+
+      - name: Save IDP data cache
+        id: cache-idp-data-save
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            test/data/idp.data
+          key: ${{ steps.cache-idp-data-restore.outputs.cache-primary-key }}
+
+
+      # Processed test data
+
+      - name: Restore test data cache
+        id: cache-test-data-restore
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            test/data/roundtrips
+          # invalid if idp data or xsugar version changed
+          key: ${{ runner.os }}-idp-data-${{ hashFiles('test/data/idp.data/.git') }}-${{ hashFiles('test/docker-compose.yml') }}
+
+      - name: Prepare test data
+        run: pnpm test:idp:prepare
         env:
           DOCKER_BUILDKIT: 1
-          
-      - name: Cleanup
+
+      - name: Save test data cache
+        id: cache-test-data-save
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            test/data/idp.data
+          key: ${{ steps.cache-test-data-restore.outputs.cache-primary-key }}
+              
+      - name: Xsugar cleanup
         run: pnpm test:idp:xsugar:down
+
+
+      - name: Test edition
+        run: pnpm test:idp:edition
+
+      - name: Test translation
+        run: pnpm test:idp:translation
