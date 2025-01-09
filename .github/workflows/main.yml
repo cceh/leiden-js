@@ -66,7 +66,8 @@ jobs:
             --cache-to type=local,dest=/tmp/.buildx-cache \
             -f ./test/docker-compose.yml \
             --target xsugar \
-            --load .        env:
+            --load .
+        env:
           DOCKER_BUILDKIT: 1
 
 
