@@ -75,7 +75,7 @@ jobs:
                 ]
               }
             }
-          }' > ./tmp/docker-compose-cache.json
+          }' > /tmp/docker-compose-cache.json
           
       # Pre-build the Docker image
       - name: Pre-build xsugar Docker image
