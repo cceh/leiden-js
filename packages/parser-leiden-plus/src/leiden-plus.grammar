@@ -106,7 +106,7 @@ topLevelInline[@isGroup=topLevel] {
     Illegible | IllegibleInvalid |
     Vestige | VestigeInvalid |
     Orig |
-    Abbrev
+    Abbrev | AbbrevInvalid
 
 }
 
@@ -385,6 +385,7 @@ AbbrevUnresolved { AbbrevUnresolvedStart Inline+ ~certLow CertLow? AbbrevUnresol
 
 // Outer abbreviation parentheses
 Abbrev { "(" (Inline)* ~abbr abbrevInner (Inline* abbrevInner)* Inline* ")" }
+AbbrevInvalid[@dynamicPrecedence=-10] { "(" Inline* ")" }
 
 // One of these is at least required inside the Abbrev expression
 abbrevInner {

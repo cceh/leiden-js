@@ -4,3 +4,8 @@
 /node_modules
 
 .npmrc
+
+/test/data/*
+!test/data/idp.data
+
+.DS_Store

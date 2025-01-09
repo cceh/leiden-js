@@ -5,7 +5,22 @@
   "description": "",
   "scripts": {
     "build": "pnpm -r build",
-    "test": "pnpm -r test",
+    "test": "TS_NODE_PROJECT=./tsconfig.test.json mocha",
+
+    "test:idp:get-data": "git submodule update --init --depth 1 test/data/idp.data",
+
+    "test:idp:xsugar:up": "docker compose -f ./test/docker-compose.yml up xsugar -d",
+    "test:idp:xsugar:down": "docker compose -f ./test/docker-compose.yml down --volumes --remove-orphans",
+
+    "test:idp:prepare:edition": "pnpm test:idp:xsugar:up && tsx ./test/scripts/idp-prepare-data.ts edition",
+    "test:idp:prepare:translation": "pnpm test:idp:xsugar:up && tsx ./test/scripts/idp-prepare-data.ts translation",
+    "test:idp:prepare": "pnpm test:idp:prepare:edition && pnpm test:idp:prepare:translation && test:idp:xsugar:down",
+
+    "test:idp:edition": "TS_NODE_PROJECT=./tsconfig.test.json mocha test/idp-edition.test.ts",
+    "test:idp:translation": "TS_NODE_PROJECT=./tsconfig.test.json mocha test/idp-translation.test.ts",
+
+    "test:idp": "pnpm test:idp:get-data && pnpm test:idp:prepare && pnpm test:idp:edition && pnpm test:idp:translation",
+
     "dev": "pnpm --parallel --filter \"dev-app^...\" watch & pnpm --filter dev-app start"
   },
   "keywords": [],
@@ -14,5 +29,17 @@
   "private": true,
   "workspaces": [
     "packages/*"
-  ]
+  ],
+  "devDependencies": {
+    "@types/chai": "^5.0.1",
+    "@types/jsdom": "^21.1.7",
+    "@types/mocha": "^10.0.10",
+    "chai": "^5.1.2",
+    "chai-xml": "^0.4.1",
+    "jsdom": "^25.0.1",
+    "mocha": "^11.0.1",
+    "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
+    "tsx": "^4.19.2"
+  }
 }

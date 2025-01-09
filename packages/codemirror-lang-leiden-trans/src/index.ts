@@ -1,6 +1,6 @@
 import {LanguageSupport, LRLanguage} from "@codemirror/language";
 import {parser} from "@leiden-plus/parser-leiden-trans";
-import {leidenTranslationHighlighting} from "./highlight";
+import {leidenTranslationHighlighting} from "./highlight.js";
 
 export const leidenTranslationLanguage = LRLanguage.define({
     parser: parser.configure({

@@ -183,13 +183,15 @@ export function toXml(input: string, root = parser.parse(input)) {
                     break;
 
                 case 'Ab':
-                    if (node.firstChild()) {
-                        xml.push("<ab>")
-                    } else {
+                    node.firstChild() // <= (opening delim)
+                    node.nextSibling() // content or => (closing delim)
+                    if (node.type.is("Delims")) {
                         xml.push("<ab/>")
+                        node.parent();
                         return false;
                     }
 
+                    xml.push("<ab>")
                     break;
 
                 case 'Foreign':

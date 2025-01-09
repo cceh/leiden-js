@@ -1,17 +1,21 @@
-import {Diagnostic, linter} from "@codemirror/lint";
-import {syntaxTree} from "@codemirror/language";
+import {leidenBaseLinter} from "@leiden-plus/lib/linter";
 
-export const leidenPlusLinter = linter(view => {
-    const diagnostics: Diagnostic[] = []
-    syntaxTree(view.state).cursor().iterate(node => {
-        if (node.type.isError) {
-            diagnostics.push({
-                from: node.from,
+export const leidenPlusLinter = leidenBaseLinter(node => {
+    if (node.type.isError) {
+        console.log(node.node)
+        if (node.matchContext(["Abbrev"])) {
+            return [{
+                from: node.node.parent!.from,
                 to: node.to,
-                severity: "error",
-                message: "Syntax error",
-            })
+                severity: "error", message: "Error abbrev1!"
+            }]
         }
-    })
-    return diagnostics
+    }
+
+    // if (node.name === "NumberSpecial") {
+    //     const { from, to } = node
+    //     return [{
+    //         from, to, severity: "error", message: "Oh Gott! EIN NUMBER SPECIAL!"
+    //     }]
+    // }
 })

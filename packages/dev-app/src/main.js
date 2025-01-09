@@ -4,10 +4,11 @@ import {leidenPlus} from "@leiden-plus/codemirror-lang-leiden-plus";
 import {syntaxTree} from "@codemirror/language";
 import {NodeWeakMap} from "@lezer/common";
 import {leidenTranslation} from "@leiden-plus/codemirror-lang-leiden-trans";
-import {Annotation, ChangeSet as Diagnostic, Compartment, EditorState, StateField} from "@codemirror/state";
-import {fromXml, toXml} from "@leiden-plus/transformer-leiden-plus/src";
+import {Annotation, Compartment, StateField} from "@codemirror/state";
+import {fromXml as xmlToLeidenPlus, toXml as leidenPlusToXml, TransformationError as LeidenPlusTransformationError} from "@leiden-plus/transformer-leiden-plus";
+import {fromXml as xmlToLeidenTrans, toXml as leidenTransToXml, TransformationError as LeidenTransTransformationError } from "@leiden-plus/transformer-leiden-trans";
+
 import {xml} from "@codemirror/lang-xml";
-import {TransformationError} from "@leiden-plus/transformer-leiden-plus/src/fromXml";
 import {linter, lintGutter, setDiagnosticsEffect} from "@codemirror/lint";
 
 const syntaxTreeNodeMap = new NodeWeakMap();
@@ -118,15 +119,27 @@ function statusBarPanel(view) {
     return {
         dom,
         update(update) {
-            for (let transaction of update.transactions) {
-                const diagnostics = transaction.effects.find(effect => effect.is(setDiagnosticsEffect))
-                if (diagnostics?.value.length > 0) {
-                    const diagnostic = diagnostics.value[0]
-                    console.log(diagnostic)
-                    const line = view.state.doc.lineAt(diagnostic.from)
-                    dom.textContent = `${diagnostic.message}: Line ${line.number}`
-                }
+            const diagnostics = update.state.field(diagnosticsStateField)
+            if (diagnostics.length > 0) {
+                const diagnostic = diagnostics[0]
+                const line = view.state.doc.lineAt(diagnostic.from)
+                dom.textContent = `${diagnostic.message}: Line ${line.number}`
+            } else {
+                dom.innerText = ''
             }
+            // for (let transaction of update.transactions) {
+            //     const diagnostics = transaction.effects
+            //         .filter(effect => effect.is(setDiagnosticsEffect))
+            //         .flatMap(effect => effect.value)
+            //
+            //     if (diagnostics.length > 0) {
+            //         const diagnostic = diagnostics[0]
+            //         const line = view.state.doc.lineAt(diagnostic.from)
+            //         dom.textContent = `${diagnostic.message}: Line ${line.number}`
+            //     } else {
+            //         dom.innerHTML = '&nbsp;'
+            //     }
+            // }
         }
     }
 }
@@ -136,6 +149,7 @@ function getLanguage(variant) {
     return variant === 'leiden-plus' ? leidenPlus() : leidenTranslation()
 }
 
+
 const language = new Compartment
 
 const languageSelect = document.querySelector('#language-select');
@@ -143,12 +157,47 @@ languageSelect.value = localStorage.getItem('leiden-variant') || 'leiden-plus'
 languageSelect.addEventListener('change', (e) => {
     localStorage.setItem('leiden-variant', e.target.value)
     window.leidenEditorView.dispatch({
-        effects: language.reconfigure(getLanguage(e.target.value))
+        effects: language.reconfigure(getLanguage(e.target.value)),
+        changes: {
+            from: 0,
+            to: window.leidenEditorView.state.doc.length,
+            insert: localStorage.getItem(`doc-${e.target.value}`)
+        }
     })
 })
 
-const doc = localStorage.getItem('doc') || "Test your markup here"
+function convertToXml(leiden) {
+    if (languageSelect.value === 'leiden-plus') {
+        return leidenPlusToXml(leiden)
+    } else {
+        return leidenTransToXml(leiden)
+    }
+}
 
+function convertToLeiden(xml) {
+    if (languageSelect.value === 'leiden-plus') {
+        return xmlToLeidenPlus(xml)
+    } else {
+        return xmlToLeidenTrans(xml)
+    }
+}
+
+const diagnosticsStateField = StateField.define({
+    create: () => [],
+    update: (currentDiagnostics, transaction) => {
+        let diagnostics = currentDiagnostics;
+
+        for (const effect of transaction.effects) {
+            if (effect.is(setDiagnosticsEffect)) {
+                diagnostics = effect.value;
+            }
+        }
+
+        return diagnostics;
+    },
+});
+
+const doc = localStorage.getItem(`doc-${languageSelect.value}`) || "Test your markup here"
 const syncAnnotation = Annotation.define()
 
 // Create the editor view and store it globally for reference
@@ -162,25 +211,31 @@ window.leidenEditorView = new EditorView({
                 return
             }
 
-            if (update.docChanged || update.selectionSet || update.transactions.some(tr => tr.reconfigured)) {
+            const isReconfigured = update.transactions.some(tr => tr.reconfigured)
+
+            if (update.docChanged || update.selectionSet || isReconfigured) {
                 updateDebugInfo(update.view);
             }
-            if (update.docChanged) {
-                localStorage.setItem('doc', update.view.state.doc.toString())
+
+
+            if (update.docChanged || isReconfigured) {
+                localStorage.setItem(`doc-${languageSelect.value}`, update.view.state.doc.toString())
                 window.xmlEditorView.dispatch({changes: {
                         from: 0,
                         to: window.xmlEditorView.state.doc.length,
-                        insert: toXml(update.view.state.doc.toString())
+                        insert: convertToXml(update.view.state.doc.toString())
                     },
                     annotations: syncAnnotation.of(true)
                 })
             }
         }),
+        diagnosticsStateField,
         lintGutter(),
         showPanel.of(statusBarPanel)
     ],
     parent: document.querySelector('.leiden-pane')
 });
+
 
 function findNodeByPath(state, path) {
     let current = syntaxTree(state).topNode;
@@ -218,12 +273,12 @@ const xmlStateField = StateField.define({
                 window.leidenEditorView.dispatch({ changes: {
                         from: 0,
                         to: window.leidenEditorView.state.doc.length,
-                        insert: fromXml(doc)
+                        insert: convertToLeiden(doc)
                     },
                     annotations: syncAnnotation.of(true)
                 })
             } catch (e) {
-                if (e instanceof TransformationError) {
+                if (e instanceof LeidenPlusTransformationError || e instanceof LeidenTransTransformationError) {
                     const node = findNodeByPath(tr.state, e.path)
                     if (!node) {
                         return []
@@ -246,15 +301,13 @@ const xmlStateField = StateField.define({
     }
 })
 
-const transactionExtender = EditorState.transactionExtender.of(tr => {
-
-})
 
 window.xmlEditorView = new EditorView({
-    doc: toXml(doc),
+    doc: convertToXml(doc),
     extensions: [
         basicSetup,
         language.of(xml()),
+        diagnosticsStateField,
         xmlStateField,
         linter(view => {
             const diagnostics = [];

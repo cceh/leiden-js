@@ -11,7 +11,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "vite": "^6.0.3"
+    "vite": "^6.0.7"
   },
   "dependencies": {
     "@codemirror/lang-xml": "^6.1.0",
@@ -22,6 +22,7 @@
     "@leiden-plus/codemirror-lang-leiden-plus": "workspace:*",
     "@leiden-plus/codemirror-lang-leiden-trans": "workspace:*",
     "@leiden-plus/transformer-leiden-plus": "workspace:*",
+    "@leiden-plus/transformer-leiden-trans": "workspace:*",
     "@lezer/common": "^1.2.3",
     "codemirror": "^6.0.1"
   },

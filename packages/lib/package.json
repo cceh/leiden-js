@@ -1,0 +1,35 @@
+{
+  "name": "@leiden-plus/lib",
+  "private": "true",
+  "version": "0.0.0",
+  "type": "module",
+  "exports": {
+    "./linter": {
+      "types": "./dist/linter/index.d.ts",
+      "require": "./dist/linter/index.cjs",
+      "import": "./dist/linter/index.js"
+    },
+    "./transformer": {
+      "types": "./dist/transformer/index.d.ts",
+      "require": "./dist/transformer/index.cjs",
+      "import": "./dist/transformer/index.js"
+    }
+  },
+  "description": "",
+  "scripts": {
+    "build": "tsup 'src/**/index.ts' --format cjs,esm --dts",
+    "watch": "tsup 'src/**/index.ts' --format cjs,esm --dts --watch"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "tsup": "^8.3.5"
+  },
+  "dependencies": {
+    "@codemirror/lint": "^6.8.4",
+    "@codemirror/language": "^6.10.8",
+    "@codemirror/state": "^6.5.0",
+    "@lezer/common": "^1.2.3"
+  }
+}

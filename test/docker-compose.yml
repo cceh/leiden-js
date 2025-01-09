@@ -1,0 +1,11 @@
+services:
+  xsugar:
+    build:
+      context: https://github.com/papyri/xsugar.git
+      dockerfile: ./Dockerfile
+    image: xsugar
+    container_name: leiden-test-xsugar
+    ports:
+      - mode: host
+        published: 9999
+        target: 8080
