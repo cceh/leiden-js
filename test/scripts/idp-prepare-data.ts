@@ -48,11 +48,12 @@ async function xsugarConvert(input: string, direction: 'xml2nonxml' | 'nonxml2xm
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded'
         },
-        body: postData
+        body: postData,
+        signal: AbortSignal.timeout(10000)
     });
 
     if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw new Error(`HTTP error! status: ${response.status}\n`);
     }
 
     const responseData = await response.json();
@@ -117,7 +118,7 @@ async function processXmlFile(
         console.log(`[${currentIndex}/${totalFiles}] Created ${txtFilePath}`);
 
     } catch (error) {
-        console.error(`[${currentIndex}/${totalFiles}] Error processing ${txtFilePath}:`, error.stack);
+        console.error(`[${currentIndex}/${totalFiles}] Error processing ${txtFilePath}:`, error.stack, error.message);
         await fs.writeFile(`${txtFilePath}.fail`, error.message);
     }
 }

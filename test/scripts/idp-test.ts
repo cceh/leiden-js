@@ -44,7 +44,8 @@ export function processDir(
     fromXml: (xml: Element) => string,
     ignoreReasons: IgnoreReasons,
     beforeProcess: BeforeProcessHook,
-    beforeXmlCompare: BeforeXmlCompareHook
+    beforeXmlCompare: BeforeXmlCompareHook,
+    dom: JSDOM
 ): void {
     const ignore = Object.keys(ignoreReasons);
     const path = join(sourceDir, dir);
@@ -89,15 +90,12 @@ export function processDir(
 
             chai.expect(myXmlNorm).to.equal(origXmlNorm, `\n${textContent}\n`);
 
-            const dom = new JSDOM(origXmlNorm, {
-                contentType: 'text/xml',
-                url: 'http://localhost'
-            });
+            dom.window.document.documentElement.innerHTML = origXmlNorm;
 
             global.Element = dom.window.Element;
             global.Node = dom.window.Node;
 
-            const myLeiden = fromXml(dom.window.document.documentElement);
+            const myLeiden = fromXml(dom.window.document.documentElement.firstElementChild);
 
             chai.expect(myLeiden.normalize()).to.equal(textContent.normalize());
         });

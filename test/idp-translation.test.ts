@@ -1,5 +1,6 @@
 import {BeforeProcessHook, processDir, BeforeXmlCompareHook} from "./scripts/idp-test";
 import {toXml, fromXml} from "../packages/transformer-leiden-trans/src";
+import {JSDOM} from "jsdom";
 
 const sourceDir = "test/data/roundtrips";
 const ignoreReasons = {}
@@ -18,8 +19,13 @@ const beforeCompare: BeforeXmlCompareHook = function(filePath, myXml, _origXml) 
     }
 };
 
+const dom = new JSDOM('<root/>', {
+    contentType: 'text/xml',
+    url: 'http://localhost'
+});
+
 const process = (title: string) =>
-    processDir(sourceDir, title, toXml, fromXml, ignoreReasons, beforeProcess, beforeCompare);
+    processDir(sourceDir, title, toXml, fromXml, ignoreReasons, beforeProcess, beforeCompare, dom);
 
 describe("HGV_trans_EpiDoc", function() { process(this.title); })
 
