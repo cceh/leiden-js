@@ -13,6 +13,11 @@
       "types": "./dist/transformer/index.d.ts",
       "require": "./dist/transformer/index.cjs",
       "import": "./dist/transformer/index.js"
+    },
+    "./language": {
+      "types": "./dist/language/index.d.ts",
+      "require": "./dist/language/index.cjs",
+      "import": "./dist/language/index.js"
     }
   },
   "description": "",
@@ -30,6 +35,7 @@
     "@codemirror/lint": "^6.8.4",
     "@codemirror/language": "^6.10.8",
     "@codemirror/state": "^6.5.0",
+    "@codemirror/view": "^6.36.2",
     "@lezer/common": "^1.2.3"
   }
 }

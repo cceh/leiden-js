@@ -1,0 +1,1 @@
+export { highlightActiveNode } from "./highlightActiveNode.js"
