@@ -120,10 +120,10 @@ function statusBarPanel(view) {
         dom,
         update(update) {
             const diagnostics = update.state.field(diagnosticsStateField)
-            if (diagnostics.length > 0) {
-                const diagnostic = diagnostics[0]
-                const line = view.state.doc.lineAt(diagnostic.from)
-                dom.textContent = `${diagnostic.message}: Line ${line.number}`
+            const firstDiagnostic = diagnostics?.[0]
+            if (firstDiagnostic && firstDiagnostic.to <= update.state.doc.length) {
+                const line = view.state.doc.lineAt(firstDiagnostic.from)
+                dom.textContent = `${firstDiagnostic.message}: Line ${line.number}`
             } else {
                 dom.innerText = ''
             }

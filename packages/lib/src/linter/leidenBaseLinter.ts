@@ -1,4 +1,4 @@
-import {Diagnostic, linter, LintSource} from "@codemirror/lint";
+import {Diagnostic, linter } from "@codemirror/lint";
 import {syntaxTree} from "@codemirror/language";
 import {SyntaxNodeRef, TreeCursor} from "@lezer/common";
 

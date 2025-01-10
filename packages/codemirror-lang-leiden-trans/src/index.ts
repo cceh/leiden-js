@@ -1,6 +1,8 @@
-import {LanguageSupport, LRLanguage} from "@codemirror/language";
+import {LanguageSupport, LRLanguage, syntaxHighlighting} from "@codemirror/language";
 import {parser} from "@leiden-plus/parser-leiden-trans";
-import {leidenTranslationHighlighting} from "./highlight.js";
+import {leidenTransLinterExtension} from "@leiden-plus/linter-leiden-trans";
+import {highlightActiveNode} from "@leiden-plus/lib/language";
+import {leidenTranslationHighlighting, leidenTransHighlightStyle} from "./highlight.js";
 
 export const leidenTranslationLanguage = LRLanguage.define({
     parser: parser.configure({
@@ -9,5 +11,10 @@ export const leidenTranslationLanguage = LRLanguage.define({
 })
 
 export function leidenTranslation() {
-    return new LanguageSupport(leidenTranslationLanguage)
+    return [
+        new LanguageSupport(leidenTranslationLanguage),
+        syntaxHighlighting(leidenTransHighlightStyle),
+        leidenTransLinterExtension,
+        highlightActiveNode
+    ]
 }

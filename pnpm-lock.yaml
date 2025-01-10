@@ -11,6 +11,9 @@ importers:
       '@types/chai':
         specifier: ^5.0.1
         version: 5.0.1
+      '@types/chai-xml':
+        specifier: ^0.3.6
+        version: 0.3.6
       '@types/jsdom':
         specifier: ^21.1.7
         version: 21.1.7
@@ -53,6 +56,9 @@ importers:
       '@leiden-plus/lib':
         specifier: workspace:*
         version: link:../lib
+      '@leiden-plus/linter-leiden-plus':
+        specifier: workspace:*
+        version: link:../linter-leiden-plus
       '@leiden-plus/parser-leiden-plus':
         specifier: workspace:*
         version: link:../parser-leiden-plus
@@ -81,6 +87,12 @@ importers:
       '@codemirror/language':
         specifier: ^6.10.7
         version: 6.10.7
+      '@leiden-plus/lib':
+        specifier: workspace:*
+        version: link:../lib
+      '@leiden-plus/linter-leiden-trans':
+        specifier: workspace:*
+        version: link:../linter-leiden-trans
       '@leiden-plus/parser-leiden-trans':
         specifier: workspace:*
         version: link:../parser-leiden-trans
@@ -155,6 +167,9 @@ importers:
       '@codemirror/state':
         specifier: ^6.5.0
         version: 6.5.0
+      '@codemirror/view':
+        specifier: ^6.36.2
+        version: 6.36.2
       '@lezer/common':
         specifier: ^1.2.3
         version: 1.2.3
@@ -162,6 +177,62 @@ importers:
       tsup:
         specifier: ^8.3.5
         version: 8.3.5(postcss@8.4.49)(tsx@4.19.2)(typescript@5.7.2)
+
+  packages/linter-leiden-plus:
+    dependencies:
+      '@codemirror/lint':
+        specifier: ^6.8.4
+        version: 6.8.4
+      '@leiden-plus/lib':
+        specifier: workspace:*
+        version: link:../lib
+      '@leiden-plus/parser-leiden-plus':
+        specifier: workspace:*
+        version: link:../parser-leiden-plus
+      '@lezer/common':
+        specifier: ^1.2.3
+        version: 1.2.3
+    devDependencies:
+      '@rollup/plugin-typescript':
+        specifier: ^12.1.2
+        version: 12.1.2(rollup@4.28.1)(tslib@2.8.1)(typescript@5.7.2)
+      rollup:
+        specifier: ^4.28.1
+        version: 4.28.1
+      rollup-plugin-dts:
+        specifier: ^6.1.1
+        version: 6.1.1(rollup@4.28.1)(typescript@5.7.2)
+      typescript:
+        specifier: ^5.7.2
+        version: 5.7.2
+
+  packages/linter-leiden-trans:
+    dependencies:
+      '@codemirror/lint':
+        specifier: ^6.8.4
+        version: 6.8.4
+      '@leiden-plus/lib':
+        specifier: workspace:*
+        version: link:../lib
+      '@leiden-plus/parser-leiden-trans':
+        specifier: workspace:*
+        version: link:../parser-leiden-trans
+      '@lezer/common':
+        specifier: ^1.2.3
+        version: 1.2.3
+    devDependencies:
+      '@rollup/plugin-typescript':
+        specifier: ^12.1.2
+        version: 12.1.2(rollup@4.28.1)(tslib@2.8.1)(typescript@5.7.2)
+      rollup:
+        specifier: ^4.28.1
+        version: 4.28.1
+      rollup-plugin-dts:
+        specifier: ^6.1.1
+        version: 6.1.1(rollup@4.28.1)(typescript@5.7.2)
+      typescript:
+        specifier: ^5.7.2
+        version: 5.7.2
 
   packages/parser-leiden-plus:
     dependencies:
@@ -299,6 +370,9 @@ packages:
 
   '@codemirror/view@6.36.0':
     resolution: {integrity: sha512-aMePDnkNNKE8dSOo1w689xYa3dijREbRajiRcgjSGc2TWN7MTdE+9pm5fxwdz0C4D9Di1VZomrn2M+xDe7tTVg==}
+
+  '@codemirror/view@6.36.2':
+    resolution: {integrity: sha512-DZ6ONbs8qdJK0fdN7AB82CgI6tYXf4HWk1wSVa0+9bhVznCuuvhQtX8bFBoy3dv8rZSQqUd8GvhVAcielcidrA==}
 
   '@cspotcode/source-map-support@0.8.1':
     resolution: {integrity: sha512-IchNf6dN4tHoMFIn/7OE8LWZ19Y6q/67Bmf6vnGREv8RSbBVb9LPJxEcnwrcwX6ixSvaiGoomAUvu4YSxXrVgw==}
@@ -922,6 +996,9 @@ packages:
 
   '@tsconfig/node16@1.0.4':
     resolution: {integrity: sha512-vxhUy4J8lyeyinH7Azl1pdd43GJhZH/tP2weN8TntQblOY+A0XbT8DJk1/oCPuOOyg/Ja757rG0CgHcWC8OfMA==}
+
+  '@types/chai-xml@0.3.6':
+    resolution: {integrity: sha512-Oz5zQr9EDXtgntHGtCvoSVBdM+ZQMY8IksncLBuTYWYgdpm31v5iGcMCGEoTOiepKkszcbJtvEdcjc77x4cZQg==}
 
   '@types/chai@5.0.1':
     resolution: {integrity: sha512-5T8ajsg3M/FOncpLYW7sdOcD6yf4+722sze/tc4KQV0P8Z2rAr3SAuHCIkYmYpt8VbcQlnz8SxlOlPQYefe4cA==}
@@ -1999,14 +2076,14 @@ snapshots:
     dependencies:
       '@codemirror/language': 6.10.8
       '@codemirror/state': 6.5.0
-      '@codemirror/view': 6.36.0
+      '@codemirror/view': 6.36.2
       '@lezer/common': 1.2.3
 
   '@codemirror/commands@6.7.1':
     dependencies:
       '@codemirror/language': 6.10.8
       '@codemirror/state': 6.5.0
-      '@codemirror/view': 6.36.0
+      '@codemirror/view': 6.36.2
       '@lezer/common': 1.2.3
 
   '@codemirror/lang-xml@6.1.0':
@@ -2014,14 +2091,14 @@ snapshots:
       '@codemirror/autocomplete': 6.18.4
       '@codemirror/language': 6.10.7
       '@codemirror/state': 6.5.0
-      '@codemirror/view': 6.36.0
+      '@codemirror/view': 6.36.2
       '@lezer/common': 1.2.3
       '@lezer/xml': 1.0.5
 
   '@codemirror/language@6.10.7':
     dependencies:
       '@codemirror/state': 6.5.0
-      '@codemirror/view': 6.36.0
+      '@codemirror/view': 6.36.2
       '@lezer/common': 1.2.3
       '@lezer/highlight': 1.2.1
       '@lezer/lr': 1.4.2
@@ -2030,7 +2107,7 @@ snapshots:
   '@codemirror/language@6.10.8':
     dependencies:
       '@codemirror/state': 6.5.0
-      '@codemirror/view': 6.36.0
+      '@codemirror/view': 6.36.2
       '@lezer/common': 1.2.3
       '@lezer/highlight': 1.2.1
       '@lezer/lr': 1.4.2
@@ -2039,13 +2116,13 @@ snapshots:
   '@codemirror/lint@6.8.4':
     dependencies:
       '@codemirror/state': 6.5.0
-      '@codemirror/view': 6.36.0
+      '@codemirror/view': 6.36.2
       crelt: 1.0.6
 
   '@codemirror/search@6.5.8':
     dependencies:
       '@codemirror/state': 6.5.0
-      '@codemirror/view': 6.36.0
+      '@codemirror/view': 6.36.2
       crelt: 1.0.6
 
   '@codemirror/state@6.5.0':
@@ -2053,6 +2130,12 @@ snapshots:
       '@marijn/find-cluster-break': 1.0.2
 
   '@codemirror/view@6.36.0':
+    dependencies:
+      '@codemirror/state': 6.5.0
+      style-mod: 4.1.2
+      w3c-keyname: 2.2.8
+
+  '@codemirror/view@6.36.2':
     dependencies:
       '@codemirror/state': 6.5.0
       style-mod: 4.1.2
@@ -2425,6 +2508,10 @@ snapshots:
 
   '@tsconfig/node16@1.0.4': {}
 
+  '@types/chai-xml@0.3.6':
+    dependencies:
+      '@types/chai': 5.0.1
+
   '@types/chai@5.0.1':
     dependencies:
       '@types/deep-eql': 4.0.2
@@ -2576,7 +2663,7 @@ snapshots:
       '@codemirror/lint': 6.8.4
       '@codemirror/search': 6.5.8
       '@codemirror/state': 6.5.0
-      '@codemirror/view': 6.36.0
+      '@codemirror/view': 6.36.2
 
   color-convert@1.9.3:
     dependencies:

@@ -70,8 +70,6 @@ topLevelInline[@isGroup=topLevel] {
     EditorialCorrection |
     SuppliedOmitted |
     GapOmitted |
-    // diacritical |
-    // deletion |
     InsertionAbove |
     InsertionBelow |
     InsertionMargin |
@@ -97,8 +95,6 @@ topLevelInline[@isGroup=topLevel] {
     Glyph |
     Filler |
     Figure |
-    // omittedLanguage |
-    // untranscribed |
     SuppliedLost |
     Gap |
     Vacat | VacatInvalid |
@@ -384,11 +380,11 @@ AbbrevUnresolved { AbbrevUnresolvedStart Inline+ ~certLow CertLow? AbbrevUnresol
 // disallowed (?).
 
 // Outer abbreviation parentheses
-Abbrev { "(" (Inline)* ~abbr abbrevInner (Inline* abbrevInner)* Inline* ")" }
-AbbrevInvalid[@dynamicPrecedence=-10] { "(" Inline* ")" }
+Abbrev { "(" (Inline)* ~abbr AbbrevInner (Inline* AbbrevInner)* Inline* ")" }
+AbbrevInvalid[@dynamicPrecedence=-10,group=Error] { "(" Inline* ")" }
 
 // One of these is at least required inside the Abbrev expression
-abbrevInner {
+AbbrevInner {
     AbbrevInnerEx |                 // (an) as in (exp(an)sion)
     AbbrevInnerSuppliedLost |       // [an] as in (exp[an]sion)
     AbbrevInnerSuppliedLostEx |     // [an(si)] as in (exp[an(si)]on)
@@ -400,15 +396,15 @@ AbbrevInnerEx { "(" AbbrevInnerExContent { Expansion { (chars | space ~diacrit |
 
 // Variant of the general inline SuppliedLost rule that only allows simple character/whitespace content
 // and no nested inline elements: [an] as in (exp[an]sion)
-AbbrevInnerSuppliedLost[@name=SuppliedLost] { "[" Text { chars } ~lostWord "]" }
+AbbrevInnerSuppliedLost { "[" Text { chars } ~lostWord "]" }
 
 // Variant of the general inline SuppliedLost that allows complex inline content and requires an inner
 // expansion in parentheses: [an(si)] as in (exp[an(si)]on)
-AbbrevInnerSuppliedLostEx[@name=SuppliedLost]  { "[" (Inline* AbbrevInnerEx )+ Inline* ~certLow CertLow? "]" }
+AbbrevInnerSuppliedLostEx[@name=AbbrevInnerSuppliedLost]  { "[" (Inline* AbbrevInnerEx )+ Inline* ~certLow CertLow? "]" }
 
 // Variant of the general inline SuppliedParallel that allows complex inline content and requires an inner
 // expansion in parentheses: |_an(si)_| as in (exp|_an(si)_|on)
-AbbrevInnerSuppliedParallel[@name=SuppliedParallel] { SuppliedParallelStart ( Inline* AbbrevInnerEx )+ Inline* SuppliedParallelEnd }
+AbbrevInnerSuppliedParallel { SuppliedParallelStart ( Inline* AbbrevInnerEx )+ Inline* SuppliedParallelEnd }
 
 
 
@@ -1013,6 +1009,15 @@ MultiInfix[group=Delims]<infix> { infix }
     // Complex delimiters are defined here to assign openBy and closeBy properties
     // that enable bracket matching in the codemirror editor
     
+    "("[group=Delims, closedBy=")"]
+    ")"[group=Delims, openedBy="("]
+
+    "["[group=Delims, closedBy="]"]
+    "]"[group=Delims, openedBy="["]
+
+    "{"[group=Delims, closedBy="}"]
+    "}"[group=Delims, openedBy="{"]
+
     "<D=."[group=Delims, closedBy="=D>"]
     "=D>"[group=Delims, openedBy="<D=.>"]
 

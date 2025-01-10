@@ -1,5 +1,5 @@
 import {findDescendant, leidenLinterExtension} from "@leiden-plus/lib/linter";
-import {NodeProp, SyntaxNodeRef} from "@lezer/common";
+import {NodeProp, SyntaxNodeRef, TreeCursor} from "@lezer/common";
 import {Diagnostic} from "@codemirror/lint";
 import {
     Abbrev,
@@ -40,6 +40,7 @@ import {
     TextSuperscript,
     TextTall
 } from "@leiden-plus/parser-leiden-plus";
+import {NodeLinter, leidenBaseLinter} from "@leiden-plus/lib/linter";
 
 const nodeDescriptions: Record<number, string> = {
     [Abbrev]: "Abbreviation",
@@ -83,7 +84,7 @@ const unclosedExpression = (node: SyntaxNodeRef, errPos: number, close: string):
     });
 }
 
-export const leidenPlusLinter = leidenLinterExtension((doc, node) => {
+export const leidenPlusNodeLinter: NodeLinter = (doc, node) => {
     if (node.type.isError) {
         const parent = node.node.parent;
 
@@ -178,4 +179,8 @@ Abbreviation needs at least one
 
         }
     }
-})
+}
+
+export const leidenPlusLinterExtension = leidenLinterExtension(leidenPlusNodeLinter)
+export const lintLeidenPlus = (doc: string, rootCursor: TreeCursor) =>
+    leidenBaseLinter(doc, rootCursor, leidenPlusNodeLinter)

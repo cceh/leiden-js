@@ -27,6 +27,8 @@
   "dependencies": {
     "@codemirror/language": "^6.10.7",
     "@leiden-plus/parser-leiden-trans": "workspace:*",
+    "@leiden-plus/linter-leiden-trans": "workspace:*",
+    "@leiden-plus/lib": "workspace:*",
     "@lezer/common": "^1.2.3",
     "@lezer/highlight": "^1.2.1"
   },

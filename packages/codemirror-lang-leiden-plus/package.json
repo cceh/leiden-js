@@ -29,6 +29,7 @@
     "@codemirror/lint": "^6.8.4",
     "@codemirror/state": "^6.5.0",
     "@leiden-plus/parser-leiden-plus": "workspace:*",
+    "@leiden-plus/linter-leiden-plus": "workspace:*",
     "@leiden-plus/lib": "workspace:*",
     "@lezer/common": "^1.2.3",
     "@lezer/highlight": "^1.2.1"

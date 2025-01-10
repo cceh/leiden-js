@@ -64,9 +64,9 @@ export function toXml(input: string, root = parser.parse(input)) {
     const selfClosingNodeSet = new WeakSet<SyntaxNode>() // TODO: use lezer NodeWeakMap?
     root.iterate({
         enter: (node: TreeCursor) => {
-            if (node.type.isError) {
+            if (node.type.isError || node.type.is("Error")) {
                 xml.push(`<!-- Error:${text(input, node)} -->`);
-                return;
+                return false;
             }
 
             const name = node.name;
@@ -127,7 +127,8 @@ export function toXml(input: string, root = parser.parse(input)) {
                         }
                     }
 
-                    node.firstChild(); // The node holding the line number
+                    node.firstChild() // Opening delim "("
+                    node.nextSibling(); // Line number node (num)
                     value = text(input, node);
                     xml.push(`<lb n="${value}"`);
 
@@ -353,8 +354,9 @@ export function toXml(input: string, root = parser.parse(input)) {
                     break;
 
                 case 'AbbrevInnerEx':
-                    node.firstChild();
-                    node.firstChild();
+                    node.firstChild(); // opening delim "("
+                    node.nextSibling() // AbbrevInnerExContent
+                    node.firstChild(); // Expansion
                     value = text(input, node);
                     node.nextSibling();
                     if (node.name === 'QuestionMark') {
@@ -573,7 +575,9 @@ export function toXml(input: string, root = parser.parse(input)) {
 
                 case 'SuppliedOmitted':
                 case 'SuppliedLost':
+                case 'AbbrevInnerSuppliedLost':
                 case 'SuppliedParallel':
+                case 'AbbrevInnerSuppliedParallel':
                 case 'SuppliedParallelLost':
                     let reason;
                     switch (name) {
@@ -582,14 +586,16 @@ export function toXml(input: string, root = parser.parse(input)) {
                             break;
                         case "SuppliedLost":
                         case "SuppliedParallelLost":
+                        case "AbbrevInnerSuppliedLost":
                             reason = "lost";
                             break;
                         case "SuppliedParallel":
+                        case "AbbrevInnerSuppliedParallel":
                             reason = "undefined";
                             break;
                     }
 
-                    let evidenceAttr = name === "SuppliedParallel" || name === "SuppliedParallelLost"
+                    let evidenceAttr = name === "SuppliedParallel" || name === "SuppliedParallelLost" || name === "AbbrevInnerSuppliedParallel"
                         ? ' evidence="parallel"' : "";
 
                     // find CertLow?
@@ -664,9 +670,12 @@ export function toXml(input: string, root = parser.parse(input)) {
                     break;
 
                 case 'Diacritical':
-                    node.firstChild();
-                    value = text(input, node);
+                    node.firstChild(); // GapNumber, DiacriticUnclear, DiacritChar or "[" (LostNumber open)
+                    if (node.type.is("Delims")) {
+                        node.nextSibling(); // skip "[" (LostNumber open)
+                    }
 
+                    value = text(input, node);
                     let innerXml = '';
                     switch (node.name) {
                         case "GapNumber":
@@ -682,7 +691,11 @@ export function toXml(input: string, root = parser.parse(input)) {
                             innerXml = text(input, node);
                     }
 
-                    node.nextSibling();
+                    if (node.name === "LostNumber") {
+                        node.nextSibling(); // skip "]" (LostNumber close)
+                    }
+                    node.nextSibling(); // "(" (DiacriticSymbol open)
+                    node.nextSibling(); // DiacriticSymbol
                     let closeHiTags = `</hi>`;
                     xml.push(`<hi rend="${diacriticValue(text(input, node))}">`);
 
@@ -691,7 +704,8 @@ export function toXml(input: string, root = parser.parse(input)) {
                         closeHiTags += `</hi>`
                     }
 
-                    node.lastChild();
+                    node.parent(); // Diacritical
+                    node.lastChild(); // ")" or CertLow
                     xml.push(innerXml, node.name === "CertLow" ? '<certainty match=".." locus="value"/>' : '', closeHiTags);
                     node.parent();
                     return false;
@@ -728,6 +742,7 @@ export function toXml(input: string, root = parser.parse(input)) {
                     node.firstChild(); // Opening Delim
                     node.nextSibling();
                     const rendValue = text(input, node); // GlyphWord
+                    node.nextSibling(); // Closing filler delim ")"
                     node.nextSibling();
 
                     const isUnclear = node.name === 'QuestionMark';
@@ -797,7 +812,8 @@ export function toXml(input: string, root = parser.parse(input)) {
                     node.parent();
                     xml.push(`<gap reason="ellipsis"${quantityOrExtent} unit="${node.type.prop(unitProp)}"${precisionAttr}><desc>non transcribed</desc>`);
 
-                    node.lastChild();
+                    node.lastChild(); // Closing delim ")"
+                    node.prevSibling();
                     if (node.name === 'CertLow') {
                         xml.push('<certainty match=".." locus="name"/>');
                     }
@@ -841,6 +857,10 @@ export function toXml(input: string, root = parser.parse(input)) {
                 case 'QuestionMark':
                     return false;
 
+                case 'AbbrevInner':
+                    // node.firstChild()
+                    break;
+
                 default:
                     if (node.type.is("Delims") || node.type.is("GapNums")) {
                         return false;
@@ -878,6 +898,8 @@ export function toXml(input: string, root = parser.parse(input)) {
                 case 'SuppliedLost':
                 case 'SuppliedParallel':
                 case 'SuppliedParallelLost':
+                case 'AbbrevInnerSuppliedLost':
+                case 'AbbrevInnerSuppliedParallel':
                     if (!selfClosingNodeSet.has(node.node)) {
                         xml.push('</supplied>');
                     }

@@ -15,16 +15,17 @@ Translation {
 }
 
 block {
-    P { "<=" ( block | Inline )* "=>" } |
+    P { "<=" ( block | inline )* "=>" } |
     Div { "<D=." N { divWord } ( "." Subtype { divWord } )? space ( block | Whitespace )+ "=D>" }
 }
 
-Inline { Text | LineNum | LineNumBreak | Erasure | Note | Foreign | Term | App | Gap }
+topLevelRules[@isGroup=topLevel] { LineNum | LineNumBreak | Erasure | Note | Foreign | Term | App | Gap }
+inline { Text | topLevelRules }
 Text { words | Whitespace | "." | ":" | "," | "/" | "[" | "]" | "(" | ")" | "?" | ( ~eq "=") }
 LineNum { "((" Number { number } "))" }
 LineNumBreak { "(((" Number { number } ")))" }
 
-Erasure { "〚"  Content { Inline+ } "〛"}
+Erasure { "〚"  Content { inline+ } "〛"}
 
 // Found erroneous unicode ellipsis … in P.Cair. Zen. 1, 59058 (716.xml) so why not support it :)
 // Wait... Gap is in the XSugar grammar and docs but it doesn't work??
@@ -37,14 +38,14 @@ Gap {
 
 Note { "/*" Content { noteWords+ } "*/" }
 
-Term { "<" Content { Inline+ } ("~" LanguageId)? ~eq "=" Definition { termWords+ } ">"}
+Term { "<" Content { inline+ } ("~" LanguageId)? ~eq "=" Definition { termWords+ } ">"}
 
 ForeignEnd[group=Delims, openedBy="~|"] {
    "|~" LanguageId space
 }
-Foreign { "~|" Content { Inline+ } ForeignEnd }
+Foreign { "~|" Content { inline+ } ForeignEnd }
 
-App { "<:" Content { Inline+ } "|" AppType? ":" AppResp { looseWords+ }? "|" ":>" }
+App { "<:" Content { inline+ } "|" AppType? ":" AppResp { looseWords+ }? "|" ":>" }
 
 @tokens {
 
@@ -53,6 +54,8 @@ App { "<:" Content { Inline+ } "|" AppType? ":" AppResp { looseWords+ }? "|" ":>
     space { " " }
     newLine { "\n" }
     tab { "\t" }
+
+    "="
 
     "<D=."[group=Delims, closedBy="=D>"]
     "=D>"[group=Delims, openedBy="<D=."]

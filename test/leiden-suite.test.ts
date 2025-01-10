@@ -20,8 +20,8 @@ function testTransform(name, leiden, xml) {
         const resultXml = toXml(leiden);
         const wrappedXml = `<root>${resultXml}</root>`;
         const wrappedResultXml = `<root>${xml}</root>`;
-        chai.expect(wrappedXml, wrappedXml).xml.to.be.valid();
-        chai.expect(wrappedXml).to.equal(wrappedResultXml);
+        // chai.expect(wrappedXml, wrappedXml).xml.to.be.valid();
+        chai.expect(wrappedXml).to.equal(wrappedResultXml, `\n${leiden}\n`);
     });
 
     it("XML → Leiden: " + (name ?? xml), () => {

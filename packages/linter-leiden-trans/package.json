@@ -1,5 +1,5 @@
 {
-  "name": "@leiden-plus/linter-leiden-plus",
+  "name": "@leiden-plus/linter-leiden-trans",
   "version": "1.0.0",
   "description": "",
   "scripts": {
@@ -10,6 +10,7 @@
   "main": "dist/index.cjs",
   "module": "dist/index.js",
   "exports": {
+    "types": "./dist/index.d.ts",
     "import": "./dist/index.js",
     "require": "./dist/index.cjs"
   },
@@ -27,7 +28,7 @@
   "dependencies": {
     "@codemirror/lint": "^6.8.4",
     "@leiden-plus/lib": "workspace:*",
-    "@leiden-plus/parser-leiden-plus": "workspace:*",
+    "@leiden-plus/parser-leiden-trans": "workspace:*",
     "@lezer/common": "^1.2.3"
   },
   "publishConfig": {
