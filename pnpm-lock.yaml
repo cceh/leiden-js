@@ -44,6 +44,9 @@ importers:
 
   packages/codemirror-lang-leiden-plus:
     dependencies:
+      '@codemirror/autocomplete':
+        specifier: ^6.18.4
+        version: 6.18.4
       '@codemirror/language':
         specifier: ^6.10.7
         version: 6.10.8
@@ -118,6 +121,9 @@ importers:
 
   packages/dev-app:
     dependencies:
+      '@codemirror/autocomplete':
+        specifier: ^6.18.4
+        version: 6.18.4
       '@codemirror/lang-xml':
         specifier: ^6.1.0
         version: 6.1.0
@@ -133,6 +139,9 @@ importers:
       '@codemirror/view':
         specifier: ^6.36.0
         version: 6.36.2
+      '@floating-ui/dom':
+        specifier: ^1.6.13
+        version: 1.6.13
       '@leiden-plus/codemirror-lang-leiden-plus':
         specifier: workspace:*
         version: link:../codemirror-lang-leiden-plus
@@ -167,12 +176,18 @@ importers:
       '@codemirror/state':
         specifier: ^6.5.0
         version: 6.5.0
+      '@codemirror/theme-one-dark':
+        specifier: ^6.1.2
+        version: 6.1.2
       '@codemirror/view':
         specifier: ^6.36.2
         version: 6.36.2
       '@lezer/common':
         specifier: ^1.2.3
         version: 1.2.3
+      '@lezer/highlight':
+        specifier: ^1.2.1
+        version: 1.2.1
     devDependencies:
       tsup:
         specifier: ^8.3.5
@@ -364,6 +379,9 @@ packages:
 
   '@codemirror/state@6.5.0':
     resolution: {integrity: sha512-MwBHVK60IiIHDcoMet78lxt6iw5gJOGSbNbOIVBHWVXIH4/Nq1+GQgLLGgI1KlnN86WDXsPudVaqYHKBIx7Eyw==}
+
+  '@codemirror/theme-one-dark@6.1.2':
+    resolution: {integrity: sha512-F+sH0X16j/qFLMAfbciKTxVOwkdAS336b7AXTKOZhy8BR3eH/RelsnLgLFINrpST63mmN2OuwUt0W2ndUgYwUA==}
 
   '@codemirror/view@6.36.2':
     resolution: {integrity: sha512-DZ6ONbs8qdJK0fdN7AB82CgI6tYXf4HWk1wSVa0+9bhVznCuuvhQtX8bFBoy3dv8rZSQqUd8GvhVAcielcidrA==}
@@ -665,6 +683,15 @@ packages:
     engines: {node: '>=18'}
     cpu: [x64]
     os: [win32]
+
+  '@floating-ui/core@1.6.9':
+    resolution: {integrity: sha512-uMXCuQ3BItDUbAMhIXw7UPXRfAlOAvZzdK9BWpE60MCn+Svt3aLn9jsPTi/WNGlRUu2uI0v5S7JiIUsbsvh3fw==}
+
+  '@floating-ui/dom@1.6.13':
+    resolution: {integrity: sha512-umqzocjDgNRGTuO7Q8CU32dkHkECqI8ZdMZ5Swb6QAM0t5rnlrN3lGo1hdpscRd3WS8T6DKYK4ephgIH9iRh3w==}
+
+  '@floating-ui/utils@0.2.9':
+    resolution: {integrity: sha512-MDWhGtE+eHw5JW7lq4qhc5yRLS11ERl1c7Z6Xd0a58DozHES6EnNNwUWbMiG4J9Cgj053Bhk8zvlhFYKVhULwg==}
 
   '@isaacs/cliui@8.0.2':
     resolution: {integrity: sha512-O8jcjabXaleOG9DQ0+ARXWZBTfnP4WNAqzuiJK7ll44AmxGKv/J2M4TPjxjY3znBCfvBXFzucm1twdyFybFqEA==}
@@ -1965,6 +1992,13 @@ snapshots:
     dependencies:
       '@marijn/find-cluster-break': 1.0.2
 
+  '@codemirror/theme-one-dark@6.1.2':
+    dependencies:
+      '@codemirror/language': 6.10.8
+      '@codemirror/state': 6.5.0
+      '@codemirror/view': 6.36.2
+      '@lezer/highlight': 1.2.1
+
   '@codemirror/view@6.36.2':
     dependencies:
       '@codemirror/state': 6.5.0
@@ -2121,6 +2155,17 @@ snapshots:
 
   '@esbuild/win32-x64@0.24.2':
     optional: true
+
+  '@floating-ui/core@1.6.9':
+    dependencies:
+      '@floating-ui/utils': 0.2.9
+
+  '@floating-ui/dom@1.6.13':
+    dependencies:
+      '@floating-ui/core': 1.6.9
+      '@floating-ui/utils': 0.2.9
+
+  '@floating-ui/utils@0.2.9': {}
 
   '@isaacs/cliui@8.0.2':
     dependencies:

@@ -47,7 +47,7 @@ divNum { Num { divTypeSubtype} }
 block {
     Ab { "<=" ( block )* "=>" } |
     Div { "<D=." divNum ( divSubtype divRef? )? ( block )+ "=D>" } |
-    Inline
+    inline
 }
 
 textInline {
@@ -56,7 +56,8 @@ textInline {
 
 topLevelInline[@isGroup=topLevel] {
     Foreign |
-    LineBreak | (LineBreakWrapped ~diacrit) |
+    LineBreak | 
+    (LineBreakWrapped ~diacrit) |
     LineBreakSpecial |
     LineBreakSpecialWrapped |
     Number |
@@ -106,7 +107,7 @@ topLevelInline[@isGroup=topLevel] {
 
 }
 
-Inline { textInline | topLevelInline | diacritical | deletion | omittedLanguage | untranscribed }
+inline { textInline | topLevelInline | diacritical | deletion | omittedLanguage | untranscribed }
 
 Text {
     chars | QuestionMark | (space ~diacrit) | newLine  | "." | ("=" ~eq) | "-"  ~lb | "," | ":" | "+" | "'"
@@ -136,11 +137,11 @@ OrthoReg {
 }
 
 OrthoRegReg {
-     Inline+ ~certLow CertLow? LanguageIdSpec { !eq "=" CitationWords }?
+     inline+ ~certLow CertLow? LanguageIdSpec { !eq "=" CitationWords }?
 }
 
 OrthoRegOrig {
-    Inline+ ~certLow CertLow?
+    inline+ ~certLow CertLow?
 }
 
 
@@ -161,9 +162,9 @@ AlternateReading {
     ("<:" AlternateReadingLemma MultiInfix<"||alt||"> AlternateReadingReading ( "|" AlternateReadingReading)+ ":>")
 }
 
-AlternateReadingLemma { Inline+ ~certLow CertLow? }
+AlternateReadingLemma { inline+ ~certLow CertLow? }
 AlternateReadingLemmaEmpty { }
-AlternateReadingReading { Inline+ ~certLow CertLow? }
+AlternateReadingReading { inline+ ~certLow CertLow? }
 AlternateReadingReadingEmpty { }
 
 
@@ -178,9 +179,9 @@ AlternateReadingReadingEmpty { }
 ScribalCorrection {
     "<:" (ScribalCorrectionAdd | ScribalCorrectionAddEmpty) Infix<"|subst|"> ScribalCorrectionDel ":>"
 }
-ScribalCorrectionAdd { Inline+ ~certLow CertLow? }
+ScribalCorrectionAdd { inline+ ~certLow CertLow? }
 ScribalCorrectionAddEmpty { }
-ScribalCorrectionDel { Inline+ ~certLow CertLow? }
+ScribalCorrectionDel { inline+ ~certLow CertLow? }
 
 
 // -- Spelling Correction
@@ -193,8 +194,8 @@ ScribalCorrectionDel { Inline+ ~certLow CertLow? }
 SpellingCorrection {
     "<:" SpellingCorrectionCorr Infix<"|corr|"> SpellingCorrectionSic ":>"
 }
-SpellingCorrectionCorr { Inline+ ~certLow CertLow? }
-SpellingCorrectionSic { Inline+ ~certLow CertLow? }
+SpellingCorrectionCorr { inline+ ~certLow CertLow? }
+SpellingCorrectionSic { inline+ ~certLow CertLow? }
 
 
 // -- Editorial Correction
@@ -216,8 +217,8 @@ EditorialCorrection {
 
 editorialCorrectionCitation[@name="Citation"] { !eq "=" CitationWords }
 
-EditorialCorrectionLemma {  editorialCorrectionCitation | (Inline+ CertLow? editorialCorrectionCitation?) }
-EditorialCorrectionReading { editorialCorrectionCitation | (Inline+ CertLow? editorialCorrectionCitation?) }
+EditorialCorrectionLemma {  editorialCorrectionCitation | (inline+ CertLow? editorialCorrectionCitation?) }
+EditorialCorrectionReading { editorialCorrectionCitation | (inline+ CertLow? editorialCorrectionCitation?) }
 editorialCorrectionLemmaContent { EditorialCorrectionLemma | EditorialCorrectionLemmaEmpty { } }
 editorialCorrectionReadingContent { EditorialCorrectionReading | EditorialCorrectionReadingEmpty { } }
 
@@ -233,7 +234,7 @@ editorialCorrectionReadingContent { EditorialCorrectionReading | EditorialCorre
 // 
 // - ForeignEnd is defined in the @tokens section
 
-Foreign { "~|" Inline+ ForeignEnd space }
+Foreign { "~|" inline+ ForeignEnd space }
 
 
 // Note: XSugar does not recognize line breaks (1. ) or Gaps (.4) inside SuppliedOmitted,
@@ -247,7 +248,7 @@ Foreign { "~|" Inline+ ForeignEnd space }
 //
 // - (?) before closing bracket allowed
 
-SuppliedOmitted { "<"  Inline+ ~certLow CertLow? ">" }
+SuppliedOmitted { "<"  inline+ ~certLow CertLow? ">" }
 
 
 // -- Gap, reason: omitted in original
@@ -273,7 +274,7 @@ GapOmitted { "<" ( "." !dotToken ( GapNumber | GapNumberUnknown )) ~certLow Cert
 SuppliedParallelStart[group=Delims, closedBy=SuppliedParallelEnd] { "|_" }
 SuppliedParallelEnd[group=Delims, openedBy=SuppliedParallelStart] { "_|" }
 SuppliedParallel {
-    SuppliedParallelStart Inline+ ~certLow CertLow? SuppliedParallelEnd
+    SuppliedParallelStart inline+ ~certLow CertLow? SuppliedParallelEnd
 }
 
 
@@ -287,7 +288,7 @@ SuppliedParallel {
 SuppliedParallelLostStart[group=Delims,closedBy=SuppliedParallelLostEnd] { "_" ~underscore "[" }
 SuppliedParallelLostEnd[group=Delims,openedBy=SuppliedParallelLostStart] { "]" "_" }
 SuppliedParallelLost {
-      SuppliedParallelLostStart Inline+ ~certLow CertLow? SuppliedParallelLostEnd
+      SuppliedParallelLostStart inline+ ~certLow CertLow? SuppliedParallelLostEnd
 }
 
 // -- Supplied words by editor, reason: lost in lacuna ("Leiden Square Brackets")
@@ -297,7 +298,7 @@ SuppliedParallelLost {
 //
 // - (?) before closing bracket allowed
 
-SuppliedLost {  "[" (Inline)+ ~lostWord CertLowHighPrecedence? "]" ~suppliedParallel }
+SuppliedLost {  "[" (inline)+ ~lostWord CertLowHighPrecedence? "]" ~suppliedParallel }
 
 
 // -- Lost characters
@@ -323,9 +324,9 @@ Gap { "[" ( ("." !gap (GapNumber | GapNumberRange | GapNumberUnknown)) | !gap Ga
 // TODO: support [[ double brackets ]] for easier typing?
 DeletionSlashStart[group=Delims, closedBy="〛"] { "〚" "/" ~editorialNote }
 deletion[@isGroup=topLevel] {
-    Deletion[rend=erasure]       { "〚"  Content { Inline+ } ~certLow CertLow?  "〛"}  |
-    Deletion[rend=slashes]       { DeletionSlashStart  Content { Inline+ } ~certLow CertLow?  "〛"} |
-    Deletion[rend=cross-strokes] { "〚X"  Content { Inline+ } ~certLow CertLow?  "〛"}
+    Deletion[rend=erasure]       { "〚"  Content { inline+ } ~certLow CertLow?  "〛"}  |
+    Deletion[rend=slashes]       { DeletionSlashStart  Content { inline+ } ~certLow CertLow?  "〛"} |
+    Deletion[rend=cross-strokes] { "〚X"  Content { inline+ } ~certLow CertLow?  "〛"}
 
 }
 
@@ -339,7 +340,7 @@ deletion[@isGroup=topLevel] {
 
 AbbrevUnresolvedStart[group=Delims, closedBy=AbbrevUnresolvedEnd] {"(" "|" }
 AbbrevUnresolvedEnd[group=Delims, openedBy=AbbrevUnresolvedStart] { "|)" }
-AbbrevUnresolved { AbbrevUnresolvedStart Inline+ ~certLow CertLow? AbbrevUnresolvedEnd }
+AbbrevUnresolved { AbbrevUnresolvedStart inline+ ~certLow CertLow? AbbrevUnresolvedEnd }
 
 // -- Abbreviation, expanded ("Leiden Parentheses")
 // https://papyri.info/docs/leiden_plus#leiden-parentheses--
@@ -366,7 +367,7 @@ AbbrevUnresolved { AbbrevUnresolvedStart Inline+ ~certLow CertLow? AbbrevUnresol
 // - As soon as one of the above simple inner elements (expansion, supplied/lost, supplied/omitted)
 //   is present, other nested supplied/lost or supplied/omitted elements CAN have complex inline content
 //   - e.g.  (abc(de)fg[h.5]), (abc[de.5]fg(hi)), (abc[de.5]fg[hi(j)])
-// - Inline content is always allowed outside the nested expansions
+// - inline content is always allowed outside the nested expansions
 //   - e.g. (lost.3lin abc[de]fg {hi} .5)
 //
 // Most of the above rules are undocumented, grammar reference:
@@ -380,8 +381,8 @@ AbbrevUnresolved { AbbrevUnresolvedStart Inline+ ~certLow CertLow? AbbrevUnresol
 // disallowed (?).
 
 // Outer abbreviation parentheses
-Abbrev { "(" (Inline)* ~abbr AbbrevInner (Inline* AbbrevInner)* Inline* ")" }
-AbbrevInvalid[@dynamicPrecedence=-10,group=Error] { "(" Inline* ")" }
+Abbrev { "(" (inline)* ~abbr AbbrevInner (inline* AbbrevInner)* inline* ")" }
+AbbrevInvalid[@dynamicPrecedence=-10,group=Error] { "(" inline* ")" }
 
 // One of these is at least required inside the Abbrev expression
 AbbrevInner {
@@ -400,11 +401,11 @@ AbbrevInnerSuppliedLost { "[" Text { chars } ~lostWord "]" }
 
 // Variant of the general inline SuppliedLost that allows complex inline content and requires an inner
 // expansion in parentheses: [an(si)] as in (exp[an(si)]on)
-AbbrevInnerSuppliedLostEx[@name=AbbrevInnerSuppliedLost]  { "[" (Inline* AbbrevInnerEx )+ Inline* ~certLow CertLow? "]" }
+AbbrevInnerSuppliedLostEx[@name=AbbrevInnerSuppliedLost]  { "[" (inline* AbbrevInnerEx )+ inline* ~certLow CertLow? "]" }
 
 // Variant of the general inline SuppliedParallel that allows complex inline content and requires an inner
 // expansion in parentheses: |_an(si)_| as in (exp|_an(si)_|on)
-AbbrevInnerSuppliedParallel { SuppliedParallelStart ( Inline* AbbrevInnerEx )+ Inline* SuppliedParallelEnd }
+AbbrevInnerSuppliedParallel { SuppliedParallelStart ( inline* AbbrevInnerEx )+ inline* SuppliedParallelEnd }
 
 
 
@@ -416,7 +417,7 @@ AbbrevInnerSuppliedParallel { SuppliedParallelStart ( Inline* AbbrevInnerEx )+ I
 // - (?) before closing bracket allowed
 
 Surplus {
-    "{" Inline+ ~certLow CertLow? "}"
+    "{" inline+ ~certLow CertLow? "}"
 }
 
 
@@ -428,7 +429,7 @@ Surplus {
 // - (?) before closing bracket allowed
 
 InsertionAbove {
-     "\\" Inline+ ~certLow CertLow?  "/" ~editorialNote
+     "\\" inline+ ~certLow CertLow?  "/" ~editorialNote
 }
 
 
@@ -442,7 +443,7 @@ InsertionAbove {
 InsertionBelowStart[group=Delims, closedBy=InsertionBelowEnd] { "/" ~editorialNote "/" }
 InsertionBelowEnd[group=Delims, openedBy=InsertionBelowStart] { !insertionBelow "\\"  "\\" }
 InsertionBelow {
-    InsertionBelowStart Inline+ ~certLow CertLow?  InsertionBelowEnd
+    InsertionBelowStart inline+ ~certLow CertLow?  InsertionBelowEnd
 }
 
 
@@ -460,7 +461,7 @@ InsertionBelow {
 // - (?) before closing bracket allowed
 
 InsertionMargin {
-   InsertionMarginStart  Inline+ ~certLow CertLow? "||"
+   InsertionMarginStart  inline+ ~certLow CertLow? "||"
 }
 
 
@@ -473,7 +474,7 @@ InsertionMargin {
 
 InsertionMarginSlingStart[group=Delims, closedBy="|>"] { "<" "|" }
 InsertionMarginSling {
-    InsertionMarginSlingStart Inline+ ~certLow CertLow? "|>"
+    InsertionMarginSlingStart inline+ ~certLow CertLow? "|>"
 }
 
 
@@ -485,7 +486,7 @@ InsertionMarginSling {
 // - (?) before closing bracket allowed
 
 InsertionMarginUnderline {
-    "<_" Inline+ ~certLow CertLow? "_>"
+    "<_" inline+ ~certLow CertLow? "_>"
 }
 
 
@@ -495,7 +496,7 @@ InsertionMarginUnderline {
 // e.g. ~||text||~tall 
 
 TextTall {
-    "~||" Inline+ "||~tall"
+    "~||" inline+ "||~tall"
 }
 
 
@@ -504,7 +505,7 @@ TextTall {
 //
 // e.g. |^Ἡρωνείνῳ^|
 
-TextSuperscript { "|^" Inline+ "^|" }
+TextSuperscript { "|^" inline+ "^|" }
 TextSubscriptStart[group=Delims, closedBy="|/"] { "\\" "|"  }
 
 
@@ -516,7 +517,7 @@ TextSubscriptStart[group=Delims, closedBy="|/"] { "\\" "|"  }
 // - (?) before closing bracket allowed
 
 TextSubscript {
-    TextSubscriptStart Inline+  ~certLow CertLow? "|/"
+    TextSubscriptStart inline+  ~certLow CertLow? "|/"
 }
 
 
@@ -526,7 +527,7 @@ TextSubscript {
 // e.g. ¯νο.1¯
 
 SupralineSpan[@name=Supraline] {
-    "¯" ~macron Inline+ !supralineEnd "¯"
+    "¯" ~macron inline+ !supralineEnd "¯"
 }
 
 // -- Supralined text, as seqence of characters with combining macrons
@@ -559,7 +560,7 @@ supralineSicItem {
 
 SupralineUnderlineStart[group=Delims, closedBy="_¯"] { "¯" "_" ~underscore }
 SupralineUnderline {
-    SupralineUnderlineStart Inline+ "_¯"
+    SupralineUnderlineStart inline+ "_¯"
 }
 
 
@@ -577,7 +578,7 @@ SupralineUnderline {
 EditorialNoteStart[group=Delims, closedBy=EditorialNoteEnd] { "/" ~editorialNote  "*" }
 EditorialNoteEnd[group=Delims, openedBy=EditorialNoteStart] { "*" "/" }
 EditorialNote {
-   EditorialNoteStart  Inline+ EditorialNoteRef { ( "(ref=" NoteRef "=" NoteRef ")") }? EditorialNoteEnd
+   EditorialNoteStart  inline+ EditorialNoteRef { ( "(ref=" NoteRef "=" NoteRef ")") }? EditorialNoteEnd
 }
 
 
@@ -585,7 +586,7 @@ EditorialNote {
 // https://papyri.info/docs/leiden_plus#quotation
 //
 // e.g. "ὁ γὰ̣ρ̣ ἐ̣λ̣εῶ̣ν̣"
-Quotation { "\"" Inline+ !quot "\"" }
+Quotation { "\"" inline+ !quot "\"" }
 
 
 // -- Clear but incrompehensible letters
@@ -635,16 +636,16 @@ numberSpecialBase<prefix, symbol> {
 
 NumberSpecial {
     // invokes the pattern with no prefix before = for non-tick numbers
-    numberSpecialBase<(), Inline*> |
+    numberSpecialBase<(), inline*> |
     // no ticks for ranges :(
     // <#ιϛ=1-3#>, <#ιϛ=1-?=#>
-    ("<#" Inline* NumberSpecialValue "-" RangePart {  (Number | QuestionMark) } "#>")
+    ("<#" inline* NumberSpecialValue "-" RangePart {  (Number | QuestionMark) } "#>")
 }
 
 tick { space ~tick "'" }
 NumberSpecialTick[@dynamicPrecedence=1] {
     // invokes the pattern with ' before = for tick numbers
-    numberSpecialBase<~tick tick, Inline+> |
+    numberSpecialBase<~tick tick, inline+> |
 
     // workaround for XSugar peculiarity: <# '=3#> is parsed as non-tick number with symbol " '"
     numberSpecialTickNoSymbol { numberSpecialBase<tick, ()> }
@@ -685,33 +686,34 @@ Unclear { multiUnclear | singleUnclear }
 
 DiacritChar { single_char | single_latinChar | single_num | space }
 diacritical[@dynamicPrecedence=1] { // without @dynamicPrecedence this interferes with abbrev expansions e.g. "(abc d(¨) ef(g)) "
-    (LineBreakWrapped | space) Diacritical[@isGroup=topLevel] {
-        // single char with single or double diacritic: " x(^)" or " x(^`)"
-        ( ~diacrit DiacritChar  "("
-           (
-                // one diaeresis and one other
-                (DiacriticSymbol { diacriticDiaeresis | diacriticBase } DiacriticSymbol { diacriticDiaeresis | diacriticBase } ) |
-                // single other
-                DiacriticSymbol { diacriticBase }
-            )
-        ")" ) |
+     Diacritical[@isGroup=topLevel] {
+        (space | LineBreakWrapped) (
+            // single char with single or double diacritic: " x(^)" or " x(^`)"
+            ( ~diacrit DiacritChar  "("
+            (
+                    // one diaeresis and one other
+                    (DiacriticSymbol { diacriticDiaeresis | diacriticBase } DiacriticSymbol { diacriticDiaeresis | diacriticBase } ) |
+                    // single other
+                    DiacriticSymbol { diacriticBase }
+                )
+            ")" ) |
 
-      // single char with diaeresis: a(¨)
-      ( ~diacrit DiacritChar  "(" DiacriticSymbol { diacriticDiaeresis } ")" ~certLow certLow[@dynamicPrecedence=1]{ CertLow }?) |
+        // single char with diaeresis: a(¨)
+        ( ~diacrit DiacritChar  "(" DiacriticSymbol { diacriticDiaeresis } ")" ~certLow certLow[@dynamicPrecedence=1]{ CertLow }?) |
 
-      // single unclear char (with underdot) (diaeresis can have CertLow): " ạ(¨)", " ạ(¨)(?)"
-      ( ~diacrit DiacriticUnclear { singleUnclear } "(" (
-        ( DiacriticSymbol { diacriticBase } ")") |
-        ( DiacriticSymbol { diacriticDiaeresis } ")" ~certLow certLow[@dynamicPrecedence=1]{ CertLow }? )
-      )
-      ) |
+        // single unclear char (with underdot) (diaeresis can have CertLow): " ạ(¨)", " ạ(¨)(?)"
+        ( ~diacrit DiacriticUnclear { singleUnclear } "(" (
+            ( DiacriticSymbol { diacriticBase } ")") |
+            ( DiacriticSymbol { diacriticDiaeresis } ")" ~certLow certLow[@dynamicPrecedence=1]{ CertLow }? )
+        )
+        ) |
 
-      // illegible diacritic: " .4(^)" (only single diacritics allowed per XSugar grammar)
-      ( ~diacrit "." GapNumber "("  DiacriticSymbol { diacriticBase | diacriticDiaeresis } ")" ) |
+        // illegible diacritic: " .4(^)" (only single diacritics allowed per XSugar grammar)
+        ( ~diacrit "." GapNumber "("  DiacriticSymbol { diacriticBase | diacriticDiaeresis } ")" ) |
 
-      // lost diacritic: " [.5](^)" (only single diacritics allowed per XSugar grammar)
-      ( ~diacrit "[" LostNumber { "." GapNumber } ~lostWord "]" "(" DiacriticSymbol { diacriticBase | diacriticDiaeresis } ")" )
-  }
+        // lost diacritic: " [.5](^)" (only single diacritics allowed per XSugar grammar)
+        ( ~diacrit "[" LostNumber { "." GapNumber } ~lostWord "]" "(" DiacriticSymbol { diacriticBase | diacriticDiaeresis } ")" )
+    )}
 }
 
 // -- Glyph (non-alphabetical characters or symbols)
@@ -831,7 +833,7 @@ LineBreak { lineNum<"."> space }
 // e.g. "1.- ",  "5/6.- ", "2/3,ms.- ", "396/397,minf.- ", "18,ms7.- ", "3,4.- "
 // (space always required after the dash) 
 
-LineBreakWrapped{ lineNumWrapped space }
+LineBreakWrapped { lineNum<".-">  space }
 
 // A line number consists of 
 // - a leading number
@@ -851,7 +853,6 @@ lineNum[@dynamicPrecedence=1]<suffix> {
         }*
     } suffix
 }
-lineNumWrapped {  lineNum<".-"> }
 
 
 // PREFIXED MISSING CHAR/LINE PATTERNS 
@@ -1008,7 +1009,7 @@ MultiInfix[group=Delims]<infix> { infix }
 
     // Complex delimiters are defined here to assign openBy and closeBy properties
     // that enable bracket matching in the codemirror editor
-    
+
     "("[group=Delims, closedBy=")"]
     ")"[group=Delims, openedBy="("]
 

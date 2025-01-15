@@ -10,6 +10,7 @@ import {fromXml as xmlToLeidenTrans, toXml as leidenTransToXml, TransformationEr
 
 import {xml} from "@codemirror/lang-xml";
 import {linter, lintGutter, setDiagnosticsEffect} from "@codemirror/lint";
+import {toolbarPanel} from "./toolbar";
 
 const syntaxTreeNodeMap = new NodeWeakMap();
 
@@ -127,19 +128,6 @@ function statusBarPanel(view) {
             } else {
                 dom.innerText = ''
             }
-            // for (let transaction of update.transactions) {
-            //     const diagnostics = transaction.effects
-            //         .filter(effect => effect.is(setDiagnosticsEffect))
-            //         .flatMap(effect => effect.value)
-            //
-            //     if (diagnostics.length > 0) {
-            //         const diagnostic = diagnostics[0]
-            //         const line = view.state.doc.lineAt(diagnostic.from)
-            //         dom.textContent = `${diagnostic.message}: Line ${line.number}`
-            //     } else {
-            //         dom.innerHTML = '&nbsp;'
-            //     }
-            // }
         }
     }
 }
@@ -197,6 +185,8 @@ const diagnosticsStateField = StateField.define({
     },
 });
 
+
+
 const doc = localStorage.getItem(`doc-${languageSelect.value}`) || "Test your markup here"
 const syncAnnotation = Annotation.define()
 
@@ -231,7 +221,8 @@ window.leidenEditorView = new EditorView({
         }),
         diagnosticsStateField,
         lintGutter(),
-        showPanel.of(statusBarPanel)
+        showPanel.of(statusBarPanel),
+        showPanel.of(toolbarPanel)
     ],
     parent: document.querySelector('.leiden-pane')
 });

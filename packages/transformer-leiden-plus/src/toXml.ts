@@ -78,7 +78,7 @@ export function toXml(input: string, root = parser.parse(input)) {
                 "Vacat", "LineBreak", "LostLines", "LineBreakWrapped",
                 "Vestige", "Illegible", "Gap"
             ].includes(name)) {
-                if (node.matchContext(['EditorialNote', 'Inline'])) {
+                if (node.matchContext(['EditorialNote'])) {
                     let currentNode = node.node
                     while (currentNode.parent && currentNode.name !== "EditorialNote") {
                         currentNode = currentNode.parent
@@ -90,7 +90,6 @@ export function toXml(input: string, root = parser.parse(input)) {
                     }
                 }
             }
-
 
             switch (name) {
                 case 'Document':
@@ -116,17 +115,6 @@ export function toXml(input: string, root = parser.parse(input)) {
                 case 'LineBreakWrapped':
                 case 'LineBreakSpecial':
                 case 'LineBreakSpecialWrapped': {
-                    if (node.nextSibling()) {
-                        const nextNodeName = node.name;
-                        node.prevSibling();
-                        // re-create XSugar behavior
-                        if (nextNodeName === "Diacritical") {
-                            const lbText = text(input, node)
-                            xml.push(lbText.substring(0, lbText.length - 1));
-                            return false;
-                        }
-                    }
-
                     node.firstChild() // Opening delim "("
                     node.nextSibling(); // Line number node (num)
                     value = text(input, node);
@@ -191,6 +179,7 @@ export function toXml(input: string, root = parser.parse(input)) {
                         node.parent();
                         return false;
                     }
+                    node.prevSibling();
 
                     xml.push("<ab>")
                     break;
@@ -377,7 +366,7 @@ export function toXml(input: string, root = parser.parse(input)) {
                     cursor.lastChild();                                    // Closing delim "#>"
                     cursor.prevSibling();
                     let certLow = cursor.name === "CertLow";
-                    cursor.parent();
+                    cursor.parent()
 
                     cursor.firstChild()                                     // opening delim "<#"
                     cursor.nextSibling()                                    // Number symbol inline content
@@ -385,7 +374,11 @@ export function toXml(input: string, root = parser.parse(input)) {
                     let hasInline = false;
 
                     // Skip inline children
-                    while (cursor?.name === "Inline") {
+                    while (
+                        cursor.name !== "NumberSpecialValue" &&
+                        cursor.name !== "FracNoValue" &&
+                        !cursor.type.is("Delims")
+                        ) {
                         hasInline = true;
                         if (!cursor.nextSibling()) break;
                     }
@@ -462,9 +455,9 @@ export function toXml(input: string, root = parser.parse(input)) {
                 case 'AlternateReadingLemma':
                     if (!node.firstChild()) {
                         xml.push('<lem/>');
-                        selfClosingNodeSet.add(node.node);
                         return false;
                     } else {
+                        node.parent()
                         xml.push('<lem>');
                     }
                     break;
@@ -474,9 +467,9 @@ export function toXml(input: string, root = parser.parse(input)) {
                 case 'AlternateReadingReading':
                     if (node.firstChild()) {
                         xml.push('<rdg>');
+                        node.parent();
                     } else {
                         xml.push('<rdg/>');
-                        selfClosingNodeSet.add(node.node);
                         return false;
                     }
                     break;
@@ -491,9 +484,10 @@ export function toXml(input: string, root = parser.parse(input)) {
                     xml.push('<add place="inline"');
                     if (node.firstChild()) {
                         xml.push('>')
+                        node.parent()
                     } else {
-                        selfClosingNodeSet.add(node.node);
                         xml.push('/>')
+                        node.parent();
                         return false;
                     }
                     break;
@@ -549,7 +543,7 @@ export function toXml(input: string, root = parser.parse(input)) {
                     const isEmpty = !node.firstChild();
                     if (isEmpty) {
                         xml.push('<rdg/>');
-                        selfClosingNodeSet.add(node.node);
+                        node.parent();
                         return false;
                     }
 
@@ -671,6 +665,14 @@ export function toXml(input: string, root = parser.parse(input)) {
 
                 case 'Diacritical':
                     node.firstChild(); // GapNumber, DiacriticUnclear, DiacritChar or "[" (LostNumber open)
+
+                    // Xsugar compatibility workaround
+                    if (node.name === "LineBreakWrapped") {
+                        const lbText = text(input, node);
+                        xml.push(lbText.substring(0, lbText.length - 1));
+                        node.nextSibling();
+                    }
+
                     if (node.type.is("Delims")) {
                         node.nextSibling(); // skip "[" (LostNumber open)
                     }
