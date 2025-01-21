@@ -506,7 +506,6 @@ TextTall {
 // e.g. |^Ἡρωνείνῳ^|
 
 TextSuperscript { "|^" inline+ "^|" }
-TextSubscriptStart[group=Delims, closedBy="|/"] { "\\" "|"  }
 
 
 // -- Subscripted text
@@ -516,6 +515,7 @@ TextSubscriptStart[group=Delims, closedBy="|/"] { "\\" "|"  }
 //
 // - (?) before closing bracket allowed
 
+TextSubscriptStart[group=Delims, closedBy="|/"] { "\\" "|"  }
 TextSubscript {
     TextSubscriptStart inline+  ~certLow CertLow? "|/"
 }
@@ -1046,7 +1046,7 @@ MultiInfix[group=Delims]<infix> { infix }
     "/"[group=Delims, openedBy="\\"]
 
     "||"[group=Delims,openedBy=InsertionMarginStart]
-    InsertionMarginStart[closedBy="||"] {
+    InsertionMarginStart[group=Delims, closedBy="||"] {
         "||" ("bottom" | "left" | "right" | "top" | "margin" | "interlin") ":"
     }
 

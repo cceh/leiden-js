@@ -1,6 +1,10 @@
 import {computePosition, flip, offset, shift, size} from "@floating-ui/dom";
 import {snippets} from "@leiden-plus/codemirror-lang-leiden-plus";
 import {snippet} from "@codemirror/autocomplete";
+import {html, nothing, render} from "lit-html";
+import {createRef, ref} from "lit-html/directives/ref.js";
+import {Directive, directive} from "lit-html/directive.js";
+import {syntaxTree} from "@codemirror/language";
 
 const css = `
     :root {
@@ -88,9 +92,20 @@ const css = `
         border-end-start-radius: 0;
         border-start-start-radius: 0;
     }
+    
+    .menu-container {
+        position: relative;
+        z-index: 1000;
+        pointer-events: none;
+    }
+    
+    @keyframes menu-fade-in {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
 
     .menu {
-      position: absolute;
+      position: fixed;
       background: var(--menu-bg);
       border: 1px solid var(--menu-border);
       border-radius: 4px;
@@ -100,18 +115,16 @@ const css = `
       min-width: 160px;
       margin-top: -6px;
       margin-left: -6px;
-      visibility: hidden;
+      display: none;
       pointer-events: none;
-      opacity: 0;
-      transition: opacity 100ms ease-out, visibility 0s 100ms;
       overflow: auto;
+      opacity: 0;
     }
 
     .menu[data-show] {
-      visibility: visible;
+      display: block;
       pointer-events: auto;
-      opacity: 1;
-      transition: opacity 100ms ease-out;
+      animation: menu-fade-in 0.1s ease-out forwards;
     }
 
     .menu-item {
@@ -144,220 +157,437 @@ const css = `
 `;
 
 
-class Menu {
-    constructor(triggerEl, menuEl, parentMenu = null) {
-        this.triggerEl = triggerEl;
-        this.menuEl = menuEl;
-        this.parentMenu = parentMenu;
-        this.items = [];
-        this.submenus = new Map();
-        this.closeTimeout = null;
-
-        this.setupEvents();
-    }
-
-    get isOpen() {
-        return this.triggerEl.getAttribute('aria-expanded') === 'true';
-    }
-
-    set isOpen(value) {
-        if (value) {
-            this.menuEl.setAttribute('data-show', '');
-            this.triggerEl.setAttribute('aria-expanded', 'true');
-        } else {
-            this.menuEl.removeAttribute('data-show');
-            this.triggerEl.setAttribute('aria-expanded', 'false');
-        }
-    }
-
-    setupEvents() {
-        // Click and hover handling
-        if (this.parentMenu) {
-            // For submenus
-            let isTouch = false;
-
-            this.triggerEl.addEventListener('touchstart', () => {
-                isTouch = true;
-            }, { passive: true });
-
-            this.triggerEl.addEventListener('click', (e) => {
-                if (isTouch) {
-                    e.preventDefault();
-                    this.toggle();
-                }
-            });
-
-            // Only add hover for non-touch
-            this.triggerEl.addEventListener('mouseenter', (e) => {
-                if (!isTouch) {
-                    this.open();
-                }
-            });
-
-            this.menuEl.addEventListener('mouseenter', () => {
-                clearTimeout(this.closeTimeout);
-            });
-
-            this.triggerEl.addEventListener('mouseleave', (e) => {
-                if (!isTouch && !this.menuEl.contains(e.relatedTarget)) {
-                    this.closeTimeout = setTimeout(() => this.close(), 100);
-                }
-            });
-
-            this.menuEl.addEventListener('mouseleave', (e) => {
-                if (!isTouch && !this.triggerEl.contains(e.relatedTarget) && !this.menuEl.contains(e.relatedTarget)) {
-                    this.closeTimeout = setTimeout(() => this.close(), 100);
-                }
-            });
-        } else {
-            // For root menu
-            this.triggerEl.addEventListener('click', () => this.toggle());
-        }
-
-        // Keyboard navigation
-        this.triggerEl.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                this.open();
-                this.items[0]?.focus();
-            } else if (e.key === 'ArrowDown') {
-                this.items[0]?.focus();
-            } else if (e.key === 'ArrowUp') {
-                this.items[this.items.length - 1]?.focus();
-            }
-        });
-
-        this.menuEl.addEventListener('keydown', (e) => {
-            const target = e.target;
-            const currentIndex = this.items.indexOf(target);
-
-            if (!document.activeElement?.contains(target)) {
-                return
-            }
-
-            switch(e.key) {
-                case 'ArrowDown':
-                    e.preventDefault();
-                    this.items[(currentIndex + 1) % this.items.length]?.focus();
-                    break;
-                case 'ArrowUp':
-                    e.preventDefault();
-                    const prevIndex = currentIndex - 1 < 0 ? this.items.length - 1 : currentIndex - 1;
-                    this.items[prevIndex]?.focus();
-                    break;
-                case 'Escape':
-                    e.preventDefault();
-                    this.close();
-                    this.triggerEl.focus();
-                    break;
-                case 'ArrowRight':
-                    if (target.getAttribute('aria-haspopup') === 'true') {
-                        e.preventDefault();
-                        const submenu = this.submenus.get(target);
-                        if (submenu) {
-                            submenu.open();
-                            submenu.items[0]?.focus();
-                        }
-                    }
-                    break;
-                case 'ArrowLeft':
-                    if (this.parentMenu) {
-                        e.preventDefault();
-                        this.close();
-                        this.triggerThatOpenedThis.focus();
-                    }
-                    break;
-            }
-        });
-
-        // Close when clicking outside
-        document.addEventListener('click', (e) => {
-            if (!this.menuEl.contains(e.target) && !this.triggerEl.contains(e.target)) {
-                this.close();
-            }
-        });
-    }
-
-    async updatePosition() {
-        if (!this.isOpen) return;
-
-        const placement = this.parentMenu ? 'right-start' : 'bottom-start';
-        const fallbackPlacements = this.parentMenu
-            ? ['left-start', 'top-start', 'bottom-start']
-            : ['top-start', 'right-start', 'left-start'];
-
-        const { x, y } = await computePosition(this.triggerEl, this.menuEl, {
-            placement,
-            middleware: [
-                offset(4),
-                flip({
-                    fallbackPlacements,
-                }),
-                shift({ padding: 8 }),
-                size({
-                    padding: 8,
-                    apply({availableWidth, availableHeight, elements}) {
-                        console.log({ availableWidth, availableHeight, elements})
-                        // Change styles, e.g.
-                        Object.assign(elements.floating.style, {
-                            // maxWidth: `${Math.max(0, availableWidth)}px`,
-                            maxHeight: `${Math.max(0, availableHeight)}px`,
-                        });
-                    },
-                }),
-            ],
-        });
-
-        Object.assign(this.menuEl.style, {
-            left: `${x}px`,
-            top: `${y}px`,
-        });
-
-
-
-        this.submenus.forEach(submenu => submenu.updatePosition());
-    }
-
-    addSubmenu(triggerEl, submenuEl) {
-        const submenu = new Menu(triggerEl, submenuEl, this);
-        submenu.triggerThatOpenedThis = triggerEl;
-        this.submenus.set(triggerEl, submenu);
-        return submenu;
-    }
-
-    toggle() {
-        this.isOpen ? this.close() : this.open();
-    }
-
-    open() {
-        if (this.isOpen) return;
-
-        this.isOpen = true;
-        this.updatePosition();
-
-        // Close other menus at the same level
-        if (this.parentMenu) {
-            for (const [trigger, submenu] of this.parentMenu.submenus) {
-                if (submenu !== this) {
-                    submenu.close();
-                }
-            }
-        }
-    }
-
-    close() {
-        if (!this.isOpen) return;
-
-        this.isOpen = false;
-
-        // Close all submenus
-        for (const submenu of this.submenus.values()) {
-            submenu.close();
-        }
-    }
+const applySnippet = (view, snippetDef) => {
+    const { to, from } = view.state.selection.ranges[0]
+    snippet(snippetDef.template)(view, null, from, to);
 }
 
+const toolbarConfig = (state) => {
+    const snippetItem = ([id, snippetDef]) => ({
+        id,
+        label: `${snippetDef.completion.label}${snippetDef.completion.detail ? ", " + snippetDef.completion.detail : ""}`,
+        action: (view) => applySnippet(view, snippetDef),
+        active: inlineNodeActive()
+    })
 
+    const hasParent = (node, parent) => {
+        while (node) {
+            if (node.node.type.name === parent) {
+                return true;
+            }
+            node = node.next
+        }
+    }
+
+    const atomicRules = [
+        "NumberSpecialValue", "FracPart", "RangePart", "CertLow",
+        "Vestige", "Diacritical", "Glyph", "Filler", "Handshift",
+        "Figure", "OmittedLanguage", "Untranscribed", "LineBreakSpecial",
+        "LineBreakSpecialWrapped", "LineBreak", "LineBreakWrapped",
+        "Illegible", "IllegibleInvalid", "VestigeInvalid", "LostLines",
+        "LostLinesInvalid", "Vacat", "Citation", "EditorialNoteRef",
+        "Gap", "GapOmitted"
+    ]
+
+    const inlineNodeActive = (() => {
+        const tree = syntaxTree(state)
+        let node = tree.resolveStack(state.selection.ranges[0].from)
+        if (node.node.type.is("Delims")) {
+            return false;
+        }
+
+        if (hasParent(node, "AbbrevInner")) {
+            return false;
+        }
+
+        if (atomicRules.some(name => hasParent(node, name))) {
+            return false;
+        }
+
+        return true
+    })
+
+    return [
+        {
+            id: "markup",
+            label: "Markup",
+            items: [{
+                id: "abbreviations",
+                label: "Abbreviations",
+                items: (() => {
+                    const {abbreviation, abbreviationUnresolved} = snippets;
+                    return Object.entries({abbreviation, abbreviationUnresolved}).map(snippetEntry => ({
+                        ...snippetItem(snippetEntry),
+                        active: inlineNodeActive()
+                    }))
+                })(),
+            }, {
+                id: "apparatus",
+                label: "Apparatus",
+                items: (() => {
+                    const {modernRegularization, modernCorrection, scribalCorrection, alternateReading, editorialCorrection} = snippets;
+                    return Object.entries({modernRegularization, modernCorrection, scribalCorrection, alternateReading, editorialCorrection}).map(snippetEntry => ({
+                        ...snippetItem(snippetEntry),
+                        active: inlineNodeActive()
+                    }))
+                })(),
+            }, {
+                id: "deletions",
+                label: "Deletion/cancellation",
+                items: (() => {
+                    const {deletion, deletionSlashes, deletionCrossStrokes} = snippets;
+                    return Object.entries({deletionSlashes, deletionCrossStrokes, deletion}).map(snippetEntry => ({
+                        ...snippetItem(snippetEntry),
+                        active: inlineNodeActive()
+                    }))
+                })(),
+            }, {
+                id: "doc-divisions",
+                label: "Document divisions",
+                items: (() => {
+                    const {divisionRecto, divisionVerso, divisionColumn, divisionFolio, divisionFragment, divisionOther, divisionOtherRef} = snippets;
+                    return Object.entries({divisionRecto, divisionVerso, divisionColumn, divisionFolio, divisionFragment, divisionOther, divisionOtherRef}).map(snippetEntry => ({
+                        ...snippetItem(snippetEntry),
+                        active: inlineNodeActive() // TODO
+                    }))
+                })()
+            }, {
+                id: "foreign-lang",
+                label: "Foreign language",
+                items: (() => {
+                    const {foreignLatin, foreignGreek, foreign} = snippets;
+                    return Object.entries({foreignLatin, foreignGreek, foreign}).map((snippetEntry) => ({
+                        ...snippetItem(snippetEntry),
+                        active: inlineNodeActive()
+                    }))
+                })(),
+            }, {
+                id: "gaps",
+                label: "Gaps (missing/illegible)",
+                items: [{
+                    id: "lacunae",
+                    label: "Lacuna",
+                    items: (() => {
+                        const {gapLostChars, gapLostCharsCa, gapLostCharsRange, gapLostCharsUnknown, gapLostLines, gapLostLinesRange, gapLostLinesCa, gapLostLinesUnknown} = snippets;
+                        return Object.entries({
+                            gapLostChars,
+                            gapLostCharsCa,
+                            gapLostCharsRange,
+                            gapLostCharsUnknown,
+                            gapLostLines,
+                            gapLostLinesRange,
+                            gapLostLinesCa,
+                            gapLostLinesUnknown
+                        }).map((snippetEntry) => ({
+                            ...snippetItem(snippetEntry),
+                            active: inlineNodeActive()
+                        }))
+                    })()
+                }, {
+                    id: "illegibles",
+                    label: "Illegible",
+                    items: (() => {
+                        const {illegibleChars, illegibleCharsRange, illegibleCharsCa, illegibleCharsUnknown, illegibleLines, illegibleLinesRange, illegibleLinesCa} = snippets;
+                        return Object.entries({
+                            illegibleChars, illegibleCharsRange, illegibleCharsCa, illegibleCharsUnknown, illegibleLines, illegibleLinesRange, illegibleLinesCa
+                        }).map((snippetEntry) => ({
+                            ...snippetItem(snippetEntry),
+                            active: inlineNodeActive()
+                        }))
+                    })()
+                }, {
+                    id: "vacats",
+                    label: "Vacat",
+                    items: (() => {
+                        const {vacatChars, vacatCharsRange, vacatCharsCa, vacatCharsUnknown, vacatLines, vacatLinesRange, vacatLinesCa, vacatLinesUnknown} = snippets;
+                        return Object.entries({
+                            vacatChars, vacatCharsRange, vacatCharsCa, vacatCharsUnknown, vacatLines, vacatLinesRange, vacatLinesCa, vacatLinesUnknown
+                        }).map((snippetEntry) => ({
+                            ...snippetItem(snippetEntry),
+                            active: inlineNodeActive()
+                        }))
+                    })()
+                }, {
+                    id: "vestiges",
+                    label: "Vestiges",
+                    items: (() => {
+                        const {vestigChars, vestigCharsRange, vestigCharsCa, vestigLines, vestigLinesRange, vestigLinesCa, vestigLinesUnknown} = snippets;
+                        return Object.entries({
+                            vestigChars, vestigCharsRange, vestigCharsCa, vestigLines, vestigLinesRange, vestigLinesCa, vestigLinesUnknown
+                        }).map((snippetEntry) => ({
+                            ...snippetItem(snippetEntry),
+                            active: inlineNodeActive()
+                        }))
+                    })()
+                }, {
+                    id: "omissions",
+                    label: "Omissions",
+                    items: (() => {
+                        const {gapOmittedChars, gapOmittedCharsUnknown} = snippets;
+                        return Object.entries({
+                            gapOmittedChars, gapOmittedCharsUnknown
+                        }).map((snippetEntry) => ({
+                            ...snippetItem(snippetEntry),
+                            active: inlineNodeActive()
+                        }))
+                    })()
+                }],
+            }, {
+                id: "non-transcribed",
+                label: "Not transcribed",
+                items: [{
+                    id: "not-transcribed-language",
+                    label: "Language not transcribed",
+                    items: (() => {
+                        const {nonTranscribedLanguageChars, nonTranscribedLanguageCharsUnknown, nonTranscribedLanguageLines, nonTranscribedLanguageLinesCa, nonTranscribedLanguageLinesUnknown} = snippets;
+                        return Object.entries({nonTranscribedLanguageChars, nonTranscribedLanguageCharsUnknown, nonTranscribedLanguageLines, nonTranscribedLanguageLinesCa, nonTranscribedLanguageLinesUnknown}).map((snippetEntry) => ({
+                            ...snippetItem(snippetEntry),
+                            active: inlineNodeActive(),
+                        }))
+                    })()
+                }, {
+                    id: "untranscribed-chars",
+                    label: "Untranscribed characters",
+                    items: (() => {
+                        const {untranscribedChars, untranscribedCharsRange, untranscribedCharsCa, untranscribedCharsUnknown} = snippets;
+                        return Object.entries({untranscribedChars, untranscribedCharsRange, untranscribedCharsCa, untranscribedCharsUnknown}).map((snippetEntry) => ({
+                            ...snippetItem(snippetEntry),
+                            active: inlineNodeActive(),
+                        }))
+                    })()
+                }, {
+                    "id": "untranscribed-lines",
+                    label: "Untranscribed lines",
+                    items: (() => {
+                        const {untranscribedLines, untranscribedLinesRange, untranscribedLinesCa, untranscribedLinesUnknown} = snippets;
+                        return Object.entries({untranscribedLines, untranscribedLinesRange, untranscribedLinesCa, untranscribedLinesUnknown}).map((snippetEntry) => ({
+                            ...snippetItem(snippetEntry),
+                            active: inlineNodeActive(),
+                        }))
+                    })()
+                }, {
+                    "id": "untranscribed-columns",
+                    label: "Untranscribed columns",
+                    items: (() => {
+                        const {untranscribedColumns, untranscribedColumnsRange, untranscribedColumnsCa, untranscribedColumnsUnknown} = snippets;
+                        return Object.entries({untranscribedColumns, untranscribedColumnsRange, untranscribedColumnsCa, untranscribedColumnsUnknown}).map((snippetEntry) => ({
+                            ...snippetItem(snippetEntry),
+                            active: inlineNodeActive(),
+                        }))
+                    })()
+                }]
+            }, {
+                id: "insertions",
+                label: "Insertion",
+                items: (() => {
+                    const {insertionAbove, insertionBelow, insertionMarginLeft, insertionMarginRight, insertionMarginTop, insertionMarginBottom, insertionMargin, insertionMarginSling, insertionMarginUnderline, insertionInterlinear} = snippets;
+                    return Object.entries({insertionAbove, insertionBelow, insertionMarginLeft, insertionMarginRight, insertionMarginTop, insertionMarginBottom, insertionMargin, insertionMarginSling, insertionMarginUnderline, insertionInterlinear}).map(snippetEntry => ({
+                        ...snippetItem(snippetEntry),
+                        active: inlineNodeActive()
+                    }))
+                })()
+            }, {
+                id: "line-numbers",
+                label: "Line numbers",
+                items: [...(() => {
+                    const {lineNumber, lineNumberBreak, lineNumberUnknown} = snippets;
+                    return Object.entries({lineNumber, lineNumberBreak}).map(snippetEntry => ({
+                        ...snippetItem(snippetEntry),
+                        active: inlineNodeActive()
+                    }))
+                })(), {
+                    id: "line-numbers-margin",
+                    label: "Line written in margin",
+                    items: (() => {
+                        const {lineNumberMarginLeft, lineNumberMarginRight, lineNumberMarginUpper, lineNumberMarginLower, lineNumberMarginPerpendicularLeft, lineNumberMarginPerpendicularRight, lineNumberMarginInverseLower} = snippets;
+                        return Object.entries({lineNumberMarginLeft, lineNumberMarginRight, lineNumberMarginUpper, lineNumberMarginLower, lineNumberMarginPerpendicularLeft, lineNumberMarginPerpendicularRight, lineNumberMarginInverseLower}).map(snippetEntry => ({
+                            ...snippetItem(snippetEntry),
+                            active: inlineNodeActive()
+                        }))
+                    })()
+                }, {
+                    id: "line-numbers-relative",
+                    label: "Lines relative to the main text",
+                    items: (() => {
+                        const {lineNumberPerpendicular, lineNumberInverse, lineNumberIndented, lineNumberOutdented} = snippets;
+                        return Object.entries({lineNumberPerpendicular, lineNumberInverse, lineNumberIndented, lineNumberOutdented}).map(snippetEntry => ({
+                            ...snippetItem(snippetEntry),
+                            active: inlineNodeActive()
+                        }))
+                    })()
+                }],
+            }, {
+                id: "numbers",
+                label: "Numbers",
+                items: (() => {
+                    const {
+                        number,
+                        numberFraction,
+                        numberFractionUnknown,
+                        numberRange,
+                        numberRangeUnknownEnd,
+                        numberTick,
+                        numberTickFraction,
+                        numberTickFractionUnknown,
+                    } = snippets;
+                    return Object.entries({
+                        number,
+                        numberFraction,
+                        numberFractionUnknown,
+                        numberRange,
+                        numberRangeUnknownEnd,
+                        numberTick,
+                        numberTickFraction,
+                        numberTickFractionUnknown
+                    }).map(snippetEntry => ({
+                        ...snippetItem(snippetEntry),
+                        active: inlineNodeActive()
+                    }))
+                })(),
+                active: inlineNodeActive()
+            }, {
+                id: "supplied",
+                label: "Supplied text",
+                items: (() => {
+                    const {suppliedLost, suppliedLostParallel, suppliedParallel, suppliedOmitted} = snippets
+                    return Object.entries({suppliedLost, suppliedLostParallel, suppliedParallel, suppliedOmitted}).map((snippetEntry) => ({
+                        ...snippetItem(snippetEntry),
+                        active: inlineNodeActive()
+                    }))
+                })()
+            }, {
+                id: "textual-features",
+                label: "Textual features",
+                items: (() => {
+                    const {textTall, textSubscript, textSuperscript, textSupraline, textSupralineUnderline} = snippets
+                    return Object.entries({textTall, textSubscript, textSuperscript, textSupraline, textSupralineUnderline}).map((snippetEntry) => ({
+                        ...snippetItem(snippetEntry),
+                        active: inlineNodeActive()
+                    }))
+                })()
+            }, {
+                id: "other",
+                label: "Other annotations",
+                items: (() => {
+                    const {handShift, editorialNote, editorialNoteRef, surplus, quotation} = snippets
+                    return Object.entries({handShift, editorialNote, editorialNoteRef, surplus, quotation}).map((snippetEntry) => ({
+                        ...snippetItem(snippetEntry),
+                        active: inlineNodeActive()
+                    }))
+                })()
+            }],
+        },
+        {
+            id: "symbols",
+            label: "Symbols",
+            items: (() => {
+                const {figure, filler, glyph, paragraphos, horizontalRule, wavyLine, dipleObelismene, coronis, textInBox} = snippets
+                return Object.entries({figure, filler, glyph, paragraphos, horizontalRule, wavyLine, dipleObelismene, coronis, textInBox}).map((snippetEntry) => ({
+                    ...snippetItem(snippetEntry),
+                    active: inlineNodeActive()
+                }))
+            })()
+        },
+        {
+            id: "abbreviation",
+            label: "(a(bc))",
+            action: (view) => applySnippet(view, snippets.abbreviation),
+            tooltip: snippets.abbreviation.completion.label + " " + snippets.abbreviation.completion.detail,
+            menuTooltip: "More abbreviation markup",
+            items: [
+                {
+                    id: "abbreviation-unresolved",
+                    label: "Abbreviation, not resolved (|abc|)",
+                    action: (view) => applySnippet(view, snippets.abbreviationUnresolved),
+                    active: inlineNodeActive()
+                }
+            ],
+            active: inlineNodeActive()
+        },
+        {
+            id: "supplied-lost",
+            label: "[abc]",
+            tooltip: "Lost text, supplied/restored",
+            menuTooltip: "More lost text markup",
+            action: (view) => applySnippet(view, snippets.suppliedLost),
+            items: (() => {
+                const {gapLostChars, gapLostCharsCa, gapLostCharsRange, gapLostCharsUnknown} = snippets;
+                return Object.entries({
+                    gapLostChars,
+                    gapLostCharsCa,
+                    gapLostCharsRange,
+                    gapLostCharsUnknown
+                }).map((snippetEntry) => ({
+                    ...snippetItem(snippetEntry),
+                    active: inlineNodeActive()
+                }))
+            })(),
+            active: inlineNodeActive()
+        },
+        {
+            id: "deletion",
+            label: "〚abc〛",
+            tooltip: "Deleted text",
+            menuTooltip: "More deletion markup",
+            action: (view) => applySnippet(view, snippets.deletion),
+            items: (() => {
+                const {deletionSlashes, deletionCrossStrokes} = snippets;
+                return Object.entries({deletionSlashes, deletionCrossStrokes}).map(snippetEntry => ({
+                    ...snippetItem(snippetEntry),
+                    active: inlineNodeActive()
+                }))
+            })(),
+            active: inlineNodeActive()
+        },
+        {
+            id: "unclear",
+            label: "ạ",
+            tooltip: "Mark as unclear",
+            action: (view) => {
+                console.log("UNDERDOT")
+            }
+        },
+        {
+            id: "unclear",
+            label: "ā",
+            tooltip: "Supraline",
+            action: (view) => {
+            }
+        },
+        {
+            id: "number",
+            label: "№",
+            tooltip: "Number",
+            action: (view) => {
+                applySnippet(view, snippets.number);
+            },
+            items: (() => {
+                const {
+                    numberFraction,
+                    numberFractionUnknown,
+                    numberRange,
+                    numberRangeUnknownEnd,
+                    numberTick,
+                    numberTickFraction,
+                    numberTickFractionUnknown,
+                } = snippets;
+                return Object.entries({
+                    numberFraction,
+                    numberFractionUnknown,
+                    numberRange,
+                    numberRangeUnknownEnd,
+                    numberTick,
+                    numberTickFraction,
+                    numberTickFractionUnknown
+                }).map(snippetEntry => ({
+                    ...snippetItem(snippetEntry),
+                    active: inlineNodeActive()
+                }))
+            })(),
+            active: inlineNodeActive()
+        }
+    ];
+}
 
 export function toolbarPanel(view) {
     const menus = new Set()
@@ -369,255 +599,450 @@ export function toolbarPanel(view) {
     panel.role = "toolbar"
     panel.ariaLabel = "Toolbar"
     panel.appendChild(style);
-    const menuParent = view.dom
+    panel.addEventListener('click', (e) => {
+        const toolbarItem = e.target.closest(".toolbar-button");
+        if (!toolbarItem) {
+            return
+        }
+        e.preventDefault();
 
-    const createMenuEl = (id) => {
-        const menuEl = document.createElement('div');
-        menuEl.id = id;
-        menuEl.className = 'menu';
-        menuEl.role = 'menu';
-        menuEl.ariaLabel = 'Format options';
-        menuParent.appendChild(menuEl);
-        return menuEl;
-    }
+        if (isMenuOpen(toolbarItem)) {
+            closeMenuForTrigger(toolbarItem);
+        } else {
+            closeAllMenusUnder(menuParent)
+            void openMenuAndFocus(toolbarItem);
+        }
 
-    const createMenuItem = (parent, menu, {id, label, action, items}) => {
+    })
 
-        const itemEl = document.createElement('button');
-        itemEl.className = 'menu-item';
-        itemEl.role = 'menuitem';
-        itemEl.innerText = label;
-        itemEl.id = `menu-item-${id}`;
+    panel.addEventListener('keydown', async (e) => {
+        const toolbarItem = e.target.closest(".toolbar-button");
+        if (!toolbarItem) {
+            return
+        }
 
-        parent.appendChild(itemEl);
-        menu.items.push(itemEl);
+        const items = getToolbarItems();
+        const currentIndex = items.indexOf(toolbarItem);
 
-        if (action) {
-            itemEl.addEventListener('click', (e) => {
-                action();
-                view.focus();
-                menus.values().forEach(menu => menu.close());
-            })
-        } else if (items) {
-            const menuId = `menu-${id}`;
-            itemEl.ariaHasPopup = 'true';
-            itemEl.ariaExpanded = 'false';
-            itemEl.setAttribute("aria-controls", menuId);
-
-            const subMenuEl = createMenuEl(menuId);
-            // parent.appendChild(subMenuEl);
-            const subMenu = menu.addSubmenu(itemEl, subMenuEl);
-            for (const item of items) {
-                createMenuItem(subMenuEl, subMenu, item);
+        switch(e.key) {
+            case 'ArrowRight': {
+                e.preventDefault();
+                moveToolbarFocus(toolbarItem, getNextCircularItem(currentIndex, items));
+                break;
             }
 
-        }
+            case 'ArrowLeft': {
+                e.preventDefault();
+                moveToolbarFocus(toolbarItem, getPreviousCircularItem(currentIndex, items));
+                break;
+            }
 
-        return itemEl
-    }
+            case 'Home': {
+                e.preventDefault();
+                moveToolbarFocus(toolbarItem, items[0])
+                break;
+            }
 
-    const createButton = (parent, {id, label, action, items, tooltip, menuTooltip}) => {
-        const button = document.createElement('button');
-        button.className = 'toolbar-button';
-        button.textContent = label;
-        button.id = `button-${id}`;
+            case 'End': {
+                e.preventDefault();
+                moveToolbarFocus(toolbarItem, items[items.length - 1])
+                break
+            }
 
-        if (tooltip) {
-            button.title = tooltip;
-        }
+            case 'ArrowDown': {
+                e.preventDefault();
+                if (hasMenu(e.target)) {
+                    void openMenuAndFocus(toolbarItem);
+                }
+                break
+            }
 
-        if (action) {
-            button.addEventListener('click', (e) => {
-                action();
-                view.focus();
-            })
-            if (!items) {
-                parent.appendChild(button);
+            case 'ArrowUp': {
+                e.preventDefault();
+                if (hasMenu(e.target)) {
+                    void openMenuAndFocus(toolbarItem, false);
+                }
+                break;
+            }
+
+            case 'Escape': {
+                closeAllMenusUnder(menuParent)
             }
         }
+    })
 
-        if (items) {
-            const menuId = `menu-${id}`;
+    const menuParent = document.createElement('div')
+    menuParent.classList.add('menu-container')
+    view.dom.appendChild(menuParent)
 
-            const menuEl =  createMenuEl(menuId)
-            // parent.appendChild(menuEl);
-
-
-            if (action) {
-                const containerEl = document.createElement('div');
-                containerEl.className = 'menu-button-container';
-                containerEl.appendChild(button);
-                parent.appendChild(containerEl);
-
-                const moreButton = document.createElement('button');
-                moreButton.className = 'toolbar-button more-button';
-                moreButton.id = `more-${id}`;
-                moreButton.setAttribute('aria-haspopup', 'true');
-                moreButton.setAttribute('aria-expanded', 'false');
-                moreButton.setAttribute('aria-controls', menuId);
-                moreButton.innerHTML = '&nbsp;'
-                if (menuTooltip) {
-                    moreButton.title = menuTooltip;
-                }
-                containerEl.appendChild(moreButton);
-                const menu = new Menu(moreButton, menuEl)
-                menus.add(menu)
-                for (const item of items) {
-                    createMenuItem(menuEl, menu, item)
-                }
-            } else {
-                const menu = new Menu(button, menuEl)
-                menus.add(menu)
-                for (const item of items) {
-                    createMenuItem(menuEl, menu, item)
-                }
-                button.setAttribute('aria-haspopup', 'true');
-                button.setAttribute('aria-expanded', 'false');
-                button.setAttribute('aria-controls', menuId);
-                parent.appendChild(button);
-            }
+    // close when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!menuParent.contains(e.target) && !panel.contains(e.target)) {
+            closeAllMenusUnder(menuParent)
         }
+    })
 
-        return button;
+    const focusOutListener = (e) => {
+        const newTarget = e.relatedTarget
+        if (!newTarget || (!menuParent.contains(newTarget) && !panel.contains(newTarget))) {
+            closeAllMenusUnder(menuParent)
+        }}
+
+    menuParent.addEventListener('focusout', focusOutListener)
+    panel.addEventListener('focusout', focusOutListener)
+
+    const getMenuEl = (triggerEl) => {
+        const menuId = triggerEl.getAttribute('aria-controls');
+        return menuParent.querySelector(`#${menuId}`);
     }
 
-    const applySnippet = (view, snippetDef) => {
-        const { to, from } = view.state.selection.ranges[0]
-        snippet(snippetDef.template)(view, null, from, to);
-    }
+    const getTriggerEl = (menuEl) =>
+        view.dom.querySelector(`[aria-controls=${menuEl.id}]`)
 
-    const buttons = [
-        {
-            id: "vestiges",
-            label: "Vestiges",
-            items: Object.entries(snippets).map(([id, value]) => ({
-                id: id,
-                label: value.completion.label + " " + value.completion.detail,
-                action: () => applySnippet(view, value)
-            }))
-        },
-        {
-            id: "abbreviation",
-            label: "(a(bc))",
-            action: () => applySnippet(view, snippets.abbreviation),
-            tooltip: snippets.abbreviation.completion.label + " " + snippets.abbreviation.completion.detail,
-            menuTooltip: "More abbreviation markup",
-            items: [
-                {
-                    id: "abbreviation-unresolved",
-                    label: "Abbreviation, not resolved (|abc|)",
-                    action: () => applySnippet(view, snippets.abbreviationUnresolved)
-                }
-            ]
-        },
-        {
-            id: "supplied-lost",
-            label: "[abc]",
-            tooltip: "Lost text, supplied/restored",
-            menuTooltip: "More lost text markup",
-            action: () => applySnippet(view, snippets.suppliedLost),
-            items: (() => {
-                const {gapLostChars, gapLostCharsCa, gapLostCharsRange, gapLostCharsUnknown} = snippets;
-                return Object.entries({gapLostChars, gapLostCharsCa, gapLostCharsRange, gapLostCharsUnknown}).map(([id, snippet]) => ({
-                    id,
-                    label: snippet.completion.label + ", " + snippet.completion.detail,
-                    action: () => applySnippet(view, snippet)
-                }))
-            })()
-        },
-        {
-            id: "deletion",
-            label: "〚abc〛",
-            tooltip: "Deleted text",
-            menuTooltip: "More deletion markup",
-            action: () => applySnippet(view, snippets.deletion),
-            items: (() => {
-                const { deletionSlashes, deletionCrossStrokes} = snippets;
-                return Object.entries({deletionSlashes, deletionCrossStrokes}).map(([id, snippet]) => ({
-                    id,
-                    label: snippet.completion.label + ", " + snippet.completion.detail,
-                    action: () => applySnippet(view, snippet)
-                }))
-            })()
-        },
-        {
-            id: "unclear",
-            label: "ạ",
-            tooltip: "Mark as unclear",
-            action: () => {}
-        },
-        {
-            id: "unclear",
-            label: "ā",
-            tooltip: "Supraline",
-            action: () => {}
-        },
-        {
-            id: "number",
-            label: "№",
-            tooltip: "Number",
-            action: () => {
-                applySnippet(view, snippets.number);
-            },
-            items: (() => {
-                const {number, numberFraction, numberFractionUnknown, numberRange, numberRangeUnknownEnd, numberTick, numberTickFraction, numberTickFractionUnknown, } = snippets;
-                return Object.entries({number, numberFraction, numberFractionUnknown, numberRange, numberRangeUnknownEnd, numberTick, numberTickFraction, numberTickFractionUnknown}).map(([id, snippet]) => ({
-                    id,
-                    label: snippet.completion.label + ", " + snippet.completion.detail,
-                    action: () => applySnippet(view, snippet)
-                }))
-            })()
-        },
-        {
-            id: "format",
-            label: "Format",
-            items: [{
-                id: "heading",
-                label: "Heading 1",
-                action: () => console.log("be2!")
-            }, {
-                id: "quote",
-                label: "Quote",
-                items: [
-                    {
-                        id: "left",
-                        label: "Left",
-                        action: () => console.log("be3!")
+    const isMenuOpen = (triggerEl) =>
+        triggerEl.getAttribute('aria-expanded') === 'true'
+
+    const hasMenu = (triggerEl) =>
+        triggerEl.getAttribute('aria-haspopup') === 'true'
+
+    const getToolbarItems = ()=>
+        Array.from(panel.querySelectorAll(":scope .toolbar-button"))
+
+    const openMenu = async (triggerEl) => {
+        const menuEl = getMenuEl(triggerEl);
+        const hasParentMenu = triggerEl.role === "menuitem"
+
+        const placement = hasParentMenu ? 'right-start' : 'bottom-start';
+        const fallbackPlacements = hasParentMenu
+            ? ['left-start', 'top-start', 'bottom-start']
+            : ['top-start', 'right-start', 'left-start'];
+
+        const { x, y } = await computePosition(triggerEl, menuEl, {
+            strategy: 'fixed',
+            placement,
+            middleware: [
+                offset(4),
+                flip({
+                    fallbackPlacements,
+                }),
+                shift({ padding: 8 }),
+                size({
+                    padding: 8,
+                    apply({_availableWidth, availableHeight, elements}) {
+                        Object.assign(elements.floating.style, {
+                            maxHeight: `${Math.max(0, availableHeight)}px`,
+                        });
                     },
-                    {
-                        id: "center",
-                        label: "Center",
-                        action: () => console.log("be4!")
-                    },
-                    {
-                        id: "right",
-                        label: "Right",
-                        items: [
-                            {
-                                id: "left",
-                                label: "Left",
-                                action: () => console.log("be5!")
-                            },
-                            {
-                                id: "center",
-                                label: "Center",
-                                action: () => console.log("be6!")
-                            },
-                        ]
-                    }
-                ]
-            }]
-        }
-    ]
+                }),
+            ],
+        });
 
-    for (const button of buttons) {
-        createButton(panel, button);
+        Object.assign(menuEl.style, {
+            left: `${x}px`,
+            top: `${y}px`,
+        });
+
+        triggerEl.setAttribute('aria-expanded', 'true');
+        menuEl.setAttribute('data-show', '');
+    }
+
+    const closeAllMenusUnder = (parentEl) => {
+        const menus = parentEl.querySelectorAll(":scope [role=menu][data-show]");
+        menus.forEach(menu => closeMenu(menu))
+    }
+
+    const closeMenu = (menuEl) => {
+        const triggerEl = getTriggerEl(menuEl);
+
+        triggerEl.setAttribute('aria-expanded', 'false');
+        menuEl.removeAttribute('data-show');
+
+        closeAllMenusUnder(menuEl);
+    }
+
+    const closeMenuForTrigger = (triggerEl) => {
+        if (hasMenu(triggerEl) && isMenuOpen(triggerEl)) {
+            const menuEl = getMenuEl(triggerEl)
+            closeMenu(menuEl)
+        }
+    }
+
+    const moveToolbarFocus = (sourceItem, targetItem) => {
+        closeMenuForTrigger(sourceItem)
+        sourceItem.tabIndex = -1;
+        targetItem.tabIndex = 0;
+        targetItem.focus()
+    }
+
+    const getMenuItems = menuEl =>
+        Array.from(menuEl.querySelectorAll(":scope > [role=menuitem]"));
+
+    const getNextCircularItem = (currentIndex, items) =>
+        items[(currentIndex + 1) % items.length]
+
+    const getPreviousCircularItem = (currentIndex, items) =>
+        items[(currentIndex - 1 + items.length) % items.length]
+
+    const openMenuAndFocus = async (triggerEl, first = true) => {
+        if (!isMenuOpen(triggerEl)) {
+            await openMenu(triggerEl);
+        }
+
+        const menuEl = getMenuEl(triggerEl);
+        const menuItems = getMenuItems(menuEl)
+
+        const focusEl = first ? menuItems[0] : menuItems[menuItems.length - 1];
+        focusEl.focus();
+    }
+
+    const moveMenuItemFocus = (menuEl, sourceItem, targetItem) => {
+        closeAllMenusUnder(menuEl);
+        targetItem.focus();
+        if (hasMenu(targetItem)) {
+            void openMenu(targetItem);
+        }
+    }
+
+    const menuKeydownHandler = async (e) => {
+        const currentItem = e.target;
+
+        if (currentItem !== document.activeElement) {
+            return
+        }
+
+
+        const menuEl = e.currentTarget;
+        const items = getMenuItems(menuEl);
+        const currentIndex = items.indexOf(currentItem);
+
+        switch(e.key) {
+            case 'ArrowDown': {
+                e.preventDefault();
+                moveMenuItemFocus(menuEl, currentItem, getNextCircularItem(currentIndex, items));
+                break;
+            }
+
+            case 'ArrowUp': {
+                e.preventDefault();
+                moveMenuItemFocus(menuEl, currentItem, getPreviousCircularItem(currentIndex, items));
+                break;
+            }
+
+            case 'Home': {
+                e.preventDefault();
+                moveMenuItemFocus(menuEl, currentItem, items[0]);
+                break;
+            }
+
+            case 'End': {
+                e.preventDefault();
+                moveMenuItemFocus(menuEl, currentItem, items[items.length - 1]);
+                break;
+            }
+
+            case 'Escape': {
+                e.preventDefault();
+                const triggerEl = getTriggerEl(menuEl);
+                if (isMenuOpen(triggerEl)) {
+                    closeMenu(menuEl);
+                    triggerEl.focus();
+                }
+                break;
+            }
+
+            case 'ArrowRight': {
+                e.preventDefault();
+
+                if (hasMenu(currentItem)) {
+                    void openMenuAndFocus(currentItem);
+                } else {
+                    const toolbarItems = getToolbarItems()
+                    const currentToolbarItem = panel.querySelector("[aria-expanded=true]");
+                    const currentToolbarIndex = toolbarItems.indexOf(currentToolbarItem)
+                    moveToolbarFocus(currentToolbarItem, getNextCircularItem(currentToolbarIndex, toolbarItems));
+                }
+                break;
+            }
+
+            case 'ArrowLeft': {
+                e.preventDefault();
+                const currentToolbarItem = panel.querySelector("[aria-expanded=true]");
+
+                void closeMenu(menuEl)
+
+                const triggerThatOpenedThis = getTriggerEl(menuEl);
+                if (triggerThatOpenedThis.role === "menuitem") {
+                    triggerThatOpenedThis.focus();
+                } else {
+                    const toolbarItems = getToolbarItems();
+                    const currentToolbarIndex = toolbarItems.indexOf(currentToolbarItem);
+                    moveToolbarFocus(currentToolbarItem, getPreviousCircularItem(currentToolbarIndex, toolbarItems));
+                }
+
+                break;
+            }
+        }
+    }
+
+    const createSplitButton = (parent, {id, label, action, items, tooltip, menuTooltip, active}, tabIndex = -1) => {
+        return html`
+            <div class="menu-button-container">
+                ${createButton(parent, {id, label, action, items, tooltip, menuTooltip, active}, tabIndex)}
+                <button 
+                        class="toolbar-button more-button" 
+                        id="more-${id}"
+                        aria-haspopup="true"
+                        aria-expanded="false"
+                        aria-controls="menu-${id}"
+                        tabindex="${tabIndex}"
+                        title="${menuTooltip}"
+                >&nbsp;</button>
+            </div>
+        `
+    }
+
+
+    const createButton = (parent, {id, label, action, items, tooltip, menuTooltip, active}, tabIndex = -1) => {
+        return html`
+            <button class="toolbar-button" 
+                    id="button-${id}" 
+                    title=${tooltip}
+                    tabindex="${tabIndex}"
+                    @click="${(e) => {
+                        e.preventDefault();
+                        action(view);
+                        view.focus();
+                    }}"
+                    ?disabled="${active !== undefined && !active}"
+            >${label}</button>
+        `
+
+    }
+
+    const menuBehavior = directive(class extends Directive {
+        // render(menuRef) {
+        //     // return menuRef
+        // }
+
+        update(part, [menuRef, parent]) {
+            const menu = new Menu(part.element, menuRef, parent);
+            menus.add(menu);
+            menu.initialize();
+            return () => {} // cleanup
+        }
+    })
+
+    const createMenuButton = (parent, {id, label, action, items, tooltip, menuTooltip}, menuRef, tabIndex = -1) => {
+        return html`
+            <button
+                    class="toolbar-button"
+                    id="more-${id}"
+                    aria-haspopup="true"
+                    aria-expanded="false"
+                    aria-controls="menu-${id}"
+                    tabindex="${tabIndex}"
+                    title="${tooltip}"
+            >${label}</button>
+        `
+    }
+
+    let openTimeout;
+    let closeTimeout;
+
+    const createMenuEl = ({id, items, active}, ref) => {
+        return html`
+            <div
+                    ${ref ?? nothing} id="menu-${id}" class="menu" role="menu"
+                    aria-label="Format options"
+                    @keydown=${menuKeydownHandler}
+                    @mouseenter=${() => clearTimeout(closeTimeout)}
+                    @mouseleave=${(e) => {
+                        closeTimeout = setTimeout(() => closeMenu(e.target), 100)
+                    }}
+            >
+                ${items ? items.map(item => createMenuItem(id, null, item)) : ""}
+            </div>
+            </div>
+        `
+    }
+
+    const createMenuItem = (parent, menu, {id, label, action, items, active}) => {
+        return html`
+            ${items ? createMenuEl({id, items}, null) : ""}
+            <button
+                    aria-haspopup=${items ? "true" : nothing}
+                    aria-expanded=${items ? "false" : nothing}
+                    aria-controls=${items ? `menu-${id}` : nothing}
+                    tabindex="-1" 
+                    class="menu-item" role="menuitem" id="menu-item-${id}"
+                    ?disabled="${active !== undefined && !active}"
+                    @mouseenter=${(e) => {
+                        e.preventDefault()
+                        const menuItem = e.target
+                        if (!hasMenu(menuItem)) {
+                            return
+                        }
+                        
+                        clearTimeout(closeTimeout)
+                        const parentMenu = menuItem.closest("[role=menu]")
+                        closeAllMenusUnder(parentMenu)
+                        openTimeout = setTimeout(() => void openMenu(menuItem), 100)
+
+                    }}
+                    @mouseleave=${(e) => {
+                        e.preventDefault()
+                        clearTimeout(openTimeout)
+                        if (hasMenu(e.target)) {
+                            const menuEl = getMenuEl(e.target)
+
+                            if (!menuEl.contains(e.relatedTarget)) {
+                                closeTimeout = setTimeout(() => closeMenu(menuEl), 100)
+                            }
+                        }
+                    }}
+                    @click=${ action ? (e) => {
+                        e.preventDefault()
+                        closeAllMenusUnder(menuParent);
+                        action(view);
+                        view.focus();
+                    } : nothing}
+            >${label}</button>
+        `
+    }
+
+    const toolbarMenuRefs = new Map();
+    const makeRef = (id) => {
+        if (!toolbarMenuRefs.has(id)) {
+            toolbarMenuRefs.set(id, createRef())
+        }
+        return toolbarMenuRefs.get(id)
+    }
+
+    const renderToolbar = (view) => {
+        const config = toolbarConfig(view.state);
+
+        render(html`${
+            config.filter(button => button.items)
+                .map(button => createMenuEl(button, makeRef(button.id)))
+        }`, menuParent)
+
+
+        render(html`${config.map((button, index) => {
+                const tabIndex = index === 0 ? 0 : -1;
+                return button.action && button.items
+                    ? createSplitButton(panel, button, tabIndex)
+                    : button.items
+                        ? createMenuButton(panel, button, toolbarMenuRefs.get(button.id), tabIndex)
+                        : createButton(panel, button, tabIndex);
+            }
+        )}`, panel)
     }
 
     return {
         dom: panel,
         top: true,
         mount() {
+            renderToolbar(view)
 
             // Update positions on scroll and resize
             window.addEventListener('scroll', () => {
@@ -627,10 +1052,18 @@ export function toolbarPanel(view) {
             window.addEventListener('resize', () => {
                 menus.values().forEach(menu => menu.updatePosition());
             });
+
         },
         update(update) {
-            const panelBg = getComputedStyle(update.view.dom.querySelector('.cm-panels')).backgroundColor
-            this.dom.querySelectorAll('[role=menu]').forEach(menu => menu.style.backgroundColor = panelBg)
+
+            if (update.transactions.some(transaction => transaction.reconfigured)) {
+                const panelBg = getComputedStyle(update.view.dom.querySelector('.cm-panels')).backgroundColor
+                this.dom.querySelectorAll(':scope > [role=menu]').forEach(menu => menu.style.backgroundColor = panelBg)
+            }
+
+            if (update.docChanged || update.selectionSet) {
+                renderToolbar(update.view);
+            }
         }
 
     }

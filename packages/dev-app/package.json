@@ -15,19 +15,20 @@
     "vite": "^6.0.7"
   },
   "dependencies": {
+    "@codemirror/autocomplete": "^6.18.4",
     "@codemirror/lang-xml": "^6.1.0",
     "@codemirror/language": "^6.10.7",
     "@codemirror/lint": "^6.8.4",
     "@codemirror/state": "^6.5.0",
     "@codemirror/view": "^6.36.0",
-    "@codemirror/autocomplete": "^6.18.4",
+    "@floating-ui/dom": "^1.6.13",
     "@leiden-plus/codemirror-lang-leiden-plus": "workspace:*",
     "@leiden-plus/codemirror-lang-leiden-trans": "workspace:*",
     "@leiden-plus/transformer-leiden-plus": "workspace:*",
     "@leiden-plus/transformer-leiden-trans": "workspace:*",
     "@lezer/common": "^1.2.3",
     "codemirror": "^6.0.1",
-    "@floating-ui/dom": "^1.6.13"
+    "lit-html": "^3.2.1"
   },
   "publishConfig": {
     "registry": "https://gitlab.dh.uni-koeln.de/api/v4/projects/726/packages/npm/"
