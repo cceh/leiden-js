@@ -7,29 +7,27 @@ on:
   pull_request:
 
 jobs:
-  idp-tests:
+  setup:
     runs-on: ubuntu-latest
+    outputs:
+      idp-data-key: ${{ steps.submodule-hash.outputs.hash }}
+      docker-key: ${{ hashFiles('test/docker-compose.yml') }}
 
     steps:
-      # Checkout the code
       - name: Checkout repository
         uses: actions/checkout@v3
-        
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10
-        
-      # Setup Node.js
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: 20 # Use your project's Node.js version
-          cache: 'pnpm'
 
-      # Install dependencies
-      - name: Install dependencies
-        run: pnpm install
+      - name: Get submodule hash
+        id: submodule-hash
+        run: |
+          echo "hash=$(git ls-tree HEAD test/data/idp.data | awk '{print $3}')" >> $GITHUB_OUTPUT
+
+  prepare-docker:
+    runs-on: ubuntu-latest
+    needs: setup
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
       # Cache Docker layers
       - name: Restore Docker layers
@@ -37,7 +35,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-docker-${{ hashFiles('test/docker-compose.yml') }}
+          key: ${{ runner.os }}-docker-${{ needs.setup.outputs.docker-key }}
 
       # Set up Docker Buildx
       - name: Set up Docker Buildx
@@ -61,7 +59,7 @@ jobs:
               }
             }
           }' > /tmp/docker-compose-cache.json
-          
+
       # Pre-build the Docker image
       - name: Pre-build xsugar Docker image
         run: |
@@ -71,71 +69,214 @@ jobs:
 
       # Cache Docker layers
       - name: Save Docker layers
-        id: cache-docker-layers-save
         uses: actions/cache/save@v4
         with:
           path: /tmp/.buildx-cache
-          key: ${{ steps.cache-docker-layers-restore.outputs.cache-primary-key }}
+          key: ${{ runner.os }}-docker-${{ needs.setup.outputs.docker-key }}
 
+  prepare-idp-data:
+    runs-on: ubuntu-latest
+    needs: setup
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-      # IDP data
-      - name: Get submodule hash
-        id: submodule-hash
-        run: |
-          echo "hash=$(git ls-tree HEAD test/data/idp.data | awk '{print $3}')" >> $GITHUB_OUTPUT
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install
 
       - name: Restore IDP data cache
         id: cache-idp-data-restore
         uses: actions/cache/restore@v4
         with:
-          path: |
-            test/data/idp.data
-          # invalid if idp data changed  
-          key: idp-data-${{ steps.submodule-hash.outputs.hash }}
+          path: test/data/idp.data
+          key: idp-data-${{ needs.setup.outputs.idp-data-key }}
 
       - name: Get IDP Data
         if: steps.cache-idp-data-restore.outputs.cache-hit != 'true'
         run: pnpm test:idp:get-data
 
       - name: Save IDP data cache
-        id: cache-idp-data-save
         uses: actions/cache/save@v4
         with:
-          path: |
-            test/data/idp.data
-          key: ${{ steps.cache-idp-data-restore.outputs.cache-primary-key }}
+          path: test/data/idp.data
+          key: idp-data-${{ needs.setup.outputs.idp-data-key }}
 
+  prepare-edition:
+    runs-on: ubuntu-latest
+    needs: [setup, prepare-docker, prepare-idp-data]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-      # Processed test data
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
 
-      - name: Restore test data cache
-        id: cache-test-data-restore
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install
+
+      # Restore IDP data
+      - name: Restore IDP data cache
         uses: actions/cache/restore@v4
         with:
-          path: |
-            test/data/roundtrips
-          # invalid if idp data or xsugar version changed
-          key: test-data-${{ hashFiles('test/data/idp.data/.git') }}-${{ hashFiles('test/docker-compose.yml') }}
+          path: test/data/idp.data
+          key: idp-data-${{ needs.setup.outputs.idp-data-key }}
+          fail-on-cache-miss: true
 
-      - name: Prepare test data
-        run: pnpm test:idp:prepare
+      # Restore Docker cache
+      - name: Restore Docker layers
+        uses: actions/cache/restore@v4
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-docker-${{ needs.setup.outputs.docker-key }}
+          fail-on-cache-miss: true
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      # Restore edition data cache
+      - name: Restore edition data cache
+        id: cache-edition-data-restore
+        uses: actions/cache/restore@v4
+        with:
+          path: test/data/roundtrips/DDB_EpiDoc_XML
+          key: edition-data-${{ needs.setup.outputs.idp-data-key }}-${{ needs.setup.outputs.docker-key }}
+
+      - name: Prepare edition data
+        if: steps.cache-edition-data-restore.outputs.cache-hit != 'true'
+        run: pnpm test:idp:prepare:edition
         env:
           DOCKER_BUILDKIT: 1
 
-      - name: Save test data cache
-        id: cache-test-data-save
+      - name: Save edition data cache
+        if: steps.cache-edition-data-restore.outputs.cache-hit != 'true'
         uses: actions/cache/save@v4
         with:
-          path: |
-            test/data/roundtrips
-          key: ${{ steps.cache-test-data-restore.outputs.cache-primary-key }}
-              
+          path: test/data/roundtrips/DDB_EpiDoc_XML
+          key: edition-data-${{ needs.setup.outputs.idp-data-key }}-${{ needs.setup.outputs.docker-key }}
+
       - name: Xsugar cleanup
+        if: always()
         run: pnpm test:idp:xsugar:down
 
+  prepare-translation:
+    runs-on: ubuntu-latest
+    needs: [setup, prepare-docker, prepare-idp-data]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-      # - name: Test edition
-      #  run: pnpm test:idp:edition
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install
+
+      # Restore IDP data
+      - name: Restore IDP data cache
+        uses: actions/cache/restore@v4
+        with:
+          path: test/data/idp.data
+          key: idp-data-${{ needs.setup.outputs.idp-data-key }}
+          fail-on-cache-miss: true
+
+      # Restore Docker cache
+      - name: Restore Docker layers
+        uses: actions/cache/restore@v4
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-docker-${{ needs.setup.outputs.docker-key }}
+          fail-on-cache-miss: true
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      # Restore translation data cache
+      - name: Restore translation data cache
+        id: cache-translation-data-restore
+        uses: actions/cache/restore@v4
+        with:
+          path: test/data/roundtrips/HGV_trans_EpiDoc
+          key: translation-data-${{ needs.setup.outputs.idp-data-key }}-${{ needs.setup.outputs.docker-key }}
+
+      - name: Prepare translation data
+        if: steps.cache-translation-data-restore.outputs.cache-hit != 'true'
+        run: pnpm test:idp:prepare:translation
+        env:
+          DOCKER_BUILDKIT: 1
+
+      - name: Save translation data cache
+        if: steps.cache-translation-data-restore.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: test/data/roundtrips/HGV_trans_EpiDoc
+          key: translation-data-${{ needs.setup.outputs.idp-data-key }}-${{ needs.setup.outputs.docker-key }}
+
+      - name: Xsugar cleanup
+        if: always()
+        run: pnpm test:idp:xsugar:down
+
+  run-tests:
+    runs-on: ubuntu-latest
+    needs: [prepare-edition, prepare-translation]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install
+
+      # Restore prepared data
+      - name: Restore edition data
+        uses: actions/cache/restore@v4
+        with:
+          path: test/data/roundtrips/DDB_EpiDoc_XML
+          key: edition-data-${{ needs.setup.outputs.idp-data-key }}-${{ needs.setup.outputs.docker-key }}
+          fail-on-cache-miss: true
+
+      - name: Restore translation data
+        uses: actions/cache/restore@v4
+        with:
+          path: test/data/roundtrips/HGV_trans_EpiDoc
+          key: translation-data-${{ needs.setup.outputs.idp-data-key }}-${{ needs.setup.outputs.docker-key }}
+          fail-on-cache-miss: true
 
       - name: Test edition
         run: pnpm test:idp:edition
