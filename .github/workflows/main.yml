@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       idp-data-key: ${{ steps.submodule-hash.outputs.hash }}
-      docker-key: ${{ hashFiles('test/docker-compose.yml') }}
+      docker-key: ${{ steps.docker-hash.outputs.hash }}
 
     steps:
       - name: Checkout repository
@@ -21,6 +21,10 @@ jobs:
         id: submodule-hash
         run: |
           echo "hash=$(git ls-tree HEAD test/data/idp.data | awk '{print $3}')" >> $GITHUB_OUTPUT
+
+      - name: Get Docker compose hash
+        id: docker-hash
+        run: echo "hash=${{ hashFiles('test/docker-compose.yml') }}" >> $GITHUB_OUTPUT
 
   prepare-docker:
     runs-on: ubuntu-latest
