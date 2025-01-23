@@ -148,9 +148,6 @@ importers:
       '@leiden-plus/codemirror-lang-leiden-trans':
         specifier: workspace:*
         version: link:../codemirror-lang-leiden-trans
-      '@leiden-plus/parser-leiden-plus':
-        specifier: workspace:*
-        version: link:../parser-leiden-plus
       '@leiden-plus/transformer-leiden-plus':
         specifier: workspace:*
         version: link:../transformer-leiden-plus
