@@ -192,7 +192,13 @@ export function toXml(input: string, root = parser.parse(input)) {
                     break;
 
                 case 'Unclear':
-                    xml.push(`<unclear>${stripCodepoints(text(input, node), 0x304, 0x323)}</unclear>`);
+                case 'SupralineUnclear':
+                    const pos = node.from
+                    node.parent()
+                    const toStrip = name === "SupralineUnclear" ? [0x323, 0x304] : [0x323];
+                    node.childAfter(pos)
+
+                    xml.push(`<unclear>${stripCodepoints(text(input, node), ...toStrip)}</unclear>`);
                     return false;
 
                 case 'Illegible':
@@ -617,7 +623,7 @@ export function toXml(input: string, root = parser.parse(input)) {
                 case 'Supraline':
                     xml.push('<hi rend="supraline">');
                     break;
-                case 'SupralineSicContent':
+                case 'SupralineMacronContent':
                     xml.push(stripCodepoints(text(input, node), 0x304));
                     return false;
                 case 'SupralineUnderline':

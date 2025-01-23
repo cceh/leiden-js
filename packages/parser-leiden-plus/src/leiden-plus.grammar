@@ -51,7 +51,7 @@ block {
 }
 
 textInline {
-    Text | Unclear | SupralineSic 
+    Text | Unclear | supralineMacron 
 }
 
 topLevelInline[@isGroup=topLevel] {
@@ -540,17 +540,18 @@ SupralineSpan[@name=Supraline] {
 // Can also have characters with supraline and underdot which represent unclear supralined
 // characters. In this case, we want them to appear as Unclear nodes inside of Supraline nodes.
 //
-// The tokens supralineSic (macrons only) and supralineSicUnclear are supplied by external
+// The tokens SupralineMacronContent (macrons only) and SupralineUnclear are supplied by external
 // tokenizers.
 
 
-SupralineSic[@name=Supraline] {
-  supralineSicItem (!supralineSic supralineSicItem)*
+supralineMacron[@name=Supraline] {
+  supralineMacronItem (!supralineSic supralineMacronItem)*
 }
 
-supralineSicItem {
-  SupralineSicContent | supralineSicUnclear
+supralineMacronItem {
+  SupralineMacronContent | SupralineUnclear
 }
+
 
 
 // -- Supralined and underline text 
@@ -998,8 +999,8 @@ Number { num ~lb }
 Infix[group=Delims]<infix> { infix }
 MultiInfix[group=Delims]<infix> { infix }
 
-@external tokens supralineUnclearToken from "./tokens.js" { supralineSicUnclear[@name=Unclear] }
-@external tokens supralineToken from "./tokens.js" { SupralineSicContent }
+@external tokens supralineUnclearToken from "./tokens.js" { SupralineUnclear }
+@external tokens supralineToken from "./tokens.js" { SupralineMacronContent }
 @external tokens unclearToken from "./tokens.js" { multiUnclear, singleUnclear }
 @external tokens charsToken from "./tokens.js" { chars, num  }
 @external extend { chars } specializeChars from "./tokens.js" { single_char, single_latinChar, latinChars }

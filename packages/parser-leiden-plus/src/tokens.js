@@ -8,8 +8,8 @@ import {
     single_latinChar,
     single_num,
     singleUnclear,
-    SupralineSicContent,
-    supralineSicUnclear,
+    SupralineMacronContent,
+    SupralineUnclear,
 } from "./parser.terms.js";
 
 const COMBINING_GRAVE_ACCENT = 0x0300, COMBINING_ACUTE_ACCENT = 0x0301,
@@ -218,7 +218,7 @@ export const supralineToken = new ExternalTokenizer(input => {
     );
 
     if (charCount > 0) {
-        input.acceptToken(SupralineSicContent);
+        input.acceptToken(SupralineMacronContent);
     }
 });
 
@@ -228,7 +228,7 @@ export const supralineUnclearToken = new ExternalTokenizer(input => {
     );
 
     if (charCount > 0) {
-        input.acceptToken(supralineSicUnclear);
+        input.acceptToken(SupralineUnclear);
     }
 });
 
@@ -305,7 +305,7 @@ export const supralineUnclearToken = new ExternalTokenizer(input => {
 //     }
 //
 //     if (charCount > 0) {
-//         input.acceptToken(SupralineSicContent);
+//         input.acceptToken(SupralineMacronContent);
 //     }
 // })
 //
@@ -342,7 +342,7 @@ export const supralineUnclearToken = new ExternalTokenizer(input => {
 //     }
 //
 //     if (charCount > 0) {
-//         input.acceptToken(supralineSicUnclear);
+//         input.acceptToken(SupralineUnclear);
 //     }
 // })
 

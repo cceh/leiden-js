@@ -1,4 +1,4 @@
-import {EditorView, showPanel} from "@codemirror/view"
+import {EditorView, hoverTooltip, showPanel, showTooltip} from "@codemirror/view"
 import {basicSetup} from "codemirror"
 import {leidenPlus} from "@leiden-plus/codemirror-lang-leiden-plus";
 import {syntaxTree} from "@codemirror/language";
@@ -10,7 +10,7 @@ import {fromXml as xmlToLeidenTrans, toXml as leidenTransToXml, TransformationEr
 
 import {xml} from "@codemirror/lang-xml";
 import {linter, lintGutter, setDiagnosticsEffect} from "@codemirror/lint";
-import {toolbarPanel} from "./toolbar";
+import {leidenToolbar, toolbarPanel} from "./toolbar";
 
 const syntaxTreeNodeMap = new NodeWeakMap();
 
@@ -42,6 +42,11 @@ function createTreeNode(cursor) {
             toggle.textContent = div.classList.contains('collapsed') ? '+' : '−';
         };
         content.appendChild(toggle);
+    } else {
+        const spacer = document.createElement('span');
+        spacer.className = 'spacer';
+        spacer.innerHTML = '&nbsp;';
+        content.appendChild(spacer);
     }
 
     const name = document.createElement('span');
@@ -222,7 +227,7 @@ window.leidenEditorView = new EditorView({
         diagnosticsStateField,
         lintGutter(),
         showPanel.of(statusBarPanel),
-        showPanel.of(toolbarPanel)
+        leidenToolbar
     ],
     parent: document.querySelector('.leiden-pane')
 });

@@ -5,7 +5,10 @@ import {html, nothing, render} from "lit-html";
 import {createRef, ref} from "lit-html/directives/ref.js";
 import {Directive, directive} from "lit-html/directive.js";
 import {syntaxTree} from "@codemirror/language";
+import {Facet, findClusterBreak, RangeSet, RangeSetBuilder, StateEffect, StateField} from "@codemirror/state";
+import {Decoration, EditorView, showPanel, showTooltip} from "@codemirror/view";
 
+// language=CSS
 const css = `
     :root {
       /*--toolbar-bg: #f5f5f5;*/
@@ -14,84 +17,221 @@ const css = `
       --menu-bg: #ffffff;
       --menu-border: #ddd;
       --menu-shadow: rgba(0, 0, 0, 0.1);
-      --chevron-down: url('data:image/svg+xml;base64,CjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB2aWV3Qm94PSIwIDAgMjQgMjQiIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgZmlsbD0iY3VycmVudENvbG9yIj4KICA8cGF0aCBkPSJNNyAxMGw1IDUgNS01IiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBmaWxsPSJub25lIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4KPC9zdmc+Cg==');
+      --chevron-down: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 122.88 66.91"><path d="M11.68 1.95a6.884 6.884 0 0 0-9.73.13 6.884 6.884 0 0 0 .13 9.73l54.79 53.13 4.8-4.93-4.8 4.95a6.9 6.9 0 0 0 9.75-.15c.08-.08.15-.16.22-.24l53.95-52.76a6.875 6.875 0 0 0 .14-9.73c-2.65-2.72-7.01-2.79-9.73-.13L61.65 50.41z"/></svg>');
+        --chevron-size: 0.33em;
+    }
+
+    :root {
+        /* Spacing */
+        --toolbar-padding: 0.25rem;
+        --button-padding: 0.25rem 0.5rem;
+        --button-gap: 0.4rem;
+        --divider-margin: 0.25rem;
+
+
+        /* Icons */
+        --icon-size: 0.5rem;
+        --icon-size-more: 0.75rem;
+        --icon-chevron: var(--chevron-down);
+
+        /* Visual */
+        --border-radius: 0.25rem;
+        --focus-ring-width: 2px;
+        --focus-ring-offset: 2px;
+        --divider-width: 1px;
+
+        /* Colors */
+        --color-focus: #0066cc;
+        --color-border: var(--menu-border, #e2e8f0);
+        --color-hover: var(--button-hover, #f1f5f9);
+
+        /* Typography */
+        --font-family: system-ui, sans-serif;
     }
 
     .toolbar {
-      box-sizing: border-box;
-      display: flex;
-      align-items: center;
-      padding: 4px;
-      font-family: system-ui, sans-serif;
+        box-sizing: border-box;
+        display: flex;
+        align-items: center;
+        padding: var(--toolbar-padding);
+        font-family: var(--font-family);
     }
 
     .toolbar-button {
-      box-sizing: border-box;
-      border: none;
-      padding: 3px 6px;
-      background: none;
-      border-radius: 4px;
-      cursor: pointer;
-      position: relative;
-    }
-    
-    .toolbar > .toolbar-button, .menu-button-container {
-        margin-inline-end: 4px;
-    }
-    
-    .toolbar > .toolbar-button[aria-haspopup="true"] {
-        padding-right: 1.1em;
-    }
-    
-     .toolbar > .toolbar-button[aria-haspopup="true"]:after {
-        position: absolute;
-        right: 0;
-        top: 0;
-        bottom: 0;
-        margin-left: 6px;
-        text-align: center;
-        width: 1em;
-        content: "";
-        background: var(--chevron-down);
-        background-size: contain;
-        background-position: right;
-        background-repeat: no-repeat;
+        box-sizing: border-box;
+        display: flex;
+        align-items: center;
+        padding: var(--button-padding);
+        border: none;
+        background: none;
+        border-radius: var(--border-radius);
+        cursor: pointer;
+        position: relative;
+        line-height: 1;
     }
 
     .toolbar-button:hover,
     .toolbar-button[aria-expanded="true"] {
-      background: var(--button-hover);
+        background: var(--color-hover);
     }
 
     .toolbar-button:focus-visible {
-      outline: 2px solid #0066cc;
-      outline-offset: 2px;
+        outline: var(--focus-ring-width) solid var(--color-focus);
+        outline-offset: var(--focus-ring-offset);
     }
-    
-    .more-button {
-        background: var(--chevron-down);
+
+    .toolbar-button[aria-haspopup="true"] {
+        gap: var(--button-gap);
+    }
+
+    .toolbar-button[aria-haspopup="true"]:after,
+    .more-button:after {
+        content: "";
+        width: var(--icon-size);
+        height: var(--icon-size);
+        background-image: var(--icon-chevron);
         background-size: contain;
-        background-position: right;
         background-repeat: no-repeat;
+        background-position: center;
     }
-    
-    
-    .menu-button-container:hover,
-    .menu-button-container:has([aria-expanded="true"]) {
+
+    .more-button {
+        display: flex;
+        align-items: center;
+        /*padding-inline-end: calc(var(--button-gap) / 2);*/
+    }
+
+    .more-button:after {
+        width: var(--icon-size-more);
+        height: var(--icon-size-more);
+    }
+
+    .toolbar-divider {
+        width: var(--divider-width);
+        margin: var(--divider-margin);
+        background: var(--color-border);
+        align-self: stretch;
+    }
+
+    .split-button-container {
+        display: flex;
+        align-items: stretch;
+    }
+
+    .split-button-container:hover,
+    .split-button-container:has([aria-expanded="true"]) {
         box-sizing: border-box;
-        box-shadow: 0 0 0 1px var(--button-hover) inset;
-        border-radius: 4px;
+        box-shadow: 0 0 0 var(--divider-width) var(--color-hover) inset;
+        border-radius: var(--border-radius);
     }
-    
-     .menu-button-container button:first-child {
+
+    .split-button-container button:first-child {
         border-end-end-radius: 0;
         border-start-end-radius: 0;
+        padding-inline-end: calc(var(--button-gap) / 2); /* Match the menu button */
     }
-    
-    .menu-button-container button:nth-child(2) {
+
+    .split-button-container button:nth-child(2) {
         border-end-start-radius: 0;
         border-start-start-radius: 0;
+        padding-inline: calc(var(--button-gap) / 2); /* Match the menu button */
     }
+
+    /*.toolbar {*/
+    /*  box-sizing: border-box;*/
+    /*  display: flex;*/
+    /*  align-items: center;*/
+    /*  padding: 4px;*/
+    /*  font-family: system-ui, sans-serif;*/
+    /*}*/
+    
+    /*.toolbar-button {*/
+    /*  box-sizing: border-box;*/
+    /*  border: none;*/
+    /*  padding: 0.15rem 0.3rem;*/
+    /*  background: none;*/
+    /*  border-radius: 4px;*/
+    /*  cursor: pointer;*/
+    /*  position: relative;*/
+    /*}*/
+    
+    /*.toolbar > .toolbar-button, .split-button-container {*/
+    /*    display: flex;*/
+    /*    align-items: stretch;*/
+    /*}*/
+    
+    /*.toolbar > .toolbar-button[aria-haspopup="true"] {*/
+    /*    display: flex;*/
+    /*    align-items: center;*/
+    /*    gap: 0.3rem;*/
+    /*}*/
+    
+    /* .toolbar > .toolbar-button[aria-haspopup="true"]:after {*/
+    /*     content: "";*/
+    /*     width: 0.5rem;*/
+    /*     height: 0.5rem;*/
+    /*     background-image: var(--chevron-down);*/
+    /*     background-size: contain;*/
+    /*     background-repeat: no-repeat;*/
+    /*     background-position: center;*/
+    /*     */
+    /*   */
+    /*}*/
+    
+    /*.toolbar-button:hover,*/
+    /*.toolbar-button[aria-expanded="true"] {*/
+    /*  background: var(--button-hover);*/
+    /*}*/
+    
+    /*.toolbar-button:focus-visible {*/
+    /*  outline: 2px solid #0066cc;*/
+    /*  outline-offset: 2px;*/
+    /*}*/
+    
+    /*.more-button {*/
+    /*    display: flex;*/
+    /*    align-items: center;*/
+    /*    position: relative;*/
+    /*    padding-inline: 0;*/
+    /*}*/
+    
+    /*.more-button:after {*/
+    /*    content: "";*/
+    /*    width: 0.6rem;*/
+    /*    height: 0.6rem;*/
+    /*    background-image: var(--chevron-down);*/
+    /*    background-size: contain;*/
+    /*    background-repeat: no-repeat;*/
+    /*    background-position: center;*/
+    /*}*/
+    
+    /*.toolbar-divider {*/
+    /*    width: 1px;*/
+    /*    margin: 4px;*/
+    /*    background: var(--menu-border);*/
+    /*    align-self: stretch;*/
+    /*}*/
+    
+    
+    /*.split-button-container:hover,*/
+    /*.split-button-container:has([aria-expanded="true"]) {*/
+    /*    box-sizing: border-box;*/
+    /*    box-shadow: 0 0 0 1px var(--button-hover) inset;*/
+    /*    border-radius: 4px;*/
+    /*}*/
+    
+    /* .split-button-container button:first-child {*/
+    /*    border-end-end-radius: 0;*/
+    /*    border-start-end-radius: 0;*/
+    /*     padding-inline-end: 0.3rem;*/
+    /*}*/
+    
+    /*.split-button-container button:nth-child(2) {*/
+    /*    border-end-start-radius: 0;*/
+    /*    border-start-start-radius: 0;*/
+    /*    padding-inline-start: 0.3rem;*/
+    /*    padding-inline-end: 0.3rem;*/
+    /*}*/
     
     .menu-container {
         position: relative;
@@ -156,11 +296,136 @@ const css = `
     }
 `;
 
+function processCombiningMarks(text, combiningCharacters, mode = "add") {
+    const output = []
+    for (let i = 0; i < text.length; i++) {
+        const codepoint = text.codePointAt(i);
+
+        if (codepoint) {
+            // Handle surrogate pairs, move index appropriately
+            const char = String.fromCodePoint(codepoint);
+            output.push(char);
+
+            if (codepoint >= 0x10000) {
+                i++; // increment extra for surrogate pairs
+            }
+
+            // Output existing combining marks and increase the index
+            while (i + 1 < text.length) {
+                const nextCodepoint = text.codePointAt(i + 1);
+                if (!nextCodepoint || !/\p{M}/u.test(String.fromCodePoint(nextCodepoint))) {
+                    break;
+                }
+                i++;
+                const mark = String.fromCodePoint(nextCodepoint);
+                if (!combiningCharacters.includes(mark)) {
+                    output.push(mark);
+                }
+            }
+
+            if (mode === "add") output.push(...combiningCharacters);
+        }
+    }
+    return output.join("");
+}
+
+function addCombining(text, combiningCharacters) {
+    return processCombiningMarks(text, combiningCharacters, "add");
+}
+
+function removeCombining(text, combiningCharacters) {
+    return processCombiningMarks(text, combiningCharacters, "remove");
+}
+
+export const setHighlights = StateEffect.define()
+export const clearHighlights = StateEffect.define()
+
+const highlightMark = Decoration.mark({
+    class: "leiden-highlight"
+})
+
+const highlightField = StateField.define({
+    create() { return RangeSet.empty },
+    update(highlights, tr) {
+        highlights = highlights.map(tr.changes)
+        for (const effect of tr.effects) {
+            if (effect.is(setHighlights)) {
+                return RangeSet.of(
+                    effect.value.map(({from, to}) =>
+                        highlightMark.range(from, to))
+                )
+            } else if (effect.is(clearHighlights)) {
+                return RangeSet.empty
+            }
+        }
+
+        return highlights
+    },
+    provide: f => EditorView.decorations.from(f)
+})
+
+const highlightTheme = EditorView.baseTheme({
+    ".leiden-highlight": {
+        backgroundColor: "rgba(255, 255, 0, 0.2)"
+    }
+})
+
+const availableUnderdotRanges = StateField.define({
+    create() { return [] },
+    update(ranges, tr) {
+        if (tr.docChanged || tr.selection) {
+            ranges.length = 0
+            const selection = tr.state.selection.main;
+            if (selection.empty && selection.from === 0) {
+                return ranges
+            }
+
+            const from = selection.empty ? findClusterBreak(tr.state.doc.toString(), selection.from, false) : selection.from
+            const to = selection.to
+
+            let node = syntaxTree(tr.state).cursorAt(from, 1)
+            while (node) {
+                const name = node.type.name
+                if (name === "Text") {
+                    const pattern = /[\p{L}\p{N}]+/gu
+                    const testFrom = Math.max(from, node.from)
+                    const testTo = Math.min(to, node.to)
+
+                    let match
+                    while ((match = pattern.exec(tr.state.doc.sliceString(testFrom, testTo)))) {
+                        ranges.push({
+                            name,
+                            from: testFrom + match.index,
+                            to: testFrom + match.index + match[0].length,
+                        })
+                    }
+                } else if (name === "Unclear" || name === "SupralineMacronContent" || name === "SupralineUnclear") {
+                    ranges.push({
+                        name,
+                        from: Math.max(from, node.from),
+                        to: Math.min(to, node.to)
+                    })
+                }
+
+                if (node.to > to) {
+                    console.log({selTo: to, nodeTo: node.to})
+                    break
+                }
+                node.next()
+            }
+        }
+        return ranges
+    }
+})
+
+
+
 
 const applySnippet = (view, snippetDef) => {
     const { to, from } = view.state.selection.ranges[0]
     snippet(snippetDef.template)(view, null, from, to);
 }
+
 
 const toolbarConfig = (state) => {
     const snippetItem = ([id, snippetDef]) => ({
@@ -207,6 +472,42 @@ const toolbarConfig = (state) => {
         return true
     })
 
+    const ancientDiacrits = {
+        Acute: "´",
+        Asper: " ῾",
+        Circumflex: "^",
+        Diaeresis: "¨",
+        Grave: "`",
+        Lenis: " ᾿",
+    }
+
+    const diacritItems = Object.entries(ancientDiacrits).map(([name, diacrit]) => ({
+        id: name.toLowerCase(),
+        label: name,
+        active: inlineNodeActive(),
+        action: (view) => {
+            applySnippet(view, {
+                template: ` \${char}(${diacrit})`
+            })
+        }
+    }))
+
+    const doubleDiacritFirstItems = Object.entries(ancientDiacrits).map(([name, diacrit]) => ({
+        id: `${name.toLowerCase()}-with`,
+        label: `${name} with`,
+        active: inlineNodeActive(),
+        items: Object.entries(ancientDiacrits)
+            .filter(([secondName]) => secondName !== name)
+            .map(([secondName, secondDiacrit]) => ({
+            id: `with-${secondName.toLowerCase()}`,
+            label: `${secondName}`,
+            action: (view) => {
+                applySnippet(view, {
+                    template: ` \${char}(${diacrit}${secondDiacrit})`
+                })
+            }
+        }))
+    }))
     return [
         {
             id: "markup",
@@ -480,14 +781,35 @@ const toolbarConfig = (state) => {
         {
             id: "symbols",
             label: "Symbols",
-            items: (() => {
-                const {figure, filler, glyph, paragraphos, horizontalRule, wavyLine, dipleObelismene, coronis, textInBox} = snippets
-                return Object.entries({figure, filler, glyph, paragraphos, horizontalRule, wavyLine, dipleObelismene, coronis, textInBox}).map((snippetEntry) => ({
+            items: [...(() => {
+                const {figure, filler, glyph} = snippets
+                return Object.entries({figure, filler, glyph}).map((snippetEntry) => ({
                     ...snippetItem(snippetEntry),
                     active: inlineNodeActive()
                 }))
-            })()
+            })(),
+            {
+              id: "ancient-diacrits",
+              label: "Ancient diacriticals",
+              items: [...diacritItems, {
+                  id: "ancient-diacrits-double",
+                  label: "Double diacriticals",
+                  items: doubleDiacritFirstItems
+              }]
+            },
+            {
+                id: "milestones",
+                label: "Milestone",
+                items: (() => {
+                    const {paragraphos, horizontalRule, wavyLine, dipleObelismene, coronis, textInBox} = snippets
+                    return Object.entries({paragraphos, horizontalRule, wavyLine, dipleObelismene, coronis, textInBox}).map((snippetEntry) => ({
+                        ...snippetItem(snippetEntry),
+                        active: inlineNodeActive()
+                    }))
+                })()
+            }]
         },
+        {type: "divider"},
         {
             id: "abbreviation",
             label: "(a(bc))",
@@ -526,7 +848,7 @@ const toolbarConfig = (state) => {
         },
         {
             id: "deletion",
-            label: "〚abc〛",
+            label:  "⟦abc⟧",
             tooltip: "Deleted text",
             menuTooltip: "More deletion markup",
             action: (view) => applySnippet(view, snippets.deletion),
@@ -538,21 +860,6 @@ const toolbarConfig = (state) => {
                 }))
             })(),
             active: inlineNodeActive()
-        },
-        {
-            id: "unclear",
-            label: "ạ",
-            tooltip: "Mark as unclear",
-            action: (view) => {
-                console.log("UNDERDOT")
-            }
-        },
-        {
-            id: "unclear",
-            label: "ā",
-            tooltip: "Supraline",
-            action: (view) => {
-            }
         },
         {
             id: "number",
@@ -585,7 +892,57 @@ const toolbarConfig = (state) => {
                 }))
             })(),
             active: inlineNodeActive()
-        }
+        },
+        {type: "divider"},
+        {
+            id: "unclear",
+            label: "ạ",
+            tooltip: "Mark as unclear",
+            action: (view) => {
+                const availableRanges = view.state.field(availableUnderdotRanges)
+                view.dispatch({
+                    changes: availableRanges.map(range => {
+                        const text = view.state.doc.sliceString(range.from, range.to)
+                        const process =
+                            range.name === "Unclear" || range.name === "SupralineUnclear" ? removeCombining : addCombining
+                        return {from: range.from, to: range.to, insert: process(text, ['\u0323'])}
+                    })
+                })
+            },
+            active: state.field(availableUnderdotRanges).length > 0,
+            hoverAction: {
+                enter: (view) => {
+                    const availableRanges = view.state.field(availableUnderdotRanges)
+                    view.dispatch({effects: [setHighlights.of(availableRanges)]})
+                },
+                leave: (view) => view.dispatch({effects: [clearHighlights.of()]})
+            }
+        },
+        {
+            id: "supraline-macron",
+            label: "ā",
+            tooltip: "Supraline",
+            action: (view) => {
+                const availableRanges = view.state.field(availableUnderdotRanges)
+                view.dispatch({
+                    changes: availableRanges.map(range => {
+                        const text = view.state.doc.sliceString(range.from, range.to)
+                        const process =
+                            range.name === "SupralineMacronContent" || range.name === "SupralineUnclear" ? removeCombining : addCombining
+                        return {from: range.from, to: range.to, insert: process(text, ['\u0304'])}
+                    })
+                })
+            },
+            active: state.field(availableUnderdotRanges).length > 0,
+            hoverAction: {
+                enter: (view) => {
+                    const availableRanges = view.state.field(availableUnderdotRanges)
+                    view.dispatch({effects: [setHighlights.of(availableRanges)]})
+                },
+                leave: (view) => view.dispatch({effects: [clearHighlights.of()]})
+            }
+        },
+        {type: "divider"}
     ];
 }
 
@@ -606,13 +963,15 @@ export function toolbarPanel(view) {
         }
         e.preventDefault();
 
-        if (isMenuOpen(toolbarItem)) {
-            closeMenuForTrigger(toolbarItem);
-        } else {
-            closeAllMenusUnder(menuParent)
-            void openMenuAndFocus(toolbarItem);
-        }
+        if (hasMenu(toolbarItem)) {
+            if (isMenuOpen(toolbarItem)) {
+                closeMenuForTrigger(toolbarItem);
+            } else {
+                closeAllMenusUnder(menuParent)
+                void openMenuAndFocus(toolbarItem);
+            }
 
+        }
     })
 
     panel.addEventListener('keydown', async (e) => {
@@ -886,7 +1245,7 @@ export function toolbarPanel(view) {
 
     const createSplitButton = (parent, {id, label, action, items, tooltip, menuTooltip, active}, tabIndex = -1) => {
         return html`
-            <div class="menu-button-container">
+            <div class="split-button-container">
                 ${createButton(parent, {id, label, action, items, tooltip, menuTooltip, active}, tabIndex)}
                 <button 
                         class="toolbar-button more-button" 
@@ -896,13 +1255,13 @@ export function toolbarPanel(view) {
                         aria-controls="menu-${id}"
                         tabindex="${tabIndex}"
                         title="${menuTooltip}"
-                >&nbsp;</button>
+                ></button>
             </div>
         `
     }
 
 
-    const createButton = (parent, {id, label, action, items, tooltip, menuTooltip, active}, tabIndex = -1) => {
+    const createButton = (parent, {id, label, action, items, tooltip, menuTooltip, active, hoverAction}, tabIndex = -1) => {
         return html`
             <button class="toolbar-button" 
                     id="button-${id}" 
@@ -914,23 +1273,12 @@ export function toolbarPanel(view) {
                         view.focus();
                     }}"
                     ?disabled="${active !== undefined && !active}"
+                    @mouseenter="${() => {hoverAction && hoverAction.enter(view)}}"
+                    @mouseleave="${() => {hoverAction && hoverAction.leave(view)}}"
             >${label}</button>
         `
 
     }
-
-    const menuBehavior = directive(class extends Directive {
-        // render(menuRef) {
-        //     // return menuRef
-        // }
-
-        update(part, [menuRef, parent]) {
-            const menu = new Menu(part.element, menuRef, parent);
-            menus.add(menu);
-            menu.initialize();
-            return () => {} // cleanup
-        }
-    })
 
     const createMenuButton = (parent, {id, label, action, items, tooltip, menuTooltip}, menuRef, tabIndex = -1) => {
         return html`
@@ -1010,6 +1358,10 @@ export function toolbarPanel(view) {
         `
     }
 
+    const createDivider = () => html`
+        <div class="toolbar-divider"></div>
+    `
+
     const toolbarMenuRefs = new Map();
     const makeRef = (id) => {
         if (!toolbarMenuRefs.has(id)) {
@@ -1028,12 +1380,18 @@ export function toolbarPanel(view) {
 
 
         render(html`${config.map((button, index) => {
+                if (button.type === "divider") {
+                    return createDivider()   
+                }
+            
                 const tabIndex = index === 0 ? 0 : -1;
-                return button.action && button.items
-                    ? createSplitButton(panel, button, tabIndex)
-                    : button.items
-                        ? createMenuButton(panel, button, toolbarMenuRefs.get(button.id), tabIndex)
-                        : createButton(panel, button, tabIndex);
+                if (button.action && button.items) {
+                    return createSplitButton(panel, button, tabIndex);
+                }
+
+                return button.items
+                    ? createMenuButton(panel, button, toolbarMenuRefs.get(button.id), tabIndex)
+                    : createButton(panel, button, tabIndex);
             }
         )}`, panel)
     }
@@ -1057,6 +1415,7 @@ export function toolbarPanel(view) {
         update(update) {
 
             if (update.transactions.some(transaction => transaction.reconfigured)) {
+                console.log(update.view.dom.querySelector('.cm-panels'))
                 const panelBg = getComputedStyle(update.view.dom.querySelector('.cm-panels')).backgroundColor
                 this.dom.querySelectorAll(':scope > [role=menu]').forEach(menu => menu.style.backgroundColor = panelBg)
             }
@@ -1068,3 +1427,7 @@ export function toolbarPanel(view) {
 
     }
 }
+
+export const leidenToolbar = [
+    availableUnderdotRanges, highlightField, highlightTheme, showPanel.of(toolbarPanel),
+]

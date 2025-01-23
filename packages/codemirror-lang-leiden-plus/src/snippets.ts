@@ -460,6 +460,12 @@ export const snippets: Record<string, {
         }
     },
 
+    diacritical: {
+      template: " ${char}(${symbol}})",
+      completion: {
+          label: "Ancient diacritical"
+      }
+    },
 
     handShift: {
         template: "$m${num} ",
