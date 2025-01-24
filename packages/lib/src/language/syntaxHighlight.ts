@@ -55,7 +55,7 @@ const abbrev = Tag.define(t.className)
 export const leidenTags = {
     bracket: Tag.define(t.bracket),
     gapNumber: Tag.define(),
-    test: Tag.define(), // TODO: remove
+    keyword: Tag.define(), // TODO: remove
 
     blockLevel1,
     blockLevel1Attr,
@@ -110,10 +110,10 @@ export const leidenHighlightStyle = HighlightStyle.define([
         filter: "brightness(75%)"},
     {tag: leidenTags.gapNumber,
         filter: "brightness(130%)"},
-    {tag: leidenTags.test,
+    {tag: leidenTags.keyword,
         // 'text-decoration': 'overline dotted lightgrey',
-        'font-variant': "small-caps",
-        'font-weight': "bold"},
+        // 'font-variant': "small-caps",
+        'font-family': 'monospace'},
 
     {tag: leidenTags.blockLevel1,
         color: "#1E429F"},

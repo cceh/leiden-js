@@ -279,6 +279,14 @@ const css = `
       cursor: pointer;
       border-radius: 2px;
     }
+    
+    .menu-item .info {
+        color: darkgray;
+    }
+    
+    .menu-item .info:not(:empty) {
+        padding-inline-start: 1em;
+    }
 
     .menu-item:hover,
     .menu-item:focus-visible {
@@ -430,9 +438,10 @@ const applySnippet = (view, snippetDef) => {
 const toolbarConfig = (state) => {
     const snippetItem = ([id, snippetDef]) => ({
         id,
-        label: `${snippetDef.completion.label}${snippetDef.completion.detail ? ", " + snippetDef.completion.detail : ""}`,
+        label: `${snippetDef.completion.displayLabel}${snippetDef.completion.detail ? ", " + snippetDef.completion.detail : ""}`,
         action: (view) => applySnippet(view, snippetDef),
-        active: inlineNodeActive()
+        active: inlineNodeActive(),
+        info: snippetDef.completion.info
     })
 
     const hasParent = (node, parent) => {
@@ -745,7 +754,6 @@ const toolbarConfig = (state) => {
                         active: inlineNodeActive()
                     }))
                 })(),
-                active: inlineNodeActive()
             }, {
                 id: "supplied",
                 label: "Supplied text",
@@ -791,6 +799,7 @@ const toolbarConfig = (state) => {
             {
               id: "ancient-diacrits",
               label: "Ancient diacriticals",
+              info: " ὑ(¨)",
               items: [...diacritItems, {
                   id: "ancient-diacrits-double",
                   label: "Double diacriticals",
@@ -814,7 +823,7 @@ const toolbarConfig = (state) => {
             id: "abbreviation",
             label: "(a(bc))",
             action: (view) => applySnippet(view, snippets.abbreviation),
-            tooltip: snippets.abbreviation.completion.label + " " + snippets.abbreviation.completion.detail,
+            tooltip: snippets.abbreviation.completion.displayLabel + " " + snippets.abbreviation.completion.detail,
             menuTooltip: "More abbreviation markup",
             items: [
                 {
@@ -1314,7 +1323,7 @@ export function toolbarPanel(view) {
         `
     }
 
-    const createMenuItem = (parent, menu, {id, label, action, items, active}) => {
+    const createMenuItem = (parent, menu, {id, label, action, items, active, info}) => {
         return html`
             ${items ? createMenuEl({id, items}, null) : ""}
             <button
@@ -1354,7 +1363,10 @@ export function toolbarPanel(view) {
                         action(view);
                         view.focus();
                     } : nothing}
-            >${label}</button>
+            >
+                <span class="label">${label}</span>
+                <span class="info">${info}</span>
+            </button>
         `
     }
 

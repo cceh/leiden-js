@@ -11,78 +11,56 @@ import {fromXml as xmlToLeidenTrans, toXml as leidenTransToXml, TransformationEr
 import {xml} from "@codemirror/lang-xml";
 import {linter, lintGutter, setDiagnosticsEffect} from "@codemirror/lint";
 import {leidenToolbar, toolbarPanel} from "./toolbar";
+import {html, nothing, render} from "lit-html";
+import {createRef, ref} from "lit-html/directives/ref.js";
 
 const syntaxTreeNodeMap = new NodeWeakMap();
 
 function createTreeNode(cursor) {
-    const div = document.createElement('div');
-    syntaxTreeNodeMap.cursorSet(cursor, div);
+    const theRef = createRef()
+    syntaxTreeNodeMap.cursorSet(cursor, theRef);
 
-    div.className = 'tree-node';
-    div.dataset.from = cursor.from;
-    div.dataset.to = cursor.to;
 
-    const content = document.createElement('div');
-    content.className = 'node-content';
-
-    // Check if the current node has children by attempting to move into them
-    let hasChildren = cursor.firstChild();
-    if (hasChildren) {
-        // Move back up after checking
-        cursor.parent();
-    }
-
-    if (hasChildren) {
-        const toggle = document.createElement('span');
-        toggle.className = 'toggle';
-        toggle.textContent = '−';
-        toggle.onclick = (e) => {
-            e.stopPropagation();
-            div.classList.toggle('collapsed');
-            toggle.textContent = div.classList.contains('collapsed') ? '+' : '−';
-        };
-        content.appendChild(toggle);
-    } else {
-        const spacer = document.createElement('span');
-        spacer.className = 'spacer';
-        spacer.innerHTML = '&nbsp;';
-        content.appendChild(spacer);
-    }
-
-    const name = document.createElement('span');
-    name.className = 'node-name';
-    name.textContent = cursor.name;
-    content.appendChild(name);
-    div.appendChild(content);
-
-    // Clicking the node selects the corresponding text in the editor
-    div.addEventListener('click', (e) => {
-        e.stopPropagation();
-        if (window.leidenEditorView) {
-            const from = Number(div.dataset.from);
-            const to = Number(div.dataset.to);
-            window.leidenEditorView.dispatch({
-                selection: {anchor: from, head: to}
-            });
-            window.leidenEditorView.focus();
-        }
-    });
-
+   const children = []
     // If the node has children, dive in and create their nodes
-    if (hasChildren && cursor.firstChild()) {
-        const childrenDiv = document.createElement('div');
-        childrenDiv.className = 'children';
-
+    if (cursor.firstChild()) {
         do {
-            childrenDiv.appendChild(createTreeNode(cursor));
+            children.push(createTreeNode(cursor));
         } while (cursor.nextSibling());
 
         // Move back up to the parent node after processing children
         cursor.parent();
-        div.appendChild(childrenDiv);
     }
 
-    return div;
+    return html`
+        <div ${ref(theRef)} class="tree-node" .from=${cursor.from} .to=${cursor.to} @click=${(e) => {
+            e.stopPropagation();
+            if (window.leidenEditorView) {
+                const from = Number(e.target.dataset.from);
+                const to = Number(e.target.dataset.to);
+                window.leidenEditorView.dispatch({
+                    selection: {anchor: from, head: to}
+                });
+                window.leidenEditorView.focus();
+            }
+        }}>
+            <div class="node-content">
+                ${ children.length > 0
+                        ? html`<span class="toggle" @onclick=${((e) => {
+                            e.stopPropagation();
+                            const node = e.target.closest('.tree-node')
+                            node.classList.toggle('collapsed');
+                            e.target.textContent = node.classList.contains('collapsed') ? '+' : '−';
+                        })}>−</span>` 
+                        : html`<span class="spacer">&nbsp;</span>`
+                }
+                <span class="node-name">${cursor.name}</span>
+            </div>
+            ${ children.length > 0
+                    ? html`<div class="children">${children}</div>`
+                    : nothing }
+        </div>
+    `
 }
 
 function highlightCurrentNodeInTree(syntaxNode) {
@@ -90,7 +68,7 @@ function highlightCurrentNodeInTree(syntaxNode) {
     const nodes = treeContent.querySelectorAll('.tree-node');
     nodes.forEach(node => node.classList.remove('highlighted'));
 
-    const treeNode = syntaxTreeNodeMap.get(syntaxNode);
+    const treeNode = syntaxTreeNodeMap.get(syntaxNode).value;
     treeNode.classList.add('highlighted');
     treeNode.scrollIntoView({block: 'center', behavior: 'auto'});
 }
@@ -102,9 +80,9 @@ function updateDebugInfo(view) {
 
     // Update tree view
     const treeContent = document.getElementById('parse-tree-content');
-    treeContent.innerHTML = '';
-    const rootNode = createTreeNode(tree.cursor());
-    treeContent.appendChild(rootNode);
+
+    render(createTreeNode(tree.cursor()), treeContent)
+
     setTimeout(() => {
         // Highlight the current node corresponding to the cursor position
         const token = tree.resolveInner(pos);
@@ -227,7 +205,12 @@ window.leidenEditorView = new EditorView({
         diagnosticsStateField,
         lintGutter(),
         showPanel.of(statusBarPanel),
-        leidenToolbar
+        leidenToolbar,
+        EditorView.theme({
+            ".cm-content": {
+                fontFamily: `"Cardo", "Lucida Grande", "IFAO-Grec Unicode", "Arial Unicode MS", "New Athena Unicode", "Athena Unicode", "Lucida Grande", "Verdana", "Tahoma"`
+            }
+        })
     ],
     parent: document.querySelector('.leiden-pane')
 });
