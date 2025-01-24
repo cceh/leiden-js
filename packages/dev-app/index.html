@@ -2,40 +2,136 @@
 <html>
   <head>
     <title>Leiden+ Dev</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cardo:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
     <style>
       body { 
         margin: 0;
         height: 100vh;
         display: flex;
+        gap: 5px;
       }
+
+      h3 {
+        margin-top: 4px;
+        margin-bottom: 2px;
+      }
+
       .language-select {
         border-bottom: 1px solid #ddd;
       }
       .editor-pane {
         display: flex;
         flex-direction: column;
-        justify-content: stretch;
-        width: 50%;
+        /*justify-content: stretch;*/
+        /*width: 50%;*/
         height: 100%;
-        border-right: 1px solid #ddd;
-      }
-      .leiden-pane, .xml-pane {
-        display: flex;
-        flex-direction: column;
-        flex: 1 1 0;
-        min-height: 0;
-        border-bottom: 1px solid #ddd;
+        flex: 1 1 auto;
+        /*border-right: 1px solid #ddd;*/
       }
 
+      .xml-container {
+        display: flex;
+        flex-direction: column;
+        height: 50%;
+        /*flex: 1;*/
+      }
+
+      .xml-editor {
+        flex: 1;
+      }
+
+      .xml-container.hidden .xml-editor {
+        display: none;
+        height: 0;
+      }
+
+      .xml-container.hidden {
+        height: unset;
+      }
+
+      .leiden-editor, .xml-editor {
+        display: flex;
+        flex-direction: column;
+        /*flex: 1 1 0;*/
+        flex: 1;
+        min-height: 0;
+        border-bottom: 1px solid #ddd;
+        position: relative;
+      }
+
+
+
       .debug-pane {
-        width: 50%;
+        height: 100%;
+        display: flex;
+        flex-direction: row;
+      }
+      .debug-pane:not(.hidden) {
+        width: 400px;
+      }
+
+      .debug-pane.hidden .debug-content {
+        display: none;
+      }
+
+      .debug-content {
         height: 100%;
         display: flex;
         flex-direction: column;
+        flex: 1;
       }
+
+      .debug-toggle {
+          display: flex;
+          flex-direction: row;
+          align-items: stretch;
+      }
+
+      .debug-toggle button {
+        writing-mode: vertical-rl;
+        padding: 25px 2px 2px 2px;
+        position: relative;
+        text-align: start;
+      }
+
+      .xml-container > button {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2px 2px 2px 2px;
+
+      }
+
+      .debug-toggle button::after,
+      .xml-container > button::after {
+        content: '';
+        width: 5px;
+        height: 5px;
+        border-right: 1px solid currentColor;
+        border-bottom: 1px solid currentColor;
+        transition: transform 0.2s ease;
+      }
+
+      .debug-toggle button::after {
+        position: absolute;
+        top: 8px;
+        left: 50%;
+        transform: translateX(-50%) rotate(-45deg);
+      }
+
+      .xml-container > button::after {
+        display: inline-block;
+        transform: rotate(45deg);
+        margin-left: 8px;
+      }
+
+      .xml-container.hidden > button::after {
+        transform: rotate(225deg);
+      }
+
+      .debug-pane.hidden .debug-toggle button::after {
+        transform: translateX(-50%) rotate(135deg);
+      }
+
       .parse-tree {
         height: 70%;
         overflow: auto;
@@ -43,6 +139,11 @@
         border-bottom: 1px solid #ddd;
         font-family: monospace;
       }
+
+      .tree-controls {
+        margin-bottom: 8px;
+      }
+
       .debug-info {
         height: 30%;
         padding: 1rem;
@@ -50,6 +151,9 @@
       }
       .cm-editor {
         height: 100%;
+        position: absolute !important;
+        inset: 0;
+        overflow: auto;
       }
       .debug-label {
         font-weight: bold;
@@ -124,21 +228,36 @@
           <option value="leiden-trans">Leiden Translation</option>
         </select>
       </div>
-      <div class="leiden-pane">
+      <div class="leiden-editor">
       </div>
-      <div class="xml-pane">
+      <div class="xml-container">
+        <button id="xml-toggle-button">XML editor</button>
+        <div class="xml-editor">
+        </div>
       </div>
     </div>
     <div class="debug-pane">
-      <div class="parse-tree">
-        <h3>Parse Tree</h3>
-        <div id="parse-tree-content"></div>
+      <div class="debug-toggle">
+        <button id="debug-toggle-button">Parse tree</button>
       </div>
-      <div class="debug-info">
-        <h3>Debug Info</h3>
-        <div id="debug-info-content"></div>
+      <div class="debug-content">
+        <div class="parse-tree">
+          <h3>Parse Tree</h3>
+          <div class="tree-controls">
+            <input type="checkbox" id="hide-text-nodes" />
+            <label for="hide-text-nodes">Hide Text</label>
+            <input type="checkbox" id="hide-delim-nodes" />
+            <label for="hide-delim-nodes">Hide Delims</label>
+          </div>
+          <div id="parse-tree-content"></div>
+        </div>
+        <div class="debug-info">
+          <h3>Debug Info</h3>
+          <div id="debug-info-content"></div>
+        </div>
       </div>
     </div>
+
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>

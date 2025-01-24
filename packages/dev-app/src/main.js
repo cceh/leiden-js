@@ -14,7 +14,16 @@ import {leidenToolbar, toolbarPanel} from "./toolbar";
 import {html, nothing, render} from "lit-html";
 import {createRef, ref} from "lit-html/directives/ref.js";
 
+import './styles/cardo.css'
+
 const syntaxTreeNodeMap = new NodeWeakMap();
+const selectTreeNodeAnnotation = Annotation.define()
+
+function clearTreeNodeHighlight() {
+    const treeContent = document.getElementById('parse-tree-content');
+    const nodes = treeContent.querySelectorAll(':scope .tree-node.highlighted');
+    nodes.forEach(node => node.classList.remove('highlighted'));
+}
 
 function createTreeNode(cursor) {
     const theRef = createRef()
@@ -25,6 +34,13 @@ function createTreeNode(cursor) {
     // If the node has children, dive in and create their nodes
     if (cursor.firstChild()) {
         do {
+            if (cursor.name === "Text" && localStorage.getItem('hide-text-nodes') === 'true') {
+                continue
+            }
+            if (cursor.type.is("Delims") && localStorage.getItem('hide-delim-nodes') === 'true') {
+                continue
+            }
+
             children.push(createTreeNode(cursor));
         } while (cursor.nextSibling());
 
@@ -33,20 +49,24 @@ function createTreeNode(cursor) {
     }
 
     return html`
-        <div ${ref(theRef)} class="tree-node" .from=${cursor.from} .to=${cursor.to} @click=${(e) => {
+        <div ${ref(theRef)} class="tree-node" data-from=${cursor.from} data-to=${cursor.to} @click=${(e) => {
             e.stopPropagation();
             if (window.leidenEditorView) {
-                const from = Number(e.target.dataset.from);
-                const to = Number(e.target.dataset.to);
+                clearTreeNodeHighlight()
+                e.currentTarget.classList.toggle('highlighted');
+                const from = Number(e.currentTarget.dataset.from);
+                const to = Number(e.currentTarget.dataset.to);                
                 window.leidenEditorView.dispatch({
-                    selection: {anchor: from, head: to}
+                    selection: {anchor: from, head: to},
+                    scrollIntoView: true,
+                    annotations: selectTreeNodeAnnotation.of(true)
                 });
                 window.leidenEditorView.focus();
             }
         }}>
             <div class="node-content">
                 ${ children.length > 0
-                        ? html`<span class="toggle" @onclick=${((e) => {
+                        ? html`<span class="toggle" @click=${((e) => {
                             e.stopPropagation();
                             const node = e.target.closest('.tree-node')
                             node.classList.toggle('collapsed');
@@ -64,30 +84,41 @@ function createTreeNode(cursor) {
 }
 
 function highlightCurrentNodeInTree(syntaxNode) {
-    const treeContent = document.getElementById('parse-tree-content');
-    const nodes = treeContent.querySelectorAll('.tree-node');
-    nodes.forEach(node => node.classList.remove('highlighted'));
+    clearTreeNodeHighlight()
 
-    const treeNode = syntaxTreeNodeMap.get(syntaxNode).value;
+    let node
+    if (localStorage.getItem('hide-text-nodes') === 'true' && syntaxNode.type.is("Text")) {
+        node = syntaxNode.parent
+    } else  if (localStorage.getItem('hide-delim-nodes') === 'true' && syntaxNode.type.is("Delims")) {
+        node = syntaxNode.parent
+    } else {
+        node = syntaxNode
+    }
+
+    const treeNodeRef = syntaxTreeNodeMap.get(node);
+    if (!treeNodeRef) {
+        return
+    }
+    const treeNode = treeNodeRef.value;
     treeNode.classList.add('highlighted');
-    treeNode.scrollIntoView({block: 'center', behavior: 'auto'});
+    treeNode.firstElementChild.scrollIntoView({block: 'center', behavior: 'auto'});
 }
 
-function updateDebugInfo(view) {
+function updateParseTree(view) {
     const tree = syntaxTree(view.state);
+    const treeContent = document.getElementById('parse-tree-content');
+    render(createTreeNode(tree.cursor()), treeContent)
+
+}
+function updateDebugInfo(view, highlightNode = true) {
     const pos = view.state.selection.main.head;
     const line = view.state.doc.lineAt(pos);
 
-    // Update tree view
-    const treeContent = document.getElementById('parse-tree-content');
-
-    render(createTreeNode(tree.cursor()), treeContent)
-
     setTimeout(() => {
-        // Highlight the current node corresponding to the cursor position
-        const token = tree.resolveInner(pos);
+        const tree = syntaxTree(view.state);
+        const token = tree.resolve(pos, 0);
 
-        highlightCurrentNodeInTree(token);
+        highlightNode && highlightCurrentNodeInTree(token);
 
         document.getElementById('debug-info-content').innerHTML = `
     <div><span class="debug-label">Position:</span>${pos}</div>
@@ -114,6 +145,7 @@ function statusBarPanel(view) {
         }
     }
 }
+
 
 
 function getLanguage(variant) {
@@ -186,8 +218,12 @@ window.leidenEditorView = new EditorView({
 
             const isReconfigured = update.transactions.some(tr => tr.reconfigured)
 
+
             if (update.docChanged || update.selectionSet || isReconfigured) {
-                updateDebugInfo(update.view);
+                if (localStorage.getItem('debug-open') === 'true') {
+                    const scrollTree = !update.transactions.some(tr => tr.annotation(selectTreeNodeAnnotation) === true)
+                    updateDebugInfo(update.view, scrollTree);
+                }
             }
 
 
@@ -200,6 +236,9 @@ window.leidenEditorView = new EditorView({
                     },
                     annotations: syncAnnotation.of(true)
                 })
+                if (localStorage.getItem('debug-open') === 'true') {
+                    setTimeout(() => updateParseTree(update.view))
+                }
             }
         }),
         diagnosticsStateField,
@@ -212,7 +251,7 @@ window.leidenEditorView = new EditorView({
             }
         })
     ],
-    parent: document.querySelector('.leiden-pane')
+    parent: document.querySelector('.leiden-editor')
 });
 
 
@@ -249,13 +288,15 @@ const xmlStateField = StateField.define({
         if (tr.docChanged || tr.reconfigured) {
             const doc = new DOMParser().parseFromString(tr.state.doc.toString(), 'text/xml').documentElement
             try {
-                window.leidenEditorView.dispatch({ changes: {
-                        from: 0,
-                        to: window.leidenEditorView.state.doc.length,
-                        insert: convertToLeiden(doc)
-                    },
-                    annotations: syncAnnotation.of(true)
-                })
+                if (localStorage.getItem('xml-open') === 'true') {
+                    window.leidenEditorView.dispatch({ changes: {
+                            from: 0,
+                            to: window.leidenEditorView.state.doc.length,
+                            insert: convertToLeiden(doc)
+                        },
+                        annotations: syncAnnotation.of(true)
+                    })
+                }
             } catch (e) {
                 if (e instanceof LeidenPlusTransformationError || e instanceof LeidenTransTransformationError) {
                     const node = findNodeByPath(tr.state, e.path)
@@ -281,8 +322,58 @@ const xmlStateField = StateField.define({
 })
 
 
+const hideTextNodesCheckbox = document.querySelector('#hide-text-nodes')
+hideTextNodesCheckbox.addEventListener("input", (e) => {
+    localStorage.setItem('hide-text-nodes', e.currentTarget.checked);
+    updateParseTree(window.leidenEditorView);
+})
+
+const hideDelimNodesCheckbox = document.querySelector('#hide-delim-nodes')
+hideDelimNodesCheckbox.addEventListener("input", (e) => {
+    localStorage.setItem('hide-delim-nodes', e.currentTarget.checked);
+    updateParseTree(window.leidenEditorView);
+})
+
+hideTextNodesCheckbox.checked = localStorage.getItem('hide-text-nodes') === 'true'
+hideDelimNodesCheckbox.checked = localStorage.getItem('hide-delim-nodes') === 'true'
+
+const debugToggleButton = document.querySelector('#debug-toggle-button')
+debugToggleButton.addEventListener("click", (e) => {
+    const panel = document.querySelector('.debug-pane')
+    panel.classList.toggle('hidden')
+    const open = !panel.classList.contains('hidden')
+    localStorage.setItem('debug-open', `${open}`);
+    if (open) {
+        updateDebugInfo(window.leidenEditorView);
+        updateParseTree(window.leidenEditorView);
+    }
+})
+const debugPane = document.querySelector('.debug-pane')
+const debugOpen = localStorage.getItem('debug-open') === 'true'
+debugPane.classList.toggle('hidden', !debugOpen)
+
+const xmlToggleButton = document.querySelector('#xml-toggle-button')
+xmlToggleButton.addEventListener("click", (e) => {
+    const panel = document.querySelector('.xml-container')
+    panel.classList.toggle('hidden')
+    const open = !panel.classList.contains('hidden')
+    localStorage.setItem('xml-open', `${open}`);
+    const content = open ? convertToXml(window.leidenEditorView.state.doc.toString()) : ""
+    window.xmlEditorView.dispatch({changes: {
+            from: 0,
+            to: window.xmlEditorView.state.doc.length,
+            insert: content
+        },
+        annotations: syncAnnotation.of(true)
+    })
+})
+
+const xmlPane = document.querySelector('.xml-container')
+const xmlOpen = localStorage.getItem('xml-open') === 'true'
+xmlPane.classList.toggle('hidden', !xmlOpen)
+
 window.xmlEditorView = new EditorView({
-    doc: convertToXml(doc),
+    doc: xmlOpen ? convertToXml(doc) : "",
     extensions: [
         basicSetup,
         language.of(xml()),
@@ -306,8 +397,11 @@ window.xmlEditorView = new EditorView({
         lintGutter(),
         showPanel.of(statusBarPanel),
     ],
-    parent: document.querySelector('.xml-pane')
+    parent: document.querySelector('.xml-editor')
 })
 
 // Initial update
-updateDebugInfo(window.leidenEditorView);
+if (debugOpen) {
+    updateDebugInfo(window.leidenEditorView);
+    updateParseTree(window.leidenEditorView);
+}

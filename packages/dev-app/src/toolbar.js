@@ -392,7 +392,7 @@ const availableUnderdotRanges = StateField.define({
             const to = selection.to
 
             let node = syntaxTree(tr.state).cursorAt(from, 1)
-            while (node) {
+            do {
                 const name = node.type.name
                 if (name === "Text") {
                     const pattern = /[\p{L}\p{N}]+/gu
@@ -416,11 +416,9 @@ const availableUnderdotRanges = StateField.define({
                 }
 
                 if (node.to > to) {
-                    console.log({selTo: to, nodeTo: node.to})
                     break
                 }
-                node.next()
-            }
+            } while (node.next())
         }
         return ranges
     }
@@ -1427,7 +1425,6 @@ export function toolbarPanel(view) {
         update(update) {
 
             if (update.transactions.some(transaction => transaction.reconfigured)) {
-                console.log(update.view.dom.querySelector('.cm-panels'))
                 const panelBg = getComputedStyle(update.view.dom.querySelector('.cm-panels')).backgroundColor
                 this.dom.querySelectorAll(':scope > [role=menu]').forEach(menu => menu.style.backgroundColor = panelBg)
             }
