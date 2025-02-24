@@ -51,7 +51,7 @@ block {
 }
 
 textInline {
-    Text | Unclear | supralineMacron 
+    Text | Unclear | supralineMacron | Number
 }
 
 topLevelInline[@isGroup=topLevel] {
@@ -60,7 +60,6 @@ topLevelInline[@isGroup=topLevel] {
     (LineBreakWrapped ~diacrit) |
     LineBreakSpecial |
     LineBreakSpecialWrapped |
-    Number |
     AbbrevUnresolved |
     NumberSpecial |
     NumberSpecialTick |
@@ -73,14 +72,12 @@ topLevelInline[@isGroup=topLevel] {
     GapOmitted |
     InsertionAbove |
     InsertionBelow |
-    InsertionMargin |
-    InsertionMarginSling |
+    InsertionMargin |    InsertionMarginSling |
     InsertionMarginUnderline |
     TextInBox |
     Paragraphos |
     HorizontalRule |
-    WavyLine |
-    DipleObelismene |
+    WavyLine |    DipleObelismene |
     Coronis |
     TextTall |
     TextSuperscript |
@@ -109,7 +106,7 @@ topLevelInline[@isGroup=topLevel] {
 
 inline { textInline | topLevelInline | diacritical | deletion | omittedLanguage | untranscribed }
 
-Text {
+text {
     chars | QuestionMark | (space ~diacrit) | newLine  | "." | ("=" ~eq) | "-"  ~lb | "," | ":" | "+" | "'"
     | ".-"  | digits ~lb | "frac"
 
@@ -117,6 +114,8 @@ Text {
     | "lin" | "char"
     | inlineCirca[@dynamicPrecedence=-3] { circaPrefix }
 }
+
+Text { text (!supralineSic text)* }
 
 
 // ANNOTATIONS / EMENDATIONS in <: tags :> with |infix|
@@ -144,7 +143,6 @@ OrthoRegOrig {
     inline+ ~certLow CertLow?
 }
 
-
 // -- Alternate Reading
 // https://papyri.info/docs/leiden_plus#alternate-reading
 //
@@ -166,7 +164,6 @@ AlternateReadingLemma { inline+ ~certLow CertLow? }
 AlternateReadingLemmaEmpty { }
 AlternateReadingReading { inline+ ~certLow CertLow? }
 AlternateReadingReadingEmpty { }
-
 
 // -- Scribal Correction
 // https://papyri.info/docs/leiden_plus#scribal-correction
