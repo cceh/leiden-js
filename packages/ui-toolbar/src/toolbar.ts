@@ -1,9 +1,8 @@
 import {EditorView, Panel, showPanel, ViewUpdate} from "@codemirror/view";
 import {html, nothing, render} from "lit-html";
 import {createRef} from "lit-html/directives/ref.js";
-import {ActionItemBase, toolbarConfigStateField, ToolbarHoverActionBase, ToolbarItem} from "./config.js";
 import {computePosition, flip, offset, Placement, shift, size} from "@floating-ui/dom";
-import {createMenu} from "./components/menu.js";
+import {menu} from "./components/menu.js";
 import {actionButton} from "./components/actionButton.js";
 import {splitButton} from "./components/splitButton.js";
 import {menuButton} from "./components/menuButton.js";
@@ -11,29 +10,25 @@ import {divider} from "./components/divider.js";
 import {previewHighlightField, previewHighlightTheme} from "./previewHighlight.js";
 import {toolbarTheme} from "./theme.js";
 import {EditorState} from "@codemirror/state";
+import {ActionCapableItem, HoverActionCapableItem, toolbarConfigStateField, ToolbarItem} from "./config.js";
 
-const setCSSVariableFromElementStyle = <P extends keyof CSSStyleDeclaration>(view: EditorView, el: HTMLElement | null, prop: P, variable: `--${string}`) => {
-    const propValue = el && getComputedStyle(el)[prop]
-    if (propValue) {
-        view.dom.style.setProperty(variable, String(propValue))
-    }
-}
 
 // Hack to get the colors of CodeMirror's panels
 // Anyone know a better way?
-const updateCMColors = (view: EditorView) => setTimeout(() => {
+const updateCMColors = (view: EditorView) => requestAnimationFrame(() => {
     const panelsEl = view.dom.querySelector<HTMLElement>(".cm-panels")
     if (!panelsEl) {
-        throw new Error("Could not find CodeMirror panels element");
+        throw new Error("Could not find CodeMirror panels element")
     }
 
-    setCSSVariableFromElementStyle(view, panelsEl, "backgroundColor", "--cm-panel-bg-color")
-    setCSSVariableFromElementStyle(view, panelsEl, "color", "--cm-panel-text-color")
-    setCSSVariableFromElementStyle(view, panelsEl, "borderBottomColor", "--cm-panel-border-color")
+    const panelStyles = getComputedStyle(panelsEl)
+
+    view.dom.style.setProperty("--cm-panel-bg-color", panelStyles.backgroundColor)
+    view.dom.style.setProperty("--cm-panel-text-color", panelStyles.color)
+    view.dom.style.setProperty("--cm-panel-border-color", panelStyles.borderBottomColor)
 })
 
 export class Toolbar implements Panel {
-    private closeTimeout: number | undefined
     private openTimeout: number | undefined
     private menuRefs = new Map()
     private readonly menuContainer: HTMLElement
@@ -54,8 +49,7 @@ export class Toolbar implements Panel {
         this.menuContainer.classList.add('cm-ljs-toolbar-menu-container')
         this.menuContainer.addEventListener('keydown', this.handleMenuKeydown)
         this.menuContainer.addEventListener('focusout', this.handleFocusOut)
-        this.menuContainer.addEventListener('mouseenter', this.handleMenuMouseEnter)
-        this.menuContainer.addEventListener('mouseleave', this.handleMenuMouseLeave)
+        this.menuContainer.addEventListener('mouseover', this.handleMenuMouseOver)
         view.dom.appendChild(this.menuContainer)
 
         // close menu when clicking outside
@@ -80,7 +74,10 @@ export class Toolbar implements Panel {
             updateCMColors(update.view)
         }
 
-        if (update.docChanged || update.selectionSet) {
+        const config = update.state.field(toolbarConfigStateField)
+        const prevConfig = update.startState.field(toolbarConfigStateField)
+
+        if (config !== prevConfig) {
             this.renderToolbar(update.state)
         }
     }
@@ -92,28 +89,28 @@ export class Toolbar implements Panel {
 
     // Rendering
 
-    private actionCallback = (item: ActionItemBase) => {
+    private actionCallback = (item: ActionCapableItem) => {
         this.closeAllMenusUnder(this.menuContainer)
 
         item.action(this.view)
         this.view.focus()
     }
 
-    private hoverActionEnterCallback(item: ToolbarHoverActionBase) {
+    private hoverActionEnterCallback = (item: HoverActionCapableItem) => {
         item.hoverAction && item.hoverAction.enter(this.view)
-    }
+    };
 
-    private hoverActionLeaveCallback(item: ToolbarHoverActionBase) {
+    private hoverActionLeaveCallback = (item: HoverActionCapableItem) => {
         item.hoverAction && item.hoverAction.leave(this.view)
-    }
+    };
 
     private renderToolbar(state: EditorState) {
         const config = state.field(toolbarConfigStateField)
 
         render(html`${
             config.items
-                .filter(item => item.type === "menu")
-                .map(buttonItem => createMenu(buttonItem, this.makeRef(buttonItem.id)))
+                .filter(item => item.type === "menu" || item.type === "split")
+                .map(buttonItem => menu(buttonItem, this.makeRef(buttonItem.id)))
         }`, this.menuContainer)
 
         render(html`
@@ -148,6 +145,7 @@ export class Toolbar implements Panel {
             return
         }
 
+
         e.preventDefault();
 
         if (this.isMenuTrigger(toolbarItem)) {
@@ -177,33 +175,16 @@ export class Toolbar implements Panel {
             return
         }
 
-        const items = this.getToolbarItems();
-        const currentIndex = items.indexOf(toolbarItem);
 
         switch(e.key) {
-            case 'ArrowRight': {
-                e.preventDefault();
-                this.moveToolbarFocus(toolbarItem, this.getNextCircularItem(currentIndex, items));
-                break;
-            }
-
-            case 'ArrowLeft': {
-                e.preventDefault();
-                this.moveToolbarFocus(toolbarItem, this.getPreviousCircularItem(currentIndex, items));
-                break;
-            }
-
-            case 'Home': {
-                e.preventDefault();
-                this.moveToolbarFocus(toolbarItem, items[0])
-                break;
-            }
-
-            case 'End': {
-                e.preventDefault();
-                this.moveToolbarFocus(toolbarItem, items[items.length - 1])
+            case 'ArrowRight':
+            case 'ArrowLeft':
+            case 'Home':
+            case 'End':
+                const items = this.getToolbarItems()
+                const currentIndex = items.indexOf(toolbarItem);
+                this.handleItemNavigationEvent(e, toolbarItem, items, currentIndex, true)
                 break
-            }
 
             case 'ArrowDown': {
                 e.preventDefault();
@@ -243,33 +224,16 @@ export class Toolbar implements Panel {
             return
         }
 
-        const items = this.getMenuItems(menuEl);
-        const currentIndex = items.indexOf(menuItemEl);
 
         switch(e.key) {
-            case 'ArrowDown': {
-                e.preventDefault();
-                this.moveMenuItemFocus(menuEl, this.getNextCircularItem(currentIndex, items));
-                break;
-            }
-
-            case 'ArrowUp': {
-                e.preventDefault();
-                this.moveMenuItemFocus(menuEl, this.getPreviousCircularItem(currentIndex, items));
-                break;
-            }
-
-            case 'Home': {
-                e.preventDefault();
-                this.moveMenuItemFocus(menuEl, items[0]);
-                break;
-            }
-
-            case 'End': {
-                e.preventDefault();
-                this.moveMenuItemFocus(menuEl, items[items.length - 1]);
-                break;
-            }
+            case 'ArrowDown':
+            case 'ArrowUp':
+            case 'Home':
+            case 'End':
+                const items = this.getMenuItems(menuEl)
+                const currentIndex = items.indexOf(menuItemEl)
+                this.handleItemNavigationEvent(e, menuItemEl, items, currentIndex, false)
+                break
 
             case 'Escape': {
                 e.preventDefault();
@@ -306,11 +270,9 @@ export class Toolbar implements Panel {
                 if (triggerThatOpenedThis.role === "menuitem") {
                     triggerThatOpenedThis.focus();
                 } else {
-                    const currentToolbarItem = this.dom.querySelector("[aria-expanded=true]");
-                    if (currentToolbarItem instanceof HTMLElement) {
-                        const toolbarItems = this.getToolbarItems();
-                        const currentToolbarIndex = toolbarItems.indexOf(currentToolbarItem);
-                        this.moveToolbarFocus(currentToolbarItem, this.getPreviousCircularItem(currentToolbarIndex, toolbarItems));                    }
+                    const toolbarItems = this.getToolbarItems();
+                    const currentToolbarIndex = toolbarItems.indexOf(triggerThatOpenedThis);
+                    this.moveToolbarFocus(triggerThatOpenedThis, this.getPreviousCircularItem(currentToolbarIndex, toolbarItems));
                 }
 
                 break;
@@ -318,49 +280,32 @@ export class Toolbar implements Panel {
         }
     }
 
-    private handleMenuMouseEnter = (e: MouseEvent) => {
-        if (!(e.target instanceof HTMLElement)) {
-            return
-        }
+    private handleMenuMouseOver = (e: MouseEvent) => {
+        if (!(e.target instanceof HTMLElement)) return;
+
+        // Cancel pending opens
+        clearTimeout(this.openTimeout);
 
         const menuItemEl = e.target.closest<HTMLElement>("[role=menuitem]");
-        if (!menuItemEl) {
-            return
-        }
 
-        e.preventDefault();
-        if (this.isMenuTrigger(menuItemEl)) {
-            clearTimeout(this.closeTimeout)
-            const menuEl = menuItemEl.closest<HTMLElement>("[role=menu]");
-            if (!menuEl) {
-                return
+        // Close open submenu whose trigger we're not hovering
+        const openTriggers = this.menuContainer.querySelectorAll<HTMLElement>("[aria-expanded=true]");
+        openTriggers.forEach(triggerEl => {
+            // Skip if this is the item we're hovering
+            if (triggerEl === menuItemEl) return;
+
+            const submenuEl = this.getMenuEl(triggerEl);
+
+            // Only close if not hovering the target submenu
+            if (e.target instanceof Node && !submenuEl.contains(e.target)) {
+                this.closeMenu(submenuEl);
             }
+        });
 
-            this.closeAllMenusUnder(this.menuContainer)
-            this.openTimeout = setTimeout(() => this.openMenu(menuItemEl), 100)
+        // Open submenu
+        if (menuItemEl && this.isMenuTrigger(menuItemEl) && !this.isMenuOpen(menuItemEl)) {
+            this.openTimeout = setTimeout(() => this.openMenu(menuItemEl), 100);
         }
-    }
-
-    private handleMenuMouseLeave = (e: MouseEvent) => {
-        if (!(e.target instanceof HTMLElement)) {
-            return
-        }
-
-        const menuItemEl = e.target.closest<HTMLElement>("[role=menuitem]");
-        if (!menuItemEl) {
-            return
-        }
-
-        e.preventDefault()
-
-        clearTimeout(this.openTimeout)
-        if (this.isMenuTrigger(menuItemEl)) {
-            const menuEl = menuItemEl.closest<HTMLElement>("[role=menu]");
-            if (menuEl && !menuEl.contains(menuItemEl)) {
-                this.closeTimeout = setTimeout(() => this.closeMenu(menuEl), 100)
-            }
-        }
-
     }
 
     private handleFocusOut = (e: FocusEvent) => {
@@ -369,7 +314,6 @@ export class Toolbar implements Panel {
             this.closeAllMenusUnder(this.menuContainer)
         }
     }
-
 
 
     // Utility methods
@@ -385,6 +329,30 @@ export class Toolbar implements Panel {
         targetItem.focus()
     }
 
+    private handleItemNavigationEvent(e: KeyboardEvent, currentItem: HTMLElement, items: HTMLElement[], currentIndex: number, adjustTabIndex: boolean) {
+        e.preventDefault()
+
+        switch (e.key) {
+            case 'ArrowDown':
+            case 'ArrowRight':
+                const nextItem = this.getNextCircularItem(currentIndex, items);
+                this.focusItem(items[currentIndex], nextItem, adjustTabIndex);
+                break;
+            case 'ArrowUp':
+            case 'ArrowLeft':
+                const prevItem = this.getPreviousCircularItem(currentIndex, items);
+                this.focusItem(items[currentIndex], prevItem, adjustTabIndex);
+                break;
+            case 'Home':
+                this.focusItem(currentItem, items[0], adjustTabIndex);
+                break;
+            case 'End':
+                this.focusItem(currentItem, items[items.length - 1], adjustTabIndex);
+                break;
+        }
+    }
+
+
     private getNextCircularItem<T>(currentIndex: number, items: Array<T>): T {
         return items[(currentIndex + 1) % items.length];
     }
@@ -393,14 +361,21 @@ export class Toolbar implements Panel {
         return items[(currentIndex - 1 + items.length) % items.length];
     }
 
-
+    private focusItem(currentItem: HTMLElement, targetItem: HTMLElement, adjustTabIndex: boolean = false) {
+        if (adjustTabIndex) {
+            currentItem.tabIndex = -1;
+            targetItem.tabIndex = 0;
+        }
+        targetItem.focus();
+        return targetItem;
+    }
     getToolbarItems() {
         return Array.from(this.dom.querySelectorAll<HTMLElement>(":scope .cm-ljs-toolbar-button" ))
     }
 
     getMenuEl(menuNameOrTriggerEl: string | HTMLElement): HTMLElement {
         const menuElId = menuNameOrTriggerEl instanceof HTMLElement
-            ? menuNameOrTriggerEl.id
+            ? menuNameOrTriggerEl.getAttribute("aria-controls")
             : this.getMenuElId(menuNameOrTriggerEl)
 
         const el = this.menuContainer.querySelector<HTMLElement>(`#${menuElId}`)
@@ -412,7 +387,7 @@ export class Toolbar implements Panel {
     }
 
     getTriggerEl(menuEl: HTMLElement): HTMLElement {
-        const triggerEl =  this.dom.querySelector<HTMLElement>(`[aria-controls=${menuEl.id}]`)
+        const triggerEl =  this.view.dom.querySelector<HTMLElement>(`[aria-controls=${menuEl.id}]`)
         if (!triggerEl) {
             throw new Error(`Trigger element for menu with id ${menuEl.id} not found. Please report this as a bug.`);
         }
@@ -504,14 +479,6 @@ export class Toolbar implements Panel {
 
         const focusEl = first ? menuItems[0] : menuItems[menuItems.length - 1];
         focusEl.focus();
-    }
-
-    moveMenuItemFocus(menuEl: HTMLElement, targetItem: HTMLElement) {
-        this.closeAllMenusUnder(menuEl);
-        targetItem.focus();
-        if (this.isMenuTrigger(targetItem)) {
-            void this.openMenu(targetItem);
-        }
     }
 }
 

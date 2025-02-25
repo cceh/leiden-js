@@ -2,307 +2,256 @@ import {computePosition, flip, offset, shift, size} from "@floating-ui/dom";
 import {snippets} from "@leiden-plus/codemirror-lang-leiden-plus";
 import {snippet} from "@codemirror/autocomplete";
 import {html, nothing, render} from "lit-html";
-import {createRef, ref} from "lit-html/directives/ref.js";
-import {Directive, directive} from "lit-html/directive.js";
+import {createRef} from "lit-html/directives/ref.js";
 import {syntaxTree} from "@codemirror/language";
-import {Facet, findClusterBreak, RangeSet, RangeSetBuilder, StateEffect, StateField} from "@codemirror/state";
-import {Decoration, EditorView, showPanel, showTooltip} from "@codemirror/view";
+import {findClusterBreak, RangeSet, StateEffect, StateField} from "@codemirror/state";
+import {Decoration, EditorView, showPanel} from "@codemirror/view";
 
-// language=CSS
-const css = `
-    :root {
-      /*--toolbar-bg: #f5f5f5;*/
-      /*--toolbar-border: #ddd;*/
-      --button-hover: #e5e5e5;
-      --menu-bg: #ffffff;
-      --menu-border: #ddd;
-      --menu-shadow: rgba(0, 0, 0, 0.1);
-      --chevron-down: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 122.88 66.91"><path d="M11.68 1.95a6.884 6.884 0 0 0-9.73.13 6.884 6.884 0 0 0 .13 9.73l54.79 53.13 4.8-4.93-4.8 4.95a6.9 6.9 0 0 0 9.75-.15c.08-.08.15-.16.22-.24l53.95-52.76a6.875 6.875 0 0 0 .14-9.73c-2.65-2.72-7.01-2.79-9.73-.13L61.65 50.41z"/></svg>');
-        --chevron-size: 0.33em;
-    }
+export const toolbarTheme = EditorView.baseTheme({
+    "&": {
+        "--chevron-down": "url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 122.88 66.91\"><path fill=\"black\" d=\"M11.68 1.95a6.884 6.884 0 0 0-9.73.13 6.884 6.884 0 0 0 .13 9.73l54.79 53.13 4.8-4.93-4.8 4.95a6.9 6.9 0 0 0 9.75-.15c.08-.08.15-.16.22-.24l53.95-52.76a6.875 6.875 0 0 0 .14-9.73c-2.65-2.72-7.01-2.79-9.73-.13L61.65 50.41z\"/></svg>')",
+        "--chevron-size": "0.33em",
 
-    :root {
         /* Spacing */
-        --toolbar-padding: 0.25rem;
-        --button-padding: 0.25rem 0.5rem;
-        --button-gap: 0.4rem;
-        --divider-margin: 0.25rem;
-
+        "--toolbar-padding": "0.25rem",
+        "--button-padding": "0.25rem 0.5rem",
+        "--button-gap": "0.4rem",
+        "--divider-margin": "0.25rem",
 
         /* Icons */
-        --icon-size: 0.5rem;
-        --icon-size-more: 0.75rem;
-        --icon-chevron: var(--chevron-down);
+        "--icon-size": "0.5rem",
+        "--icon-size-more": "0.75rem",
+        "--icon-chevron": "var(--chevron-down)",
 
         /* Visual */
-        --border-radius: 0.25rem;
-        --focus-ring-width: 2px;
-        --focus-ring-offset: 2px;
-        --divider-width: 1px;
+        "--border-radius": "0.25rem",
+        "--focus-ring-width": "2px",
+        "--focus-ring-offset": "2px",
+        "--divider-width": "1px",
 
         /* Colors */
-        --color-focus: #0066cc;
-        --color-border: var(--menu-border, #e2e8f0);
-        --color-hover: var(--button-hover, #f1f5f9);
+        "--color-focus": "#0066cc",
+        "--color-divider": "var(--cm-panel-border-color)", // set dynamically by default
+        "--color-button-bg": "var(--cm-panel-bg-color)",
+        "--color-button-text": "currentColor",
+        "--color-menu-border": "var(--cm-panel-border-color)", // set dynamically by default
+        "--color-menu-bg": "var(--cm-panel-bg-color)", // set dynamically by default
+        "--color-menu-text": "var(--cm-panel-text-color)",// set dynamically by default
+
 
         /* Typography */
-        --font-family: system-ui, sans-serif;
-    }
+        "--font-family": "system-ui, sans-serif"
+    },
 
-    .toolbar {
-        box-sizing: border-box;
-        display: flex;
-        align-items: center;
-        padding: var(--toolbar-padding);
-        font-family: var(--font-family);
-    }
+    "&light": {
+        "--menu-shadow": "rgba(0, 0, 0, 0.1)",
+        "--color-hover-bg": "color-mix(in srgb, var(--color-button-bg), black 10%)",
+        "--color-menu-secondary-text": "color-mix(in srgb, currentColor, white 50%)",
+    },
+    "&dark": {
+        "--menu-shadow": "rgba(0, 0, 0, 0.7)",
+        "--color-hover-bg": "color-mix(in srgb, var(--color-button-bg), white 10%)",
+        "--color-menu-secondary-text": "color-mix(in srgb, currentColor, black 50%)",
+    },
 
-    .toolbar-button {
-        box-sizing: border-box;
-        display: flex;
-        align-items: center;
-        padding: var(--button-padding);
-        border: none;
-        background: none;
-        border-radius: var(--border-radius);
-        cursor: pointer;
-        position: relative;
-        line-height: 1;
-    }
+    /* Toolbar container */
+    ".cm-ljs-toolbar": {
+        boxSizing: "border-box",
+        display: "flex",
+        alignItems: "center",
+        padding: "var(--toolbar-padding)",
+        fontFamily: "var(--font-family)"
+    },
 
-    .toolbar-button:hover,
-    .toolbar-button[aria-expanded="true"] {
-        background: var(--color-hover);
-    }
+    /* Toolbar button */
+    ".cm-ljs-toolbar-button": {
+        boxSizing: "border-box",
+        display: "flex",
+        alignItems: "center",
+        padding: "var(--button-padding)",
+        border: "none",
+        backgroundColor: "var(--color-button-bg)",
+        borderRadius: "var(--border-radius)",
+        cursor: "pointer",
+        position: "relative",
+        lineHeight: "1",
+        color: "var(--color-button-text)"
+    },
 
-    .toolbar-button:focus-visible {
-        outline: var(--focus-ring-width) solid var(--color-focus);
-        outline-offset: var(--focus-ring-offset);
-    }
+    ".cm-ljs-toolbar-button:hover, .cm-ljs-toolbar-button[aria-expanded=\"true\"]": {
+        background: "var(--color-hover-bg)"
+    },
 
-    .toolbar-button[aria-haspopup="true"] {
-        gap: var(--button-gap);
-    }
+    ".cm-ljs-toolbar-button:focus-visible": {
+        outline: "var(--focus-ring-width) solid var(--color-focus)",
+        outlineOffset: "var(--focus-ring-offset)"
+    },
 
-    .toolbar-button[aria-haspopup="true"]:after,
-    .more-button:after {
-        content: "";
-        width: var(--icon-size);
-        height: var(--icon-size);
-        background-image: var(--icon-chevron);
-        background-size: contain;
-        background-repeat: no-repeat;
-        background-position: center;
-    }
+    ".cm-ljs-toolbar-button[aria-haspopup=\"true\"]": {
+        gap: "var(--button-gap)"
+    },
 
-    .more-button {
-        display: flex;
-        align-items: center;
-        /*padding-inline-end: calc(var(--button-gap) / 2);*/
-    }
+    ".cm-ljs-toolbar-button[aria-haspopup=\"true\"]:after, .cm-ljs-toolbar-more-button:after": {
+        content: '""',
+        width: "var(--icon-size)",
+        height: "var(--icon-size)",
+        mask: "var(--icon-chevron)",
+        maskRepeat: "no-repeat",
+        maskPosition: "center",
+        maskSize: "contain",
+        backgroundColor: "currentColor",
+    },
 
-    .more-button:after {
-        width: var(--icon-size-more);
-        height: var(--icon-size-more);
-    }
+    /* More button (with commented-out padding preserved as a JS comment) */
+    ".cm-ljs-toolbar-more-button": {
+        display: "flex",
+        alignItems: "center"
+        // paddingInlineEnd: "calc(var(--button-gap) / 2)", // Match the menu button
+    },
 
-    .toolbar-divider {
-        width: var(--divider-width);
-        margin: var(--divider-margin);
-        background: var(--color-border);
-        align-self: stretch;
-    }
+    ".cm-ljs-toolbar-more-button:after": {
+        width: "var(--icon-size-more)",
+        height: "var(--icon-size-more)"
+    },
 
-    .split-button-container {
-        display: flex;
-        align-items: stretch;
-    }
+    /* Divider */
+    ".cm-ljs-toolbar-divider": {
+        width: "var(--divider-width)",
+        margin: "var(--divider-margin)",
+        background: "var(--color-divider)",
+        alignSelf: "stretch"
+    },
 
-    .split-button-container:hover,
-    .split-button-container:has([aria-expanded="true"]) {
-        box-sizing: border-box;
-        box-shadow: 0 0 0 var(--divider-width) var(--color-hover) inset;
-        border-radius: var(--border-radius);
-    }
+    /* Split button container */
+    ".cm-ljs-toolbar-split-button-container": {
+        display: "flex",
+        alignItems: "stretch"
+    },
 
-    .split-button-container button:first-child {
-        border-end-end-radius: 0;
-        border-start-end-radius: 0;
-        padding-inline-end: calc(var(--button-gap) / 2); /* Match the menu button */
-    }
+    ".cm-ljs-toolbar-split-button-container:hover, .cm-ljs-toolbar-split-button-container:has([aria-expanded=\"true\"])": {
+        boxSizing: "border-box",
+        boxShadow: "0 0 0 var(--divider-width) var(--color-hover-bg) inset",
+        borderRadius: "var(--border-radius)"
+    },
 
-    .split-button-container button:nth-child(2) {
-        border-end-start-radius: 0;
-        border-start-start-radius: 0;
-        padding-inline: calc(var(--button-gap) / 2); /* Match the menu button */
-    }
+    ".cm-ljs-toolbar-split-button-container button:first-child": {
+        borderEndEndRadius: "0",
+        borderStartEndRadius: "0",
+        paddingInlineEnd: "calc(var(--button-gap) / 2)" // Match the menu button
+    },
 
-    /*.toolbar {*/
-    /*  box-sizing: border-box;*/
-    /*  display: flex;*/
-    /*  align-items: center;*/
-    /*  padding: 4px;*/
-    /*  font-family: system-ui, sans-serif;*/
-    /*}*/
-    
-    /*.toolbar-button {*/
-    /*  box-sizing: border-box;*/
-    /*  border: none;*/
-    /*  padding: 0.15rem 0.3rem;*/
-    /*  background: none;*/
-    /*  border-radius: 4px;*/
-    /*  cursor: pointer;*/
-    /*  position: relative;*/
-    /*}*/
-    
-    /*.toolbar > .toolbar-button, .split-button-container {*/
-    /*    display: flex;*/
-    /*    align-items: stretch;*/
-    /*}*/
-    
-    /*.toolbar > .toolbar-button[aria-haspopup="true"] {*/
-    /*    display: flex;*/
-    /*    align-items: center;*/
-    /*    gap: 0.3rem;*/
-    /*}*/
-    
-    /* .toolbar > .toolbar-button[aria-haspopup="true"]:after {*/
-    /*     content: "";*/
-    /*     width: 0.5rem;*/
-    /*     height: 0.5rem;*/
-    /*     background-image: var(--chevron-down);*/
-    /*     background-size: contain;*/
-    /*     background-repeat: no-repeat;*/
-    /*     background-position: center;*/
-    /*     */
-    /*   */
-    /*}*/
-    
-    /*.toolbar-button:hover,*/
-    /*.toolbar-button[aria-expanded="true"] {*/
-    /*  background: var(--button-hover);*/
-    /*}*/
-    
-    /*.toolbar-button:focus-visible {*/
-    /*  outline: 2px solid #0066cc;*/
-    /*  outline-offset: 2px;*/
-    /*}*/
-    
-    /*.more-button {*/
-    /*    display: flex;*/
-    /*    align-items: center;*/
-    /*    position: relative;*/
-    /*    padding-inline: 0;*/
-    /*}*/
-    
-    /*.more-button:after {*/
-    /*    content: "";*/
-    /*    width: 0.6rem;*/
-    /*    height: 0.6rem;*/
-    /*    background-image: var(--chevron-down);*/
-    /*    background-size: contain;*/
-    /*    background-repeat: no-repeat;*/
-    /*    background-position: center;*/
-    /*}*/
-    
-    /*.toolbar-divider {*/
-    /*    width: 1px;*/
-    /*    margin: 4px;*/
-    /*    background: var(--menu-border);*/
-    /*    align-self: stretch;*/
-    /*}*/
-    
-    
-    /*.split-button-container:hover,*/
-    /*.split-button-container:has([aria-expanded="true"]) {*/
-    /*    box-sizing: border-box;*/
-    /*    box-shadow: 0 0 0 1px var(--button-hover) inset;*/
-    /*    border-radius: 4px;*/
-    /*}*/
-    
-    /* .split-button-container button:first-child {*/
-    /*    border-end-end-radius: 0;*/
-    /*    border-start-end-radius: 0;*/
-    /*     padding-inline-end: 0.3rem;*/
-    /*}*/
-    
-    /*.split-button-container button:nth-child(2) {*/
-    /*    border-end-start-radius: 0;*/
-    /*    border-start-start-radius: 0;*/
-    /*    padding-inline-start: 0.3rem;*/
-    /*    padding-inline-end: 0.3rem;*/
-    /*}*/
-    
-    .menu-container {
-        position: relative;
-        z-index: 1000;
-        pointer-events: none;
-    }
-    
-    @keyframes menu-fade-in {
-        from { opacity: 0; }
-        to { opacity: 1; }
-    }
+    ".cm-ljs-toolbar-split-button-container button:nth-child(2)": {
+        borderEndStartRadius: "0",
+        borderStartStartRadius: "0",
+        paddingInline: "calc(var(--button-gap) / 2)" // Match the menu button
+    },
 
-    .menu {
-      position: fixed;
-      background: var(--menu-bg);
-      border: 1px solid var(--menu-border);
-      border-radius: 4px;
-      padding: 4px;
-      box-shadow: 0 2px 8px var(--menu-shadow);
-      z-index: 1000;
-      min-width: 160px;
-      margin-top: -6px;
-      margin-left: -6px;
-      display: none;
-      pointer-events: none;
-      overflow: auto;
-      opacity: 0;
-    }
+    /* Menu container */
+    ".cm-ljs-toolbar-menu-container": {
+        position: "relative",
+        zIndex: "1000",
+        pointerEvents: "none"
+    },
 
-    .menu[data-show] {
-      display: block;
-      pointer-events: auto;
-      animation: menu-fade-in 0.1s ease-out forwards;
-    }
+    /* Keyframes for menu fade-in */
+    "@keyframes menu-fade-in": {
+        from: { opacity: "0" },
+        to: { opacity: "1" }
+    },
 
-    .menu-item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 6px 12px;
-      border: none;
-      background: none;
-      width: 100%;
-      text-align: left;
-      cursor: pointer;
-      border-radius: 2px;
-    }
-    
-    .menu-item .info {
-        color: darkgray;
-    }
-    
-    .menu-item .info:not(:empty) {
-        padding-inline-start: 1em;
-    }
+    /* Toolbar menu */
+    ".cm-ljs-toolbar-menu": {
+        position: "fixed",
+        background: "var(--color-menu-bg, var(--cm-panel-bg-color))",
+        border: "1px solid var(--color-divider, var(--cm-panel-border-color))",
+        borderRadius: "4px",
+        padding: "4px",
+        boxShadow: "0 2px 8px var(--menu-shadow)",
+        zIndex: "1000",
+        minWidth: "160px",
+        marginTop: "-6px",
+        marginLeft: "-6px",
+        display: "none",
+        pointerEvents: "none",
+        overflow: "auto",
+        opacity: "0"
+    },
 
-    .menu-item:hover,
-    .menu-item:focus-visible {
-      background: var(--button-hover);
-    }
+    ".cm-ljs-toolbar-menu[data-show]": {
+        display: "block",
+        pointerEvents: "auto",
+        animation: "menu-fade-in 0.1s ease-out forwards"
+    },
 
-    .menu-item:focus-visible {
-      outline: 2px solid #0066cc;
-      outline-offset: -2px;
-    }
+    /* Menu item */
+    ".cm-ljs-toolbar-menu-item": {
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        padding: "6px 12px",
+        border: "none",
+        background: "none",
+        width: "100%",
+        textAlign: "left",
+        cursor: "pointer",
+        borderRadius: "2px",
+        color: "var(--color-menu-text, var(--cm-panel-text-color))"
+    },
 
-    .menu-item[aria-haspopup="true"]::after {
-      content: "→";
-      margin-left: 8px;
-    }
-`;
+    ".cm-ljs-toolbar-menu-item .cm-ljs-toolbar-info": {
+        color: "var(--color-menu-secondary-text)",
+    },
+
+    ".cm-ljs-toolbar-menu-item .cm-ljs-toolbar-info:not(:empty)": {
+        paddingInlineStart: "1em"
+    },
+
+    ".cm-ljs-toolbar-menu-item:hover, .cm-ljs-toolbar-menu-item:focus-visible": {
+        background: "var(--color-hover-bg)"
+    },
+
+    ".cm-ljs-toolbar-menu-item:focus-visible": {
+        outline: "2px solid #0066cc",
+        outlineOffset: "-2px"
+    },
+
+    ".cm-ljs-toolbar-menu-item[aria-haspopup=\"true\"]::after": {
+        content: '"→"',
+        marginLeft: "8px"
+    },
+
+    /* Context items */
+    ".cm-ljs-toolbar-context-items": {
+        marginLeft: "auto",
+        border: "1px solid var(--menu-border)"
+    },
+
+    // /* Dark mode overrides */
+    // "&dark": {
+    //     "&": {
+    //         "--button-hover": "#333333",
+    //         "--color-menu-bg": "#222222",
+    //         "--menu-border": "#555",
+    //         "--menu-shadow": "rgba(0, 0, 0, 0.5)",
+    //         "--color-focus": "#66afe9",
+    //         "--color-border": "var(--menu-border, #444)",
+    //         "--color-hover": "var(--button-hover, #444)"
+    //     }
+    // },
+
+    // /* Light mode overrides (redundant with base, but included for completeness) */
+    // "&light": {
+    //     "&": {
+    //         "--button-hover": "#e5e5e5",
+    //         "--color-menu-bg": "#ffffff",
+    //         "--menu-border": "#ddd",
+    //         "--menu-shadow": "rgba(0, 0, 0, 0.1)",
+    //         "--color-focus": "#0066cc",
+    //         "--color-border": "var(--menu-border, #e2e8f0)",
+    //         "--color-hover": "var(--button-hover, #f1f5f9)"
+    //     }
+    // }
+});
 
 function processCombiningMarks(text, combiningCharacters, mode = "add") {
     const output = []
@@ -310,15 +259,14 @@ function processCombiningMarks(text, combiningCharacters, mode = "add") {
         const codepoint = text.codePointAt(i);
 
         if (codepoint) {
-            // Handle surrogate pairs, move index appropriately
             const char = String.fromCodePoint(codepoint);
             output.push(char);
 
+            // Handle surrogate pairs
             if (codepoint >= 0x10000) {
-                i++; // increment extra for surrogate pairs
+                i++;
             }
 
-            // Output existing combining marks and increase the index
             while (i + 1 < text.length) {
                 const nextCodepoint = text.codePointAt(i + 1);
                 if (!nextCodepoint || !/\p{M}/u.test(String.fromCodePoint(nextCodepoint))) {
@@ -334,6 +282,7 @@ function processCombiningMarks(text, combiningCharacters, mode = "add") {
             if (mode === "add") output.push(...combiningCharacters);
         }
     }
+
     return output.join("");
 }
 
@@ -349,7 +298,7 @@ export const setHighlights = StateEffect.define()
 export const clearHighlights = StateEffect.define()
 
 const highlightMark = Decoration.mark({
-    class: "leiden-highlight"
+    class: "cm-ljs-toolbar-action-highlight"
 })
 
 const highlightField = StateField.define({
@@ -373,11 +322,12 @@ const highlightField = StateField.define({
 })
 
 const highlightTheme = EditorView.baseTheme({
-    ".leiden-highlight": {
+    ".cm-ljs-toolbar-action-highlight": {
         backgroundColor: "rgba(255, 255, 0, 0.2)"
     }
 })
 
+// to lang
 const availableUnderdotRanges = StateField.define({
     create() { return [] },
     update(ranges, tr) {
@@ -426,10 +376,182 @@ const availableUnderdotRanges = StateField.define({
 
 
 
-
+// to lib commands
 const applySnippet = (view, snippetDef) => {
     const { to, from } = view.state.selection.ranges[0]
     snippet(snippetDef.template)(view, null, from, to);
+}
+
+// to lib commands
+const insertBeforeEndBracket = (view, wrappingNode, content) => {
+    const endBracket = wrappingNode.getChildren("Delims").pop()
+    if (!endBracket) {
+        throw new Error("End bracket not found")
+
+    }
+
+    view.dispatch({
+        changes: { from: endBracket.from, insert: content }
+    })
+}
+
+// to lib commands
+const removeNode = (view, {from, to}) => {
+    view.dispatch({ changes: { from, to, insert: "" } })
+}
+
+// to lp commands
+const addCertLowToWrappingNode = (view, wrappingNode) => {
+    if (wrappingNode.name === "AbbrevInnerEx") {
+        insertBeforeEndBracket(view, wrappingNode, "?")
+    } else {
+        insertBeforeEndBracket(view, wrappingNode, "(?)")
+    }
+}
+
+// to lp commands
+const removeCertLow = (view, node) => {
+    console.log(node.getChild("AbbrevInnerExContent"))
+    const certLow = node.name === "AbbrevInnerEx"
+        ? node.getChild("AbbrevInnerExContent")?.getChild("QuestionMark")
+        : node.getChild("CertLow")
+
+    removeNode(view, certLow)
+}
+
+const toggleCertLowWrapping = {
+    add: addCertLowToWrappingNode,
+    remove: removeCertLow
+}
+
+const certLowNodes = {
+    OrthoRegReg: {
+        add: (view, node) => {
+        }, remove: (view, node) => {
+        }
+    },
+    OrthoRegOrig: {
+        add: (view, node) => {
+        }, remove: (view, node) => {
+        }
+    },
+    AlternateReadingLemma: {
+        add: (view, node) => {
+        }, remove: (view, node) => {
+        }
+    },
+    AlternateReadingReading: {
+        add: (view, node) => {
+        }, remove: (view, node) => {
+        }
+    },
+    ScribalCorrectionAdd: {
+        add: (view, node) => {
+        }, remove: (view, node) => {
+        }
+    },
+    ScribalCorrectionDel: {
+        add: (view, node) => {
+        }, remove: (view, node) => {
+        }
+    },
+    SpellingCorrectionCorr: {
+        add: (view, node) => {
+        }, remove: (view, node) => {
+        }
+    },
+    SpellingCorrectionSic: {
+        add: (view, node) => {
+        }, remove: (view, node) => {
+        }
+    },
+    EditorialCorrectionLemma: {
+        add: (view, node) => {
+        }, remove: (view, node) => {
+        }
+    },
+    EditorialCorrectionReading: {
+        add: (view, node) => {
+        }, remove: (view, node) => {
+        }
+    },
+    SuppliedOmitted: toggleCertLowWrapping,
+    GapOmitted: toggleCertLowWrapping,
+    SuppliedParallel: toggleCertLowWrapping,
+    SuppliedParallelLost: toggleCertLowWrapping,
+    SuppliedLost: toggleCertLowWrapping,
+    Gap: toggleCertLowWrapping,
+    Deletion: toggleCertLowWrapping,
+    AbbrevUnresolved: toggleCertLowWrapping,
+    AbbrevInnerEx: toggleCertLowWrapping,
+    AbbrevInnerSuppliedLost: toggleCertLowWrapping,
+    Surplus: toggleCertLowWrapping,
+    InsertionAbove: toggleCertLowWrapping,
+    InsertionBelow: toggleCertLowWrapping,
+    InsertionMargin: toggleCertLowWrapping,
+    InsertionMarginSling: toggleCertLowWrapping,
+    InsertionMarginUnderline: toggleCertLowWrapping,
+    TextSubscript: toggleCertLowWrapping,
+    NumberSpecial: {
+        add: (view, node) => {
+        }, remove: (view, node) => {
+        }
+    },
+    NumberSpecialTick: {
+        add: (view, node) => {
+        }, remove: (view, node) => {
+        }
+    },
+    Diacritical: {
+        add: (view, node) => {
+        }, remove: (view, node) => {
+        }
+    },
+    Handshift: {
+        add: (view, node) => {
+        }, remove: (view, node) => {
+        }
+    },
+    OmittedLanguage: {
+        add: (view, node) => {
+        }, remove: (view, node) => {
+        }
+    },
+    Untranscribed: {
+        add: (view, node) => {
+        }, remove: (view, node) => {
+        }
+    },
+    Illegible: {
+        add: (view, node) => {
+        }, remove: (view, node) => {
+        }
+    },
+    Vestige: {
+        add: (view, node) => {
+        }, remove: (view, node) => {
+        }
+    },
+    LostLines: {
+        add: (view, node) => {
+        }, remove: (view, node) => {
+        }
+    },
+    Vacat: {
+        add: (view, node) => {
+        }, remove: (view, node) => {
+        }
+    }
+};
+
+const isIn = (node, names) => {
+    let current = node
+    while (current) {
+        if (names.includes(current.type.name)) {
+            break
+        }
+        current = current.parent
+    }
 }
 
 
@@ -451,6 +573,7 @@ const toolbarConfig = (state) => {
         }
     }
 
+    // TODO where?
     const atomicRules = [
         "NumberSpecialValue", "FracPart", "RangePart", "CertLow",
         "Vestige", "Diacritical", "Glyph", "Filler", "Handshift",
@@ -461,6 +584,7 @@ const toolbarConfig = (state) => {
         "Gap", "GapOmitted"
     ]
 
+    // TODO where?
     const inlineNodeActive = (() => {
         const tree = syntaxTree(state)
         let node = tree.resolveStack(state.selection.ranges[0].from)
@@ -515,221 +639,393 @@ const toolbarConfig = (state) => {
             }
         }))
     }))
-    return [
-        {
-            id: "markup",
-            label: "Markup",
-            items: [{
-                id: "abbreviations",
-                label: "Abbreviations",
-                items: (() => {
-                    const {abbreviation, abbreviationUnresolved} = snippets;
-                    return Object.entries({abbreviation, abbreviationUnresolved}).map(snippetEntry => ({
-                        ...snippetItem(snippetEntry),
-                        active: inlineNodeActive()
-                    }))
-                })(),
-            }, {
-                id: "apparatus",
-                label: "Apparatus",
-                items: (() => {
-                    const {modernRegularization, modernCorrection, scribalCorrection, alternateReading, editorialCorrection} = snippets;
-                    return Object.entries({modernRegularization, modernCorrection, scribalCorrection, alternateReading, editorialCorrection}).map(snippetEntry => ({
-                        ...snippetItem(snippetEntry),
-                        active: inlineNodeActive()
-                    }))
-                })(),
-            }, {
-                id: "deletions",
-                label: "Deletion/cancellation",
-                items: (() => {
-                    const {deletion, deletionSlashes, deletionCrossStrokes} = snippets;
-                    return Object.entries({deletionSlashes, deletionCrossStrokes, deletion}).map(snippetEntry => ({
-                        ...snippetItem(snippetEntry),
-                        active: inlineNodeActive()
-                    }))
-                })(),
-            }, {
-                id: "doc-divisions",
-                label: "Document divisions",
-                items: (() => {
-                    const {divisionRecto, divisionVerso, divisionColumn, divisionFolio, divisionFragment, divisionOther, divisionOtherRef} = snippets;
-                    return Object.entries({divisionRecto, divisionVerso, divisionColumn, divisionFolio, divisionFragment, divisionOther, divisionOtherRef}).map(snippetEntry => ({
-                        ...snippetItem(snippetEntry),
-                        active: inlineNodeActive() // TODO
-                    }))
-                })()
-            }, {
-                id: "foreign-lang",
-                label: "Foreign language",
-                items: (() => {
-                    const {foreignLatin, foreignGreek, foreign} = snippets;
-                    return Object.entries({foreignLatin, foreignGreek, foreign}).map((snippetEntry) => ({
-                        ...snippetItem(snippetEntry),
-                        active: inlineNodeActive()
-                    }))
-                })(),
-            }, {
-                id: "gaps",
-                label: "Gaps (missing/illegible)",
+
+    const contextItems = [];
+    const tree = syntaxTree(state);
+    let current = tree.resolve(state.selection.ranges[0].from);
+    while (current) {
+        if (certLowNodes[current.name]) {
+            break
+        }
+        current = current.parent
+    }
+    if (current) {
+        contextItems.push({
+            id: "context-item-cert-low",
+            label: "(?)",
+            action: (view) => {
+                if (current.getChild("CertLow") || current.getChild("AbbrevInnerExContent")?.getChild("QuestionMark")) {
+                    certLowNodes[current.name].remove(view, current.node)
+                } else {
+                    certLowNodes[current.name].add(view, current.node)
+                }
+            }
+        })
+    }
+
+    return {
+        items: [
+            {
+                id: "markup",
+                label: "Markup",
                 items: [{
-                    id: "lacunae",
-                    label: "Lacuna",
+                    id: "abbreviations",
+                    label: "Abbreviations",
                     items: (() => {
-                        const {gapLostChars, gapLostCharsCa, gapLostCharsRange, gapLostCharsUnknown, gapLostLines, gapLostLinesRange, gapLostLinesCa, gapLostLinesUnknown} = snippets;
-                        return Object.entries({
-                            gapLostChars,
-                            gapLostCharsCa,
-                            gapLostCharsRange,
-                            gapLostCharsUnknown,
-                            gapLostLines,
-                            gapLostLinesRange,
-                            gapLostLinesCa,
-                            gapLostLinesUnknown
-                        }).map((snippetEntry) => ({
+                        const {abbreviation, abbreviationUnresolved} = snippets;
+                        return Object.entries({abbreviation, abbreviationUnresolved}).map(snippetEntry => ({
+                            ...snippetItem(snippetEntry),
+                            active: inlineNodeActive()
+                        }))
+                    })(),
+                }, {
+                    id: "apparatus",
+                    label: "Apparatus",
+                    items: (() => {
+                        const {modernRegularization, modernCorrection, scribalCorrection, alternateReading, editorialCorrection} = snippets;
+                        return Object.entries({modernRegularization, modernCorrection, scribalCorrection, alternateReading, editorialCorrection}).map(snippetEntry => ({
+                            ...snippetItem(snippetEntry),
+                            active: inlineNodeActive()
+                        }))
+                    })(),
+                }, {
+                    id: "deletions",
+                    label: "Deletion/cancellation",
+                    items: (() => {
+                        const {deletion, deletionSlashes, deletionCrossStrokes} = snippets;
+                        return Object.entries({deletionSlashes, deletionCrossStrokes, deletion}).map(snippetEntry => ({
+                            ...snippetItem(snippetEntry),
+                            active: inlineNodeActive()
+                        }))
+                    })(),
+                }, {
+                    id: "doc-divisions",
+                    label: "Document divisions",
+                    items: (() => {
+                        const {divisionRecto, divisionVerso, divisionColumn, divisionFolio, divisionFragment, divisionOther, divisionOtherRef} = snippets;
+                        return Object.entries({divisionRecto, divisionVerso, divisionColumn, divisionFolio, divisionFragment, divisionOther, divisionOtherRef}).map(snippetEntry => ({
+                            ...snippetItem(snippetEntry),
+                            active: inlineNodeActive() // TODO
+                        }))
+                    })()
+                }, {
+                    id: "foreign-lang",
+                    label: "Foreign language",
+                    items: (() => {
+                        const {foreignLatin, foreignGreek, foreign} = snippets;
+                        return Object.entries({foreignLatin, foreignGreek, foreign}).map((snippetEntry) => ({
+                            ...snippetItem(snippetEntry),
+                            active: inlineNodeActive()
+                        }))
+                    })(),
+                }, {
+                    id: "gaps",
+                    label: "Gaps (missing/illegible)",
+                    items: [{
+                        id: "lacunae",
+                        label: "Lacuna",
+                        items: (() => {
+                            const {gapLostChars, gapLostCharsCa, gapLostCharsRange, gapLostCharsUnknown, gapLostLines, gapLostLinesRange, gapLostLinesCa, gapLostLinesUnknown} = snippets;
+                            return Object.entries({
+                                gapLostChars,
+                                gapLostCharsCa,
+                                gapLostCharsRange,
+                                gapLostCharsUnknown,
+                                gapLostLines,
+                                gapLostLinesRange,
+                                gapLostLinesCa,
+                                gapLostLinesUnknown
+                            }).map((snippetEntry) => ({
+                                ...snippetItem(snippetEntry),
+                                active: inlineNodeActive()
+                            }))
+                        })()
+                    }, {
+                        id: "illegibles",
+                        label: "Illegible",
+                        items: (() => {
+                            const {illegibleChars, illegibleCharsRange, illegibleCharsCa, illegibleCharsUnknown, illegibleLines, illegibleLinesRange, illegibleLinesCa} = snippets;
+                            return Object.entries({
+                                illegibleChars, illegibleCharsRange, illegibleCharsCa, illegibleCharsUnknown, illegibleLines, illegibleLinesRange, illegibleLinesCa
+                            }).map((snippetEntry) => ({
+                                ...snippetItem(snippetEntry),
+                                active: inlineNodeActive()
+                            }))
+                        })()
+                    }, {
+                        id: "vacats",
+                        label: "Vacat",
+                        items: (() => {
+                            const {vacatChars, vacatCharsRange, vacatCharsCa, vacatCharsUnknown, vacatLines, vacatLinesRange, vacatLinesCa, vacatLinesUnknown} = snippets;
+                            return Object.entries({
+                                vacatChars, vacatCharsRange, vacatCharsCa, vacatCharsUnknown, vacatLines, vacatLinesRange, vacatLinesCa, vacatLinesUnknown
+                            }).map((snippetEntry) => ({
+                                ...snippetItem(snippetEntry),
+                                active: inlineNodeActive()
+                            }))
+                        })()
+                    }, {
+                        id: "vestiges",
+                        label: "Vestiges",
+                        items: (() => {
+                            const {vestigChars, vestigCharsRange, vestigCharsCa, vestigLines, vestigLinesRange, vestigLinesCa, vestigLinesUnknown} = snippets;
+                            return Object.entries({
+                                vestigChars, vestigCharsRange, vestigCharsCa, vestigLines, vestigLinesRange, vestigLinesCa, vestigLinesUnknown
+                            }).map((snippetEntry) => ({
+                                ...snippetItem(snippetEntry),
+                                active: inlineNodeActive()
+                            }))
+                        })()
+                    }, {
+                        id: "omissions",
+                        label: "Omissions",
+                        items: (() => {
+                            const {gapOmittedChars, gapOmittedCharsUnknown} = snippets;
+                            return Object.entries({
+                                gapOmittedChars, gapOmittedCharsUnknown
+                            }).map((snippetEntry) => ({
+                                ...snippetItem(snippetEntry),
+                                active: inlineNodeActive()
+                            }))
+                        })()
+                    }],
+                }, {
+                    id: "non-transcribed",
+                    label: "Not transcribed",
+                    items: [{
+                        id: "not-transcribed-language",
+                        label: "Language not transcribed",
+                        items: (() => {
+                            const {nonTranscribedLanguageChars, nonTranscribedLanguageCharsUnknown, nonTranscribedLanguageLines, nonTranscribedLanguageLinesCa, nonTranscribedLanguageLinesUnknown} = snippets;
+                            return Object.entries({nonTranscribedLanguageChars, nonTranscribedLanguageCharsUnknown, nonTranscribedLanguageLines, nonTranscribedLanguageLinesCa, nonTranscribedLanguageLinesUnknown}).map((snippetEntry) => ({
+                                ...snippetItem(snippetEntry),
+                                active: inlineNodeActive(),
+                            }))
+                        })()
+                    }, {
+                        id: "untranscribed-chars",
+                        label: "Untranscribed characters",
+                        items: (() => {
+                            const {untranscribedChars, untranscribedCharsRange, untranscribedCharsCa, untranscribedCharsUnknown} = snippets;
+                            return Object.entries({untranscribedChars, untranscribedCharsRange, untranscribedCharsCa, untranscribedCharsUnknown}).map((snippetEntry) => ({
+                                ...snippetItem(snippetEntry),
+                                active: inlineNodeActive(),
+                            }))
+                        })()
+                    }, {
+                        "id": "untranscribed-lines",
+                        label: "Untranscribed lines",
+                        items: (() => {
+                            const {untranscribedLines, untranscribedLinesRange, untranscribedLinesCa, untranscribedLinesUnknown} = snippets;
+                            return Object.entries({untranscribedLines, untranscribedLinesRange, untranscribedLinesCa, untranscribedLinesUnknown}).map((snippetEntry) => ({
+                                ...snippetItem(snippetEntry),
+                                active: inlineNodeActive(),
+                            }))
+                        })()
+                    }, {
+                        "id": "untranscribed-columns",
+                        label: "Untranscribed columns",
+                        items: (() => {
+                            const {untranscribedColumns, untranscribedColumnsRange, untranscribedColumnsCa, untranscribedColumnsUnknown} = snippets;
+                            return Object.entries({untranscribedColumns, untranscribedColumnsRange, untranscribedColumnsCa, untranscribedColumnsUnknown}).map((snippetEntry) => ({
+                                ...snippetItem(snippetEntry),
+                                active: inlineNodeActive(),
+                            }))
+                        })()
+                    }]
+                }, {
+                    id: "insertions",
+                    label: "Insertion",
+                    items: (() => {
+                        const {insertionAbove, insertionBelow, insertionMarginLeft, insertionMarginRight, insertionMarginTop, insertionMarginBottom, insertionMargin, insertionMarginSling, insertionMarginUnderline, insertionInterlinear} = snippets;
+                        return Object.entries({insertionAbove, insertionBelow, insertionMarginLeft, insertionMarginRight, insertionMarginTop, insertionMarginBottom, insertionMargin, insertionMarginSling, insertionMarginUnderline, insertionInterlinear}).map(snippetEntry => ({
                             ...snippetItem(snippetEntry),
                             active: inlineNodeActive()
                         }))
                     })()
                 }, {
-                    id: "illegibles",
-                    label: "Illegible",
+                    id: "line-numbers",
+                    label: "Line numbers",
+                    items: [...(() => {
+                        const {lineNumber, lineNumberBreak, lineNumberUnknown} = snippets;
+                        return Object.entries({lineNumber, lineNumberBreak}).map(snippetEntry => ({
+                            ...snippetItem(snippetEntry),
+                            active: inlineNodeActive()
+                        }))
+                    })(), {
+                        id: "line-numbers-margin",
+                        label: "Line written in margin",
+                        items: (() => {
+                            const {lineNumberMarginLeft, lineNumberMarginRight, lineNumberMarginUpper, lineNumberMarginLower, lineNumberMarginPerpendicularLeft, lineNumberMarginPerpendicularRight, lineNumberMarginInverseLower} = snippets;
+                            return Object.entries({lineNumberMarginLeft, lineNumberMarginRight, lineNumberMarginUpper, lineNumberMarginLower, lineNumberMarginPerpendicularLeft, lineNumberMarginPerpendicularRight, lineNumberMarginInverseLower}).map(snippetEntry => ({
+                                ...snippetItem(snippetEntry),
+                                active: inlineNodeActive()
+                            }))
+                        })()
+                    }, {
+                        id: "line-numbers-relative",
+                        label: "Lines relative to the main text",
+                        items: (() => {
+                            const {lineNumberPerpendicular, lineNumberInverse, lineNumberIndented, lineNumberOutdented} = snippets;
+                            return Object.entries({lineNumberPerpendicular, lineNumberInverse, lineNumberIndented, lineNumberOutdented}).map(snippetEntry => ({
+                                ...snippetItem(snippetEntry),
+                                active: inlineNodeActive()
+                            }))
+                        })()
+                    }],
+                }, {
+                    id: "numbers",
+                    label: "Numbers",
                     items: (() => {
-                        const {illegibleChars, illegibleCharsRange, illegibleCharsCa, illegibleCharsUnknown, illegibleLines, illegibleLinesRange, illegibleLinesCa} = snippets;
+                        const {
+                            number,
+                            numberFraction,
+                            numberFractionUnknown,
+                            numberRange,
+                            numberRangeUnknownEnd,
+                            numberTick,
+                            numberTickFraction,
+                            numberTickFractionUnknown,
+                        } = snippets;
                         return Object.entries({
-                            illegibleChars, illegibleCharsRange, illegibleCharsCa, illegibleCharsUnknown, illegibleLines, illegibleLinesRange, illegibleLinesCa
-                        }).map((snippetEntry) => ({
+                            number,
+                            numberFraction,
+                            numberFractionUnknown,
+                            numberRange,
+                            numberRangeUnknownEnd,
+                            numberTick,
+                            numberTickFraction,
+                            numberTickFractionUnknown
+                        }).map(snippetEntry => ({
+                            ...snippetItem(snippetEntry),
+                            active: inlineNodeActive()
+                        }))
+                    })(),
+                }, {
+                    id: "supplied",
+                    label: "Supplied text",
+                    items: (() => {
+                        const {suppliedLost, suppliedLostParallel, suppliedParallel, suppliedOmitted} = snippets
+                        return Object.entries({suppliedLost, suppliedLostParallel, suppliedParallel, suppliedOmitted}).map((snippetEntry) => ({
                             ...snippetItem(snippetEntry),
                             active: inlineNodeActive()
                         }))
                     })()
                 }, {
-                    id: "vacats",
-                    label: "Vacat",
+                    id: "textual-features",
+                    label: "Textual features",
                     items: (() => {
-                        const {vacatChars, vacatCharsRange, vacatCharsCa, vacatCharsUnknown, vacatLines, vacatLinesRange, vacatLinesCa, vacatLinesUnknown} = snippets;
-                        return Object.entries({
-                            vacatChars, vacatCharsRange, vacatCharsCa, vacatCharsUnknown, vacatLines, vacatLinesRange, vacatLinesCa, vacatLinesUnknown
-                        }).map((snippetEntry) => ({
+                        const {textTall, textSubscript, textSuperscript, textSupraline, textSupralineUnderline} = snippets
+                        return Object.entries({textTall, textSubscript, textSuperscript, textSupraline, textSupralineUnderline}).map((snippetEntry) => ({
                             ...snippetItem(snippetEntry),
                             active: inlineNodeActive()
                         }))
                     })()
                 }, {
-                    id: "vestiges",
-                    label: "Vestiges",
+                    id: "other",
+                    label: "Other annotations",
                     items: (() => {
-                        const {vestigChars, vestigCharsRange, vestigCharsCa, vestigLines, vestigLinesRange, vestigLinesCa, vestigLinesUnknown} = snippets;
-                        return Object.entries({
-                            vestigChars, vestigCharsRange, vestigCharsCa, vestigLines, vestigLinesRange, vestigLinesCa, vestigLinesUnknown
-                        }).map((snippetEntry) => ({
-                            ...snippetItem(snippetEntry),
-                            active: inlineNodeActive()
-                        }))
-                    })()
-                }, {
-                    id: "omissions",
-                    label: "Omissions",
-                    items: (() => {
-                        const {gapOmittedChars, gapOmittedCharsUnknown} = snippets;
-                        return Object.entries({
-                            gapOmittedChars, gapOmittedCharsUnknown
-                        }).map((snippetEntry) => ({
+                        const {handShift, editorialNote, editorialNoteRef, surplus, quotation} = snippets
+                        return Object.entries({handShift, editorialNote, editorialNoteRef, surplus, quotation}).map((snippetEntry) => ({
                             ...snippetItem(snippetEntry),
                             active: inlineNodeActive()
                         }))
                     })()
                 }],
-            }, {
-                id: "non-transcribed",
-                label: "Not transcribed",
-                items: [{
-                    id: "not-transcribed-language",
-                    label: "Language not transcribed",
-                    items: (() => {
-                        const {nonTranscribedLanguageChars, nonTranscribedLanguageCharsUnknown, nonTranscribedLanguageLines, nonTranscribedLanguageLinesCa, nonTranscribedLanguageLinesUnknown} = snippets;
-                        return Object.entries({nonTranscribedLanguageChars, nonTranscribedLanguageCharsUnknown, nonTranscribedLanguageLines, nonTranscribedLanguageLinesCa, nonTranscribedLanguageLinesUnknown}).map((snippetEntry) => ({
-                            ...snippetItem(snippetEntry),
-                            active: inlineNodeActive(),
-                        }))
-                    })()
-                }, {
-                    id: "untranscribed-chars",
-                    label: "Untranscribed characters",
-                    items: (() => {
-                        const {untranscribedChars, untranscribedCharsRange, untranscribedCharsCa, untranscribedCharsUnknown} = snippets;
-                        return Object.entries({untranscribedChars, untranscribedCharsRange, untranscribedCharsCa, untranscribedCharsUnknown}).map((snippetEntry) => ({
-                            ...snippetItem(snippetEntry),
-                            active: inlineNodeActive(),
-                        }))
-                    })()
-                }, {
-                    "id": "untranscribed-lines",
-                    label: "Untranscribed lines",
-                    items: (() => {
-                        const {untranscribedLines, untranscribedLinesRange, untranscribedLinesCa, untranscribedLinesUnknown} = snippets;
-                        return Object.entries({untranscribedLines, untranscribedLinesRange, untranscribedLinesCa, untranscribedLinesUnknown}).map((snippetEntry) => ({
-                            ...snippetItem(snippetEntry),
-                            active: inlineNodeActive(),
-                        }))
-                    })()
-                }, {
-                    "id": "untranscribed-columns",
-                    label: "Untranscribed columns",
-                    items: (() => {
-                        const {untranscribedColumns, untranscribedColumnsRange, untranscribedColumnsCa, untranscribedColumnsUnknown} = snippets;
-                        return Object.entries({untranscribedColumns, untranscribedColumnsRange, untranscribedColumnsCa, untranscribedColumnsUnknown}).map((snippetEntry) => ({
-                            ...snippetItem(snippetEntry),
-                            active: inlineNodeActive(),
-                        }))
-                    })()
-                }]
-            }, {
-                id: "insertions",
-                label: "Insertion",
-                items: (() => {
-                    const {insertionAbove, insertionBelow, insertionMarginLeft, insertionMarginRight, insertionMarginTop, insertionMarginBottom, insertionMargin, insertionMarginSling, insertionMarginUnderline, insertionInterlinear} = snippets;
-                    return Object.entries({insertionAbove, insertionBelow, insertionMarginLeft, insertionMarginRight, insertionMarginTop, insertionMarginBottom, insertionMargin, insertionMarginSling, insertionMarginUnderline, insertionInterlinear}).map(snippetEntry => ({
-                        ...snippetItem(snippetEntry),
-                        active: inlineNodeActive()
-                    }))
-                })()
-            }, {
-                id: "line-numbers",
-                label: "Line numbers",
+            },
+            {
+                id: "symbols",
+                label: "Symbols",
                 items: [...(() => {
-                    const {lineNumber, lineNumberBreak, lineNumberUnknown} = snippets;
-                    return Object.entries({lineNumber, lineNumberBreak}).map(snippetEntry => ({
+                    const {figure, filler, glyph} = snippets
+                    return Object.entries({figure, filler, glyph}).map((snippetEntry) => ({
                         ...snippetItem(snippetEntry),
                         active: inlineNodeActive()
                     }))
-                })(), {
-                    id: "line-numbers-margin",
-                    label: "Line written in margin",
-                    items: (() => {
-                        const {lineNumberMarginLeft, lineNumberMarginRight, lineNumberMarginUpper, lineNumberMarginLower, lineNumberMarginPerpendicularLeft, lineNumberMarginPerpendicularRight, lineNumberMarginInverseLower} = snippets;
-                        return Object.entries({lineNumberMarginLeft, lineNumberMarginRight, lineNumberMarginUpper, lineNumberMarginLower, lineNumberMarginPerpendicularLeft, lineNumberMarginPerpendicularRight, lineNumberMarginInverseLower}).map(snippetEntry => ({
-                            ...snippetItem(snippetEntry),
-                            active: inlineNodeActive()
-                        }))
-                    })()
-                }, {
-                    id: "line-numbers-relative",
-                    label: "Lines relative to the main text",
-                    items: (() => {
-                        const {lineNumberPerpendicular, lineNumberInverse, lineNumberIndented, lineNumberOutdented} = snippets;
-                        return Object.entries({lineNumberPerpendicular, lineNumberInverse, lineNumberIndented, lineNumberOutdented}).map(snippetEntry => ({
-                            ...snippetItem(snippetEntry),
-                            active: inlineNodeActive()
-                        }))
-                    })()
-                }],
-            }, {
-                id: "numbers",
-                label: "Numbers",
+                })(),
+                    {
+                        id: "ancient-diacrits",
+                        label: "Ancient diacriticals",
+                        info: " ὑ(¨)",
+                        items: [...diacritItems, {
+                            id: "ancient-diacrits-double",
+                            label: "Double diacriticals",
+                            items: doubleDiacritFirstItems
+                        }]
+                    },
+                    {
+                        id: "milestones",
+                        label: "Milestone",
+                        items: (() => {
+                            const {paragraphos, horizontalRule, wavyLine, dipleObelismene, coronis, textInBox} = snippets
+                            return Object.entries({paragraphos, horizontalRule, wavyLine, dipleObelismene, coronis, textInBox}).map((snippetEntry) => ({
+                                ...snippetItem(snippetEntry),
+                                active: inlineNodeActive()
+                            }))
+                        })()
+                    }]
+            },
+            {type: "divider"},
+            {
+                id: "abbreviation",
+                label: "(a(bc))",
+                action: (view) => applySnippet(view, snippets.abbreviation),
+                tooltip: snippets.abbreviation.completion.displayLabel + " " + snippets.abbreviation.completion.detail,
+                menuTooltip: "More abbreviation markup",
+                items: [
+                    {
+                        id: "abbreviation-unresolved",
+                        label: "Abbreviation, not resolved (|abc|)",
+                        action: (view) => applySnippet(view, snippets.abbreviationUnresolved),
+                        active: inlineNodeActive()
+                    }
+                ],
+                active: inlineNodeActive()
+            },
+            {
+                id: "supplied-lost",
+                label: "[abc]",
+                tooltip: "Lost text, supplied/restored",
+                menuTooltip: "More lost text markup",
+                action: (view) => applySnippet(view, snippets.suppliedLost),
+                items: (() => {
+                    const {gapLostChars, gapLostCharsCa, gapLostCharsRange, gapLostCharsUnknown} = snippets;
+                    return Object.entries({
+                        gapLostChars,
+                        gapLostCharsCa,
+                        gapLostCharsRange,
+                        gapLostCharsUnknown
+                    }).map((snippetEntry) => ({
+                        ...snippetItem(snippetEntry),
+                        active: inlineNodeActive()
+                    }))
+                })(),
+                active: inlineNodeActive()
+            },
+            {
+                id: "deletion",
+                label:  "⟦abc⟧",
+                tooltip: "Deleted text",
+                menuTooltip: "More deletion markup",
+                action: (view) => applySnippet(view, snippets.deletion),
+                items: (() => {
+                    const {deletionSlashes, deletionCrossStrokes} = snippets;
+                    return Object.entries({deletionSlashes, deletionCrossStrokes}).map(snippetEntry => ({
+                        ...snippetItem(snippetEntry),
+                        active: inlineNodeActive()
+                    }))
+                })(),
+                active: inlineNodeActive()
+            },
+            {
+                id: "number",
+                label: "№",
+                tooltip: "Number",
+                action: (view) => {
+                    applySnippet(view, snippets.number);
+                },
                 items: (() => {
                     const {
-                        number,
                         numberFraction,
                         numberFractionUnknown,
                         numberRange,
@@ -739,7 +1035,6 @@ const toolbarConfig = (state) => {
                         numberTickFractionUnknown,
                     } = snippets;
                     return Object.entries({
-                        number,
                         numberFraction,
                         numberFractionUnknown,
                         numberRange,
@@ -752,219 +1047,74 @@ const toolbarConfig = (state) => {
                         active: inlineNodeActive()
                     }))
                 })(),
-            }, {
-                id: "supplied",
-                label: "Supplied text",
-                items: (() => {
-                    const {suppliedLost, suppliedLostParallel, suppliedParallel, suppliedOmitted} = snippets
-                    return Object.entries({suppliedLost, suppliedLostParallel, suppliedParallel, suppliedOmitted}).map((snippetEntry) => ({
-                        ...snippetItem(snippetEntry),
-                        active: inlineNodeActive()
-                    }))
-                })()
-            }, {
-                id: "textual-features",
-                label: "Textual features",
-                items: (() => {
-                    const {textTall, textSubscript, textSuperscript, textSupraline, textSupralineUnderline} = snippets
-                    return Object.entries({textTall, textSubscript, textSuperscript, textSupraline, textSupralineUnderline}).map((snippetEntry) => ({
-                        ...snippetItem(snippetEntry),
-                        active: inlineNodeActive()
-                    }))
-                })()
-            }, {
-                id: "other",
-                label: "Other annotations",
-                items: (() => {
-                    const {handShift, editorialNote, editorialNoteRef, surplus, quotation} = snippets
-                    return Object.entries({handShift, editorialNote, editorialNoteRef, surplus, quotation}).map((snippetEntry) => ({
-                        ...snippetItem(snippetEntry),
-                        active: inlineNodeActive()
-                    }))
-                })()
-            }],
-        },
-        {
-            id: "symbols",
-            label: "Symbols",
-            items: [...(() => {
-                const {figure, filler, glyph} = snippets
-                return Object.entries({figure, filler, glyph}).map((snippetEntry) => ({
-                    ...snippetItem(snippetEntry),
-                    active: inlineNodeActive()
-                }))
-            })(),
-            {
-              id: "ancient-diacrits",
-              label: "Ancient diacriticals",
-              info: " ὑ(¨)",
-              items: [...diacritItems, {
-                  id: "ancient-diacrits-double",
-                  label: "Double diacriticals",
-                  items: doubleDiacritFirstItems
-              }]
+                active: inlineNodeActive()
             },
+            {type: "divider"},
             {
-                id: "milestones",
-                label: "Milestone",
-                items: (() => {
-                    const {paragraphos, horizontalRule, wavyLine, dipleObelismene, coronis, textInBox} = snippets
-                    return Object.entries({paragraphos, horizontalRule, wavyLine, dipleObelismene, coronis, textInBox}).map((snippetEntry) => ({
-                        ...snippetItem(snippetEntry),
-                        active: inlineNodeActive()
-                    }))
-                })()
-            }]
-        },
-        {type: "divider"},
-        {
-            id: "abbreviation",
-            label: "(a(bc))",
-            action: (view) => applySnippet(view, snippets.abbreviation),
-            tooltip: snippets.abbreviation.completion.displayLabel + " " + snippets.abbreviation.completion.detail,
-            menuTooltip: "More abbreviation markup",
-            items: [
-                {
-                    id: "abbreviation-unresolved",
-                    label: "Abbreviation, not resolved (|abc|)",
-                    action: (view) => applySnippet(view, snippets.abbreviationUnresolved),
-                    active: inlineNodeActive()
+                id: "unclear",
+                label: "ạ",
+                tooltip: "Mark as unclear",
+                action: (view) => {
+                    const availableRanges = view.state.field(availableUnderdotRanges)
+                    view.dispatch({
+                        changes: availableRanges.map(range => {
+                            const text = view.state.doc.sliceString(range.from, range.to)
+                            const process =
+                                range.name === "Unclear" || range.name === "SupralineUnclear" ? removeCombining : addCombining
+                            return {from: range.from, to: range.to, insert: process(text, ['\u0323'])}
+                        })
+                    })
+                },
+                active: state.field(availableUnderdotRanges).length > 0,
+                hoverAction: {
+                    enter: (view) => {
+                        const availableRanges = view.state.field(availableUnderdotRanges)
+                        view.dispatch({effects: [setHighlights.of(availableRanges)]})
+                    },
+                    leave: (view) => view.dispatch({effects: [clearHighlights.of()]})
                 }
-            ],
-            active: inlineNodeActive()
-        },
-        {
-            id: "supplied-lost",
-            label: "[abc]",
-            tooltip: "Lost text, supplied/restored",
-            menuTooltip: "More lost text markup",
-            action: (view) => applySnippet(view, snippets.suppliedLost),
-            items: (() => {
-                const {gapLostChars, gapLostCharsCa, gapLostCharsRange, gapLostCharsUnknown} = snippets;
-                return Object.entries({
-                    gapLostChars,
-                    gapLostCharsCa,
-                    gapLostCharsRange,
-                    gapLostCharsUnknown
-                }).map((snippetEntry) => ({
-                    ...snippetItem(snippetEntry),
-                    active: inlineNodeActive()
-                }))
-            })(),
-            active: inlineNodeActive()
-        },
-        {
-            id: "deletion",
-            label:  "⟦abc⟧",
-            tooltip: "Deleted text",
-            menuTooltip: "More deletion markup",
-            action: (view) => applySnippet(view, snippets.deletion),
-            items: (() => {
-                const {deletionSlashes, deletionCrossStrokes} = snippets;
-                return Object.entries({deletionSlashes, deletionCrossStrokes}).map(snippetEntry => ({
-                    ...snippetItem(snippetEntry),
-                    active: inlineNodeActive()
-                }))
-            })(),
-            active: inlineNodeActive()
-        },
-        {
-            id: "number",
-            label: "№",
-            tooltip: "Number",
-            action: (view) => {
-                applySnippet(view, snippets.number);
             },
-            items: (() => {
-                const {
-                    numberFraction,
-                    numberFractionUnknown,
-                    numberRange,
-                    numberRangeUnknownEnd,
-                    numberTick,
-                    numberTickFraction,
-                    numberTickFractionUnknown,
-                } = snippets;
-                return Object.entries({
-                    numberFraction,
-                    numberFractionUnknown,
-                    numberRange,
-                    numberRangeUnknownEnd,
-                    numberTick,
-                    numberTickFraction,
-                    numberTickFractionUnknown
-                }).map(snippetEntry => ({
-                    ...snippetItem(snippetEntry),
-                    active: inlineNodeActive()
-                }))
-            })(),
-            active: inlineNodeActive()
-        },
-        {type: "divider"},
-        {
-            id: "unclear",
-            label: "ạ",
-            tooltip: "Mark as unclear",
-            action: (view) => {
-                const availableRanges = view.state.field(availableUnderdotRanges)
-                view.dispatch({
-                    changes: availableRanges.map(range => {
-                        const text = view.state.doc.sliceString(range.from, range.to)
-                        const process =
-                            range.name === "Unclear" || range.name === "SupralineUnclear" ? removeCombining : addCombining
-                        return {from: range.from, to: range.to, insert: process(text, ['\u0323'])}
-                    })
-                })
-            },
-            active: state.field(availableUnderdotRanges).length > 0,
-            hoverAction: {
-                enter: (view) => {
+            {
+                id: "supraline-macron",
+                label: "ā",
+                tooltip: "Supraline",
+                action: (view) => {
                     const availableRanges = view.state.field(availableUnderdotRanges)
-                    view.dispatch({effects: [setHighlights.of(availableRanges)]})
-                },
-                leave: (view) => view.dispatch({effects: [clearHighlights.of()]})
-            }
-        },
-        {
-            id: "supraline-macron",
-            label: "ā",
-            tooltip: "Supraline",
-            action: (view) => {
-                const availableRanges = view.state.field(availableUnderdotRanges)
-                view.dispatch({
-                    changes: availableRanges.map(range => {
-                        const text = view.state.doc.sliceString(range.from, range.to)
-                        const process =
-                            range.name === "SupralineMacronContent" || range.name === "SupralineUnclear" ? removeCombining : addCombining
-                        return {from: range.from, to: range.to, insert: process(text, ['\u0304'])}
+                    view.dispatch({
+                        changes: availableRanges.map(range => {
+                            const text = view.state.doc.sliceString(range.from, range.to)
+                            const process =
+                                range.name === "SupralineMacronContent" || range.name === "SupralineUnclear" ? removeCombining : addCombining
+                            return {from: range.from, to: range.to, insert: process(text, ['\u0304'])}
+                        })
                     })
-                })
-            },
-            active: state.field(availableUnderdotRanges).length > 0,
-            hoverAction: {
-                enter: (view) => {
-                    const availableRanges = view.state.field(availableUnderdotRanges)
-                    view.dispatch({effects: [setHighlights.of(availableRanges)]})
                 },
-                leave: (view) => view.dispatch({effects: [clearHighlights.of()]})
-            }
-        },
-        {type: "divider"}
-    ];
+                active: state.field(availableUnderdotRanges).length > 0,
+                hoverAction: {
+                    enter: (view) => {
+                        const availableRanges = view.state.field(availableUnderdotRanges)
+                        view.dispatch({effects: [setHighlights.of(availableRanges)]})
+                    },
+                    leave: (view) => view.dispatch({effects: [clearHighlights.of()]})
+                }
+            },
+            {type: "divider"}
+        ],
+        contextItems
+    };
 }
 
 export function toolbarPanel(view) {
-    const menus = new Set()
 
-    const style = document.createElement('style');
-    style.innerText = css
+    // const style = document.createElement('style');
+    // style.innerText = css
     const panel = document.createElement('div');
-    panel.classList.add('toolbar')
+    panel.classList.add('cm-ljs-toolbar')
     panel.role = "toolbar"
     panel.ariaLabel = "Toolbar"
-    panel.appendChild(style);
+
     panel.addEventListener('click', (e) => {
-        const toolbarItem = e.target.closest(".toolbar-button");
+        const toolbarItem = e.target.closest(".cm-ljs-toolbar-button");
         if (!toolbarItem) {
             return
         }
@@ -982,7 +1132,7 @@ export function toolbarPanel(view) {
     })
 
     panel.addEventListener('keydown', async (e) => {
-        const toolbarItem = e.target.closest(".toolbar-button");
+        const toolbarItem = e.target.closest(".cm-ljs-toolbar-button");
         if (!toolbarItem) {
             return
         }
@@ -1038,7 +1188,7 @@ export function toolbarPanel(view) {
     })
 
     const menuParent = document.createElement('div')
-    menuParent.classList.add('menu-container')
+    menuParent.classList.add('cm-ljs-toolbar-menu-container')
     view.dom.appendChild(menuParent)
 
     // close when clicking outside
@@ -1072,7 +1222,7 @@ export function toolbarPanel(view) {
         triggerEl.getAttribute('aria-haspopup') === 'true'
 
     const getToolbarItems = ()=>
-        Array.from(panel.querySelectorAll(":scope .toolbar-button"))
+        Array.from(panel.querySelectorAll(":scope .cm-ljs-toolbar-button"))
 
     const openMenu = async (triggerEl) => {
         const menuEl = getMenuEl(triggerEl);
@@ -1252,10 +1402,10 @@ export function toolbarPanel(view) {
 
     const createSplitButton = (parent, {id, label, action, items, tooltip, menuTooltip, active}, tabIndex = -1) => {
         return html`
-            <div class="split-button-container">
+            <div class="cm-ljs-toolbar-split-button-container">
                 ${createButton(parent, {id, label, action, items, tooltip, menuTooltip, active}, tabIndex)}
                 <button 
-                        class="toolbar-button more-button" 
+                        class="cm-ljs-toolbar-button cm-ljs-toolbar-more-button" 
                         id="more-${id}"
                         aria-haspopup="true"
                         aria-expanded="false"
@@ -1270,7 +1420,7 @@ export function toolbarPanel(view) {
 
     const createButton = (parent, {id, label, action, items, tooltip, menuTooltip, active, hoverAction}, tabIndex = -1) => {
         return html`
-            <button class="toolbar-button" 
+            <button class="cm-ljs-toolbar-button" 
                     id="button-${id}" 
                     title=${tooltip}
                     tabindex="${tabIndex}"
@@ -1290,7 +1440,7 @@ export function toolbarPanel(view) {
     const createMenuButton = (parent, {id, label, action, items, tooltip, menuTooltip}, menuRef, tabIndex = -1) => {
         return html`
             <button
-                    class="toolbar-button"
+                    class="cm-ljs-toolbar-button"
                     id="more-${id}"
                     aria-haspopup="true"
                     aria-expanded="false"
@@ -1307,7 +1457,7 @@ export function toolbarPanel(view) {
     const createMenuEl = ({id, items, active}, ref) => {
         return html`
             <div
-                    ${ref ?? nothing} id="menu-${id}" class="menu" role="menu"
+                    ${ref ?? nothing} id="menu-${id}" class="cm-ljs-toolbar-menu" role="menu"
                     aria-label="Format options"
                     @keydown=${menuKeydownHandler}
                     @mouseenter=${() => clearTimeout(closeTimeout)}
@@ -1329,7 +1479,7 @@ export function toolbarPanel(view) {
                     aria-expanded=${items ? "false" : nothing}
                     aria-controls=${items ? `menu-${id}` : nothing}
                     tabindex="-1" 
-                    class="menu-item" role="menuitem" id="menu-item-${id}"
+                    class="cm-ljs-toolbar-menu-item" role="menuitem" id="menu-item-${id}"
                     ?disabled="${active !== undefined && !active}"
                     @mouseenter=${(e) => {
                         e.preventDefault()
@@ -1362,14 +1512,14 @@ export function toolbarPanel(view) {
                         view.focus();
                     } : nothing}
             >
-                <span class="label">${label}</span>
-                <span class="info">${info}</span>
+                <span class="cm-ljs-toolbar-label">${label}</span>
+                <span class="cm-ljs-toolbar-info">${info}</span>
             </button>
         `
     }
 
     const createDivider = () => html`
-        <div class="toolbar-divider"></div>
+        <div class="cm-ljs-toolbar-divider"></div>
     `
 
     const toolbarMenuRefs = new Map();
@@ -1384,27 +1534,38 @@ export function toolbarPanel(view) {
         const config = toolbarConfig(view.state);
 
         render(html`${
-            config.filter(button => button.items)
+            config.items.filter(button => button.items)
                 .map(button => createMenuEl(button, makeRef(button.id)))
         }`, menuParent)
 
+        const renderButton = (button, index) => html`${
+            button.type === "divider" 
+                ? createDivider() 
+                : button.action && button.items 
+                    ? createSplitButton(panel, button, index === 0 ? 0 : -1) 
+                    : button.items 
+                        ? createMenuButton(panel, button, toolbarMenuRefs.get(button.id), index === 0 ? 0 : -1) 
+                        : createButton(panel, button, index === 0 ? 0 : -1)
+        }`
 
-        render(html`${config.map((button, index) => {
-                if (button.type === "divider") {
-                    return createDivider()   
-                }
-            
-                const tabIndex = index === 0 ? 0 : -1;
-                if (button.action && button.items) {
-                    return createSplitButton(panel, button, tabIndex);
-                }
-
-                return button.items
-                    ? createMenuButton(panel, button, toolbarMenuRefs.get(button.id), tabIndex)
-                    : createButton(panel, button, tabIndex);
-            }
-        )}`, panel)
+        render(html`
+            ${config.items.map(renderButton)}
+            <div class="cm-ljs-toolbar-context-items">${config.contextItems.map(renderButton)}</div>
+        `, panel)
     }
+
+    // Hack to get the colors of CodeMirror's panels
+    // Anyone know a better way?
+    const updateCMColors = (view) => setTimeout(() => {
+        const panelBg = getComputedStyle(view.dom.querySelector('.cm-panels')).backgroundColor
+        view.dom.style.setProperty('--cm-panel-bg-color', panelBg)
+
+        const panelFg = getComputedStyle(view.dom.querySelector('.cm-panels')).color
+        view.dom.style.setProperty('--cm-panel-text-color', panelFg)
+
+        const panelBorderColor = getComputedStyle(view.dom.querySelector('.cm-panels')).borderBottomColor
+        view.dom.style.setProperty('--cm-panel-border-color', panelBorderColor)
+    })
 
     return {
         dom: panel,
@@ -1413,20 +1574,13 @@ export function toolbarPanel(view) {
             renderToolbar(view)
 
             // Update positions on scroll and resize
-            window.addEventListener('scroll', () => {
-                menus.values().forEach(menu => menu.updatePosition());
-            });
 
-            window.addEventListener('resize', () => {
-                menus.values().forEach(menu => menu.updatePosition());
-            });
 
+            updateCMColors(view)
         },
         update(update) {
-
             if (update.transactions.some(transaction => transaction.reconfigured)) {
-                const panelBg = getComputedStyle(update.view.dom.querySelector('.cm-panels')).backgroundColor
-                this.dom.querySelectorAll(':scope > [role=menu]').forEach(menu => menu.style.backgroundColor = panelBg)
+                updateCMColors(view)
             }
 
             if (update.docChanged || update.selectionSet) {
@@ -1438,5 +1592,5 @@ export function toolbarPanel(view) {
 }
 
 export const leidenToolbar = [
-    availableUnderdotRanges, highlightField, highlightTheme, showPanel.of(toolbarPanel),
+    availableUnderdotRanges, highlightField, highlightTheme, showPanel.of(toolbarPanel), toolbarTheme
 ]

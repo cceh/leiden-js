@@ -2,11 +2,10 @@ import {RangeSet, StateEffect, StateField} from "@codemirror/state";
 import {Decoration, EditorView} from "@codemirror/view";
 
 
-const setPreviewHighlights = StateEffect.define<{from: number, to: number}[]>()
-const clearPreviewHighlights = StateEffect.define<never>()
+export const setPreviewHighlights = StateEffect.define<{from: number, to: number}[]>()
 
 const previewHighlightMark = Decoration.mark({
-    class: "cm-ljs-toolbar-action-highlight"
+    class: "cm-ljs-toolbar-preview-highlight"
 })
 
 export const previewHighlightField = StateField.define({
@@ -19,8 +18,6 @@ export const previewHighlightField = StateField.define({
                     effect.value.map(({from, to}) =>
                         previewHighlightMark.range(from, to))
                 )
-            } else if (effect.is(clearPreviewHighlights)) {
-                return RangeSet.empty
             }
         }
 
@@ -31,7 +28,7 @@ export const previewHighlightField = StateField.define({
 
 export const previewHighlightTheme = EditorView.baseTheme({
     ".cm-ljs-toolbar-preview-highlight": {
-        backgroundColor: "var(--cm-ljs-toolbar-color-preview-highlight)"
+        backgroundColor: "var(--cm-ljs-toolbar-color-preview-highlight, rgba(255, 255, 0, 0.4))"
     }
 })
 

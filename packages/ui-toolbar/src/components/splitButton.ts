@@ -1,13 +1,13 @@
 import {html, nothing} from "lit-html";
 import {actionButton} from "./actionButton.js";
-import {ActionItemBase, ToolbarHoverActionBase, ToolbarSplitItem} from "../config.js";
+import {ActionCapableItem, HoverActionCapableItem, ToolbarSplitItem} from "../config.js";
 
 export const splitButton = (
     item: ToolbarSplitItem,
     tabIndex = -1,
-    actionCallback: (item: ActionItemBase) => void,
-    hoverEnterCallback?: (item: ToolbarHoverActionBase) => void,
-    hoverLeaveCallback?: (item: ToolbarHoverActionBase) => void,
+    actionCallback: (item: ActionCapableItem) => void,
+    hoverEnterCallback?: (item: HoverActionCapableItem) => void,
+    hoverLeaveCallback?: (item: HoverActionCapableItem) => void,
 ) => {
     return html`
             <div class="cm-ljs-toolbar-split-button-container">
@@ -20,6 +20,7 @@ export const splitButton = (
                         aria-controls="menu-${item.id}"
                         tabindex="${tabIndex}"
                         title="${item.menuTooltip ?? nothing}"
+                        role="button"
                 ></button>
             </div>
         `

@@ -1,9 +1,6 @@
-import {Completion, snippet, snippetCompletion} from "@codemirror/autocomplete";
+import {Snippets} from "@leiden-plus/lib/language";
 
-export const snippets: Record<string, {
-    template: string,
-    completion: Completion
-}> = {
+export const snippets: Snippets = {
     vestigChars: {
         template: "vestig.${num}char",
 		completion: {

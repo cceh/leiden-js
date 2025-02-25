@@ -29,7 +29,8 @@
   langId,
   divAttr @cut,
 
-  eq @cut
+  eq @cut,
+  text
 }
 
 @top Document {
@@ -51,7 +52,7 @@ block {
 }
 
 textInline {
-    Text | Unclear | supralineMacron | Number
+    Text | Unclear | supralineMacron
 }
 
 topLevelInline[@isGroup=topLevel] {
@@ -106,16 +107,14 @@ topLevelInline[@isGroup=topLevel] {
 
 inline { textInline | topLevelInline | diacritical | deletion | omittedLanguage | untranscribed }
 
-text {
+Text {
     chars | QuestionMark | (space ~diacrit) | newLine  | "." | ("=" ~eq) | "-"  ~lb | "," | ":" | "+" | "'"
-    | ".-"  | digits ~lb | "frac"
+    | ".-"  | digits ~lb | "frac" | Number
 
     // TODO: below rules just makes strange IDP data pass the tests
     | "lin" | "char"
     | inlineCirca[@dynamicPrecedence=-3] { circaPrefix }
 }
-
-Text { text (!supralineSic text)* }
 
 
 // ANNOTATIONS / EMENDATIONS in <: tags :> with |infix|
@@ -771,8 +770,8 @@ Figure {
 // - (?) allowed after "lines" or "char" vor all valid variants: (Lang: Demotic 1 lines(?))
 
 omittedLanguage[@isGroup=topLevel] {
-    OmittedLanguage[unit=line] { "(Lang: " Language { latinChars } ~charsOrLines space ( GapNumberCirca | Number | QuestionMark) space "lines" CertLow? ")" } |
-    OmittedLanguage[unit=character] { "(Lang: " Language { latinChars } ~charsOrLines  space (Number | QuestionMark) space "char" CertLow? ")" }
+    OmittedLanguage[unit=line] { UntranscribedStart<"Lang"> Language { latinChars } ~charsOrLines space ( GapNumberCirca | GapNumber | QuestionMark) space "lines" CertLow? UntranscribedEnd } |
+    OmittedLanguage[unit=character] { UntranscribedStart<"Lang"> Language { latinChars } ~charsOrLines  space (GapNumber | QuestionMark) space "char" CertLow? UntranscribedEnd }
 }
 
 
@@ -787,13 +786,13 @@ omittedLanguage[@isGroup=topLevel] {
 //   https://github.com/papyri/xsugar/blob/96f79e62ce4d62e223faab8fe8ba8989de1aa4bc/epidoc.xsg#L905
 
 untranscribedBase<start> {
-   start ( GapNumber | GapNumberRange | GapNumberCirca | QuestionMark ) " non transcribed" CertLow? ")"
+   UntranscribedStart<start> ( GapNumber | GapNumberRange | GapNumberCirca | QuestionMark ) " non transcribed" CertLow? UntranscribedEnd
 }
 
 untranscribed[@isGroup=topLevel] {
-    Untranscribed[unit=line] { untranscribedBase<"(Lines: "> } |
-    Untranscribed[unit=character] { untranscribedBase<"(Chars: "> } |
-    Untranscribed[unit=column] { untranscribedBase<"(Column: "> }
+    Untranscribed[unit=line] { untranscribedBase<"Lines"> } |
+    Untranscribed[unit=character] { untranscribedBase<"Chars"> } |
+    Untranscribed[unit=column] { untranscribedBase<"Column"> }
 }
 
 
@@ -1011,6 +1010,10 @@ MultiInfix[group=Delims]<infix> { infix }
     "("[group=Delims, closedBy=")"]
     ")"[group=Delims, openedBy="("]
 
+    UntranscribedStart[group=Delims, closedBy=UntranscribedEnd]<kw> { "(" kw ": " }
+    UntranscribedEnd[group=Delims, openedBy=UntranscribedStart] { ")" }
+
+
     "["[group=Delims, closedBy="]"]
     "]"[group=Delims, openedBy="["]
 
@@ -1069,6 +1072,7 @@ MultiInfix[group=Delims]<infix> { infix }
     ForeignEnd[group=Delims, openedBy="~|"] {
         "|~" LanguageId
     }
+
 
     @precedence {  ForeignEnd, "|" }
 

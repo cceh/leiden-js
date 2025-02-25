@@ -5,8 +5,6 @@ import {
     highlightActiveNode,
     leidenHighlightStyle as leidenTransHighlightStyle,
     leidenHighlightStyleDark as leidenTransHighlightStyleDark,
-    leidenHighlightStyleAccessible as leidenTransHighlightStyleAccessible,
-    leidenHighlightStyleAccessibleDark as leidenTransHighlightStyleAccessibleDark,
 } from "@leiden-plus/lib/language";
 import { leidenTranslationHighlighting } from "./syntaxHighlight.js";
 
@@ -14,8 +12,6 @@ export {
     leidenTranslationHighlighting,
     leidenTransHighlightStyle,
     leidenTransHighlightStyleDark,
-    leidenTransHighlightStyleAccessible,
-    leidenTransHighlightStyleAccessibleDark
 }
 
 export const leidenTranslationLanguage = LRLanguage.define({

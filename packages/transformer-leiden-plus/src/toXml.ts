@@ -1,5 +1,6 @@
 import {SyntaxNode, TreeCursor} from "@lezer/common";
 import {parser, rendProp, unitProp} from "@leiden-plus/parser-leiden-plus";
+import {removeCombiningMarks} from "@leiden-plus/lib/util";
 
 function text(input: string, node: TreeCursor) {
     return input.substring(node.from, node.to);
@@ -24,17 +25,6 @@ function diacriticValue(input: string) {
     }
 }
 
-function stripCodepoints(input: string, ...codepoints: number[]) {
-    let stripped = '';
-    for (let i = 0; i < input.length;) {
-        const current = input.codePointAt(i);
-        if (current && !codepoints.includes(current)) {
-            stripped += String.fromCodePoint(current);
-        }
-        i += current && current > 0xFFFF ? 2 : 1;
-    }
-    return stripped;
-}
 
 /**
  * Find a first-child Number leaf
@@ -198,7 +188,7 @@ export function toXml(input: string, root = parser.parse(input)) {
                     const toStrip = name === "SupralineUnclear" ? [0x323, 0x304] : [0x323];
                     node.childAfter(pos)
 
-                    xml.push(`<unclear>${stripCodepoints(text(input, node), ...toStrip)}</unclear>`);
+                    xml.push(`<unclear>${removeCombiningMarks(text(input, node), ...toStrip)}</unclear>`);
                     return false;
 
                 case 'Illegible':
@@ -624,7 +614,7 @@ export function toXml(input: string, root = parser.parse(input)) {
                     xml.push('<hi rend="supraline">');
                     break;
                 case 'SupralineMacronContent':
-                    xml.push(stripCodepoints(text(input, node), 0x304));
+                    xml.push(removeCombiningMarks(text(input, node), 0x304));
                     return false;
                 case 'SupralineUnderline':
                     xml.push('<hi rend="supraline-underline">');
@@ -693,7 +683,7 @@ export function toXml(input: string, root = parser.parse(input)) {
                             innerXml = `<gap reason="lost" quantity="${findNumber(input, node)}" unit="character"/>`;
                             break;
                         case "DiacriticUnclear":
-                            innerXml = `<unclear>${stripCodepoints(text(input, node), 0x323)}</unclear>`
+                            innerXml = `<unclear>${removeCombiningMarks(text(input, node), 0x323)}</unclear>`
                             break;
                         case "DiacritChar":
                             innerXml = text(input, node);
@@ -771,7 +761,8 @@ export function toXml(input: string, root = parser.parse(input)) {
                     xml.push(`<figure><figDesc>${text(input, node)}</figDesc></figure>`)
                     return false;
                 case 'OmittedLanguage': {
-                    node.firstChild(); // Language
+                    node.firstChild(); // Opening delim: "(Lang:"
+                    node.nextSibling(); // Language
                     const language = text(input, node);
                     node.nextSibling();
 
@@ -781,7 +772,7 @@ export function toXml(input: string, root = parser.parse(input)) {
                     if (node.name === 'GapNumberCirca') {
                         quantityOrExtent = ` quantity="${text(input, node).substring(3)}"`;
                         precisionAttr = ' precision="low"';
-                    } else if (node.name === 'Number') {
+                    } else if (node.name === 'GapNumber') {
                         quantityOrExtent = ` quantity="${text(input, node)}"`;
                     } else if (node.name === 'QuestionMark') {
                         quantityOrExtent = ' extent="unknown"';
@@ -801,7 +792,8 @@ export function toXml(input: string, root = parser.parse(input)) {
                     let quantityOrExtent = '';
                     let precisionAttr = '';
 
-                    node.firstChild(); // number/range/question mark
+                    node.firstChild(); // Opening delim
+                    node.nextSibling(); // number/range/question mark
 
                     if (node.name === 'GapNumberCirca') {
                         quantityOrExtent = ` quantity="${text(input, node).substring(3)}"`;

@@ -199,7 +199,7 @@ export const toolbarTheme = EditorView.baseTheme({
         paddingInlineStart: "1em"
     },
 
-    ".cm-ljs-toolbar-menu-item:hover, .cm-ljs-toolbar-menu-item:focus-visible": {
+    ".cm-ljs-toolbar-menu-item:hover, .cm-ljs-toolbar-menu-item:focus-visible, .cm-ljs-toolbar-menu-item[aria-expanded=true]": {
         background: "var(--color-hover-bg)"
     },
 
@@ -208,7 +208,7 @@ export const toolbarTheme = EditorView.baseTheme({
         outlineOffset: "-2px"
     },
 
-    ".cm-ljs-toolbar-menu-item[aria-haspopup=\"true\"]::after": {
+    ".cm-ljs-toolbar-menu-item[aria-haspopup=true]::after": {
         content: '"→"',
         marginLeft: "8px"
     },

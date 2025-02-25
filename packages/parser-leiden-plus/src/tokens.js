@@ -232,128 +232,13 @@ export const supralineUnclearToken = new ExternalTokenizer(input => {
     }
 });
 
-//
-// export const unclearToken = new ExternalTokenizer(input => {
-//     let charCount = 0;
-//     for(;;) {
-//         if (input.next < 0 || skipped.indexOf(String.fromCharCode(input.next)) > -1) {
-//             break;
-//         }
-//
-//         // unclear text continues as long as next character is an underdot
-//         let pos = isHighSurrogate(input.next) ? 2 : 1;
-//         let peek = input.peek(pos);
-//         let hasUnderdot = false;
-//         let hasSupraline = false;
-//         while (peek === COMBINING_DOT_BELOW || peek === COMBINING_MACRON || combiningMarks.includes(peek)) {
-//             pos++;
-//             if (peek === COMBINING_DOT_BELOW) {
-//                 hasUnderdot = true;
-//             }
-//             if (peek === COMBINING_MACRON) {
-//                 hasSupraline = true;
-//             }
-//             peek = input.peek(pos);
-//         }
-//
-//         if (hasUnderdot && !hasSupraline) {
-//             charCount++;
-//             input.advance(pos);
-//         } else {
-//             break;
-//         }
-//     }
-//
-//     if (charCount === 1) {
-//         input.acceptToken(singleUnclear);
-//     } else if (charCount > 1) {
-//         input.acceptToken(multiUnclear);
-//     }
-// });
-//
-//
-// export const supralineToken = new ExternalTokenizer(input => {
-//     let charCount = 0;
-//
-//     for (;;) {
-//         if (input.next < 0 || skipped.indexOf(String.fromCharCode(input.next)) > -1) {
-//             break;
-//         }
-//
-//         // supraline text continues as long as next character is a supraline combining macron
-//         let pos = isHighSurrogate(input.next) ? 2 : 1;
-//         let peek = input.peek(pos);
-//         let hasSupraline = false;
-//         let hasUnderdot = false;
-//         // debugger;
-//         while (peek === COMBINING_MACRON || peek === COMBINING_DOT_BELOW || combiningMarks.includes(peek)) {
-//             pos++;
-//             if (peek === COMBINING_MACRON) {
-//                 hasSupraline = true;
-//             } else if (peek === COMBINING_DOT_BELOW) {
-//                 hasUnderdot = true;
-//             }
-//             peek = input.peek(pos);
-//         }
-//
-//         if (hasSupraline && !hasUnderdot) {
-//             charCount++;
-//             input.advance(pos);
-//         } else {
-//             break;
-//         }
-//     }
-//
-//     if (charCount > 0) {
-//         input.acceptToken(SupralineMacronContent);
-//     }
-// })
-//
-// // TODO: combining
-// export const supralineUnclearToken = new ExternalTokenizer(input => {
-//     let charCount = 0;
-//
-//     for (;;) {
-//         if (input.next < 0 || skipped.indexOf(input.next) > -1) {
-//             break;
-//         }
-//
-//         let pos = isHighSurrogate(input.next) ? 2 : 1;
-//         let peek = input.peek(pos);
-//         let hasUnderdot = false;
-//         let hasSupraline = false;
-//         while (peek === COMBINING_DOT_BELOW || peek === COMBINING_MACRON || combiningMarks.includes(peek)) {
-//             pos++;
-//             if (peek === COMBINING_DOT_BELOW) {
-//                 hasUnderdot = true;
-//             }
-//             if (peek === COMBINING_MACRON) {
-//                 hasSupraline = true;
-//             }
-//             peek = input.peek(pos);
-//         }
-//
-//         if (hasUnderdot && hasSupraline) {
-//             charCount++;
-//             input.advance(pos);
-//         } else {
-//             break;
-//         }
-//     }
-//
-//     if (charCount > 0) {
-//         input.acceptToken(SupralineUnclear);
-//     }
-// })
-
 
 export function specializeChars(input) {
     if (input.length === 1) {
         return /[a-zA-Z]+/.test(input) ? single_latinChar : single_char;
    } else if (input.length > 1) {
         let isSingleCharWithDiacrit = true;
-       for (let i = 1; i < input.length; i++) {
-           if (!combiningMarks.includes(input.charCodeAt(i))) {
+       for (let i = 1; i < input.length; i++) {           if (!combiningMarks.includes(input.charCodeAt(i))) {
                isSingleCharWithDiacrit = false;
                break;
            }
@@ -374,6 +259,8 @@ export function specializeNum(input) {
     if (input.length === 1) {
         return single_num;
     }
+
+    return -1
 }
 
 function isHighSurrogate(code) {

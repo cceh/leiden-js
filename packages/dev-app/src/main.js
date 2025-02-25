@@ -1,20 +1,34 @@
-import {EditorView, hoverTooltip, showPanel, showTooltip} from "@codemirror/view"
+import {EditorView, showPanel} from "@codemirror/view"
 import {basicSetup} from "codemirror"
-import {leidenPlus} from "@leiden-plus/codemirror-lang-leiden-plus";
+import {
+    leidenHighlightStyle,
+    leidenHighlightStyleDark,
+    leidenPlus
+} from "@leiden-plus/codemirror-lang-leiden-plus";
 import {syntaxTree} from "@codemirror/language";
 import {NodeWeakMap} from "@lezer/common";
 import {leidenTranslation} from "@leiden-plus/codemirror-lang-leiden-trans";
 import {Annotation, Compartment, StateField} from "@codemirror/state";
-import {fromXml as xmlToLeidenPlus, toXml as leidenPlusToXml, TransformationError as LeidenPlusTransformationError} from "@leiden-plus/transformer-leiden-plus";
-import {fromXml as xmlToLeidenTrans, toXml as leidenTransToXml, TransformationError as LeidenTransTransformationError } from "@leiden-plus/transformer-leiden-trans";
+import {
+    fromXml as xmlToLeidenPlus,
+    toXml as leidenPlusToXml,
+    TransformationError as LeidenPlusTransformationError
+} from "@leiden-plus/transformer-leiden-plus";
+import {
+    fromXml as xmlToLeidenTrans,
+    toXml as leidenTransToXml,
+    TransformationError as LeidenTransTransformationError
+} from "@leiden-plus/transformer-leiden-trans";
 
 import {xml} from "@codemirror/lang-xml";
 import {linter, lintGutter, setDiagnosticsEffect} from "@codemirror/lint";
-import {leidenToolbar, toolbarPanel} from "./toolbar";
+// import {leidenToolbar} from "./toolbar";
 import {html, nothing, render} from "lit-html";
 import {createRef, ref} from "lit-html/directives/ref.js";
 
 import './styles/cardo.css'
+import {oneDarkTheme} from "@codemirror/theme-one-dark";
+import {leidenPlusToolbar} from "@leiden-plus/toolbar-leiden-plus";
 
 const syntaxTreeNodeMap = new NodeWeakMap();
 const selectTreeNodeAnnotation = Annotation.define()
@@ -120,11 +134,34 @@ function updateDebugInfo(view, highlightNode = true) {
 
         highlightNode && highlightCurrentNodeInTree(token);
 
-        document.getElementById('debug-info-content').innerHTML = `
-    <div><span class="debug-label">Position:</span>${pos}</div>
-    <div><span class="debug-label">Line:</span>${line.number}</div>
-    <div><span class="debug-label">Token:</span>${token.name}</div>
-  `;
+        const certLowNodes = ["OrthoRegReg", "OrthoRegOrig", "AlternateReadingLemma",
+            "AlternateReadingReading", "ScribalCorrectionAdd", "ScribalCorrectionDel", "SpellingCorrectionCorr",
+            "SpellingCorrectionSic", "EditorialCorrectionLemma", "EditorialCorrectionReading", "SuppliedOmitted",
+            "GapOmitted", "SuppliedParallel", "SuppliedParallelLost", "SuppliedLost", "Gap", "Deletion",
+            "AbbrevUnresolved", "AbbrevInnerEx", "AbbrevInnerSuppliedLostEx", "Surplus", "InsertionAbove",
+            "InsertionBelow", "InsertionMargin", "InsertionMarginSling", "InsertionMarginUnderline", "TextSubscript",
+            "NumberSpecial", "Diacritical", "Handshift", "OmittedLanguage", "Untranscribed", "Illegible", "Vestige",
+            "LostLines", "Vacat",
+        ]
+
+        let currentToken = token
+        while (currentToken) {
+            if (certLowNodes.includes(currentToken.type.name)) {
+                break
+            }
+            currentToken = currentToken.parent
+        }
+
+        render(html`
+            <div><span class="debug-label">Position:</span>${pos}</div>
+            <div><span class="debug-label">Line:</span>${line.number}</div>
+            <div><span class="debug-label">Token:</span>${token.name} <button @click=${() => console.log(token.node)}>log</button></div>
+            <div><span class="debug-label">CertLowParent:</span>${
+                currentToken
+                        ? html`${currentToken.name} <button @click=${() => console.log(token.node)}>log</button>`
+                        : html`none`
+            }</div>
+        `, document.getElementById('debug-info-content'))
     })
 
 }
@@ -149,11 +186,40 @@ function statusBarPanel(view) {
 
 
 function getLanguage(variant) {
-    return variant === 'leiden-plus' ? leidenPlus() : leidenTranslation()
+    return variant === 'leiden-plus'
+        ? [leidenPlus(getHighlightStyle()), leidenPlusToolbar]
+        : leidenTranslation()
+}
+
+function getTheme(dark) {
+    return dark === 'true' ? oneDarkTheme : [];
 }
 
 
+
+
 const language = new Compartment
+const theme = new Compartment
+
+const highlightStyles = {leidenHighlightStyle, leidenHighlightStyleDark}
+function getHighlightStyle() {
+    return highlightStyles[localStorage.getItem('highlight-style') || Object.keys(highlightStyles)[0]]
+}
+
+const highlightStyleSelect = document.querySelector('#highlight-style-select');
+highlightStyleSelect.append(...Object.keys(highlightStyles).map(style => Object.assign(document.createElement("option"), {
+    textContent: style,
+    value: style
+})))
+highlightStyleSelect.value = localStorage.getItem('highlight-style') || Object.keys(highlightStyles)[0]
+highlightStyleSelect.addEventListener('change', (e) => {
+    localStorage.setItem('highlight-style', e.target.value)
+    window.leidenEditorView.dispatch({
+        effects: language.reconfigure(getLanguage(localStorage.getItem('leiden-variant'), e.target.value))
+    })
+})
+
+
 
 const languageSelect = document.querySelector('#language-select');
 languageSelect.value = localStorage.getItem('leiden-variant') || 'leiden-plus'
@@ -168,6 +234,18 @@ languageSelect.addEventListener('change', (e) => {
         }
     })
 })
+
+const themeCheckbox = document.querySelector("#theme-checkbox")
+themeCheckbox.checked = (localStorage.getItem('dark') || 'false') === 'true'
+themeCheckbox.addEventListener('change', (e) => {
+    const isDark = e.target.checked ? "true" : "false"
+    localStorage.setItem('dark', isDark)
+    window.leidenEditorView.dispatch({
+        effects: theme.reconfigure(getTheme(isDark))
+    })
+})
+
+
 
 function convertToXml(leiden) {
     if (languageSelect.value === 'leiden-plus') {
@@ -205,11 +283,20 @@ const diagnosticsStateField = StateField.define({
 const doc = localStorage.getItem(`doc-${languageSelect.value}`) || "Test your markup here"
 const syncAnnotation = Annotation.define()
 
+
 // Create the editor view and store it globally for reference
 window.leidenEditorView = new EditorView({
     doc,
     extensions: [
         basicSetup,
+        // bracketMatching({renderMatch: (match, state) => {
+        //         const noMatchingNodes = ["Gap", "GapOmitted"]
+        //         const node = syntaxTree(state).resolve(match.start.from)
+        //         if (noMatchingNodes.includes(node.type.name)) {
+        //             return []
+        //         }
+        //         return bra
+        //     }}),
         language.of(getLanguage(languageSelect.value)),
         EditorView.updateListener.of(update => {
             if (update.transactions.some(tr => tr.annotation(syncAnnotation) === true)) {
@@ -244,7 +331,7 @@ window.leidenEditorView = new EditorView({
         diagnosticsStateField,
         lintGutter(),
         showPanel.of(statusBarPanel),
-        leidenToolbar,
+        theme.of(getTheme(localStorage.getItem('dark') ?? 'false')),
         EditorView.theme({
             ".cm-content": {
                 fontFamily: `"Cardo", "Lucida Grande", "IFAO-Grec Unicode", "Arial Unicode MS", "New Athena Unicode", "Athena Unicode", "Lucida Grande", "Verdana", "Tahoma"`

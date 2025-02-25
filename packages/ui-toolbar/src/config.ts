@@ -1,72 +1,83 @@
 import {EditorState, Facet, StateField, Transaction} from "@codemirror/state";
 import {EditorView} from "@codemirror/view";
 
-type ItemType = "divider" | "action" | "menu" | "split"
-
-interface ItemBase {
-    id: string
-    type: ItemType
-    label: string
-    active: boolean
+// Base properties
+interface BaseProps {
+    id: string;
+    label: string;
+    active?: boolean;
 }
 
-export interface ActionItemBase extends ItemBase {
-    action: (view: EditorView) => boolean
+interface MenuTriggerProps {
+    items: MenuItem[];
 }
 
-export interface ActionItem extends ActionItemBase {
-    type: "action"
+interface ToolbarItemProps {
+    tooltip?: string;
 }
 
-export type MenuItem = (ActionItem | MenuTrigger) & {
-    info?: string
+export interface ActionCapableItem {
+    action: (view: EditorView) => void;
 }
 
-interface MenuTrigger extends ItemBase {
-    type: "menu"
-    items: MenuItem[]
-}
 
-interface ToolbarItemBase {
-    tooltip?: string
-}
-
-export interface ToolbarHoverActionBase {
+export interface HoverActionCapableItem {
     hoverAction?: {
-        enter: (view: EditorView) => void
-        leave: (view: EditorView) => void
-    }
+        enter: (view: EditorView) => void;
+        leave: (view: EditorView) => void;
+    };
 }
 
-export type ToolbarActionItem = ActionItem & ToolbarItemBase & ToolbarHoverActionBase
-export type ToolbarMenuTrigger = MenuTrigger & ToolbarItemBase
-export type ToolbarSplitItem =
-    Omit<ToolbarActionItem, "type"> &
-    Omit<ToolbarMenuTrigger, "type"> &
-    ToolbarHoverActionBase & {
-    type: "split",
-    menuTooltip?: string
+// Menu item types
+export interface ActionItem extends BaseProps, ActionCapableItem {
+    type: "action";
+    info?: string;
 }
 
-export type ToolbarItem = ToolbarActionItem | ToolbarMenuTrigger | ToolbarSplitItem | DividerItem
+export interface MenuTrigger extends BaseProps, MenuTriggerProps {
+    type: "menu";
+    info?: string;
+}
+
+export type MenuItem = ActionItem | MenuTrigger;
+
+// Toolbar item types
+export type ToolbarActionItem = ActionItem & ToolbarItemProps & HoverActionCapableItem;
+
+export type ToolbarMenuTrigger = MenuTrigger & ToolbarItemProps;
+
+export type ToolbarSplitItem = BaseProps &
+    ActionCapableItem &
+    MenuTriggerProps &
+    ToolbarItemProps &
+    HoverActionCapableItem & {
+    type: "split";
+    menuTooltip?: string;
+};
 
 export interface DividerItem {
-    type: "divider"
+    type: "divider";
 }
 
+export type ToolbarItem = ToolbarActionItem | ToolbarMenuTrigger | ToolbarSplitItem | DividerItem;
+
+
+// Configuration
 export interface ToolbarConfig {
-    items: ToolbarItem[],
-    contextItems?: ToolbarItem[]
+    items: ToolbarItem[];
+    contextItems?: ToolbarItem[];
 }
 
-export const toolbarConfigFacet = Facet.define<(state: EditorState) => ToolbarConfig, (state: EditorState) => ToolbarConfig>({
+export type ToolbarConfigProvider = (state: EditorState) => ToolbarConfig;
+
+export const toolbarConfig = Facet.define<ToolbarConfigProvider, ToolbarConfigProvider>({
     combine(inputs) {
         return inputs[inputs.length - 1]
     }
 })
 
 const applyConfig = (state: EditorState): ToolbarConfig => {
-    const configFn = state.facet(toolbarConfigFacet)
+    const configFn = state.facet(toolbarConfig)
     return configFn(state)
 }
 
@@ -74,7 +85,11 @@ export const toolbarConfigStateField = StateField.define<ToolbarConfig>({
     create(state) {
         return applyConfig(state)
     },
-    update(_value: ToolbarConfig, transaction: Transaction) {
-        return applyConfig(transaction.state)
+    update(value: ToolbarConfig, transaction: Transaction) {
+        if (transaction.reconfigured || transaction.docChanged || transaction.selection) {
+            return applyConfig(transaction.state)
+        }
+
+        return value
     }
 })
