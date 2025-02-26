@@ -70,7 +70,7 @@ jobs:
       # Pre-build the Docker image
       - name: Pre-build xsugar Docker image
         run: |
-          docker buildx bake --file test/docker-compose.yml --file /tmp/docker-compose-cache.json
+          docker buildx bake --allow=fs=/tmp --file test/docker-compose.yml --file /tmp/docker-compose-cache.json
         env:
           DOCKER_BUILDKIT: 1
 
