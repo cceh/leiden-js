@@ -24,11 +24,11 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "tsup": "^8.3.5"
+    "tsup": "^8.4.0"
   },
   "dependencies": {
-    "@lezer/common": "^1.2.3",
+    "@leiden-plus/lib": "workspace:*",
     "@leiden-plus/parser-leiden-trans": "workspace:*",
-    "@leiden-plus/lib": "workspace:*"
+    "@lezer/common": "^1.2.3"
   }
 }
