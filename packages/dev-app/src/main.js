@@ -1,11 +1,19 @@
-import {EditorView, showPanel} from "@codemirror/view"
+import {
+    drawSelection,
+    EditorView,
+    highlightActiveLine,
+    highlightActiveLineGutter,
+    keymap,
+    lineNumbers,
+    showPanel
+} from "@codemirror/view"
 import {basicSetup} from "codemirror"
 import {
     leidenHighlightStyle,
     leidenHighlightStyleDark,
     leidenPlus
 } from "@leiden-plus/codemirror-lang-leiden-plus";
-import {syntaxTree} from "@codemirror/language";
+import {bracketMatching, foldGutter, foldKeymap, indentOnInput, syntaxTree} from "@codemirror/language";
 import {NodeWeakMap} from "@lezer/common";
 import {leidenTranslation} from "@leiden-plus/codemirror-lang-leiden-trans";
 import {Annotation, Compartment, StateField} from "@codemirror/state";
@@ -21,7 +29,8 @@ import {
 } from "@leiden-plus/transformer-leiden-trans";
 
 import {xml} from "@codemirror/lang-xml";
-import {linter, lintGutter, setDiagnosticsEffect} from "@codemirror/lint";
+import {linter, lintGutter, lintKeymap, setDiagnosticsEffect} from "@codemirror/lint";
+import {defaultKeymap, history, historyKeymap} from "@codemirror/commands";
 // import {leidenToolbar} from "./toolbar";
 import {html, nothing, render} from "lit-html";
 import {createRef, ref} from "lit-html/directives/ref.js";
@@ -29,6 +38,9 @@ import {createRef, ref} from "lit-html/directives/ref.js";
 import './styles/cardo.css'
 import {oneDarkTheme} from "@codemirror/theme-one-dark";
 import {leidenPlusToolbar} from "@leiden-plus/toolbar-leiden-plus";
+import {leidenTransToolbar} from "@leiden-plus/toolbar-leiden-trans";
+import {closeBracketsKeymap, completionKeymap} from "@codemirror/autocomplete";
+import {searchKeymap} from "@codemirror/search";
 
 const syntaxTreeNodeMap = new NodeWeakMap();
 const selectTreeNodeAnnotation = Annotation.define()
@@ -188,7 +200,7 @@ function statusBarPanel(view) {
 function getLanguage(variant) {
     return variant === 'leiden-plus'
         ? [leidenPlus(getHighlightStyle()), leidenPlusToolbar]
-        : leidenTranslation()
+        : [leidenTranslation(), leidenTransToolbar]
 }
 
 function getTheme(dark) {
@@ -288,7 +300,32 @@ const syncAnnotation = Annotation.define()
 window.leidenEditorView = new EditorView({
     doc,
     extensions: [
-        basicSetup,
+        lineNumbers(),
+        highlightActiveLineGutter(),
+        // highlightSpecialChars(),
+        history(),
+        foldGutter(),
+        drawSelection(),
+        // dropCursor(),
+        // EditorState.allowMultipleSelections.of(true),
+        indentOnInput(),
+        // syntaxHighlighting(defaultHighlightStyle, {fallback: true}),
+        bracketMatching(),
+        // closeBrackets(),
+        // autocompletion(),
+        // rectangularSelection(),
+        // crosshairCursor(),
+        highlightActiveLine(),
+        // highlightSelectionMatches(),
+        keymap.of([
+            ...closeBracketsKeymap,
+            ...defaultKeymap,
+            ...searchKeymap,
+            ...historyKeymap,
+            ...foldKeymap,
+            ...completionKeymap,
+            ...lintKeymap
+        ]),
         // bracketMatching({renderMatch: (match, state) => {
         //         const noMatchingNodes = ["Gap", "GapOmitted"]
         //         const node = syntaxTree(state).resolve(match.start.from)

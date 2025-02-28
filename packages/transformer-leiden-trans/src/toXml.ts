@@ -114,8 +114,10 @@ export function toXml(input: string, root = parser.parse(input)) {
                 case 'Foreign': {
                     node.lastChild(); // ForeignEnd
                     node.lastChild(); // LanguageId
-                    xml.push(`<foreign xml:lang="${text(input, node)}">`);
-                    node.parent(); // ForeignEnd
+                    if (node.name === "LanguageId") {
+                        xml.push(`<foreign xml:lang="${text(input, node)}">`);
+                        node.parent(); // ForeignEnd
+                    }
                     node.parent();
                     break;
                 }

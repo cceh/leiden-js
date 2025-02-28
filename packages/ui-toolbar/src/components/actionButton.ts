@@ -20,7 +20,7 @@ export const actionButton = (
                 }}"
                 @mouseenter="${hoverEnterCallback ? () => {
                     hoverEnterCallback(item)
-                }: nothing}"
+                } : nothing}"
                 @mouseleave="${hoverLeaveCallback ? () => {
                     hoverLeaveCallback(item)
                 } : nothing}"

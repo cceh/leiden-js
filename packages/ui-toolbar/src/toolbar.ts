@@ -110,7 +110,7 @@ export class Toolbar implements Panel {
         render(html`${
             config.items
                 .filter(item => item.type === "menu" || item.type === "split")
-                .map(buttonItem => menu(buttonItem, this.makeRef(buttonItem.id)))
+                .map(buttonItem => menu(buttonItem, this.actionCallback, this.makeRef(buttonItem.id)))
         }`, this.menuContainer)
 
         render(html`
@@ -159,7 +159,7 @@ export class Toolbar implements Panel {
     };
 
     private handleOutsideClick = (e: MouseEvent) => {
-        if (e.target instanceof HTMLElement && !this.dom.contains(e.target)) {
+        if (e.target instanceof HTMLElement && !(this.dom.contains(e.target) || this.menuContainer.contains(e.target))) {
             this.closeAllMenusUnder(this.menuContainer)
         }
     };

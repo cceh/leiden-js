@@ -17,7 +17,7 @@ export function menu(triggerItem: { id: string, label: string, items: MenuItem[]
     `
 }
 
-export function menuItem(item: MenuItem, actionCallback: (item: ActionCapableItem) => void): TemplateResult {
+function menuItem(item: MenuItem, actionCallback: (item: ActionCapableItem) => void): TemplateResult {
     const isMenuTrigger = item.type === "menu"
     return html`
         ${isMenuTrigger ? menu(item, actionCallback) : ""}

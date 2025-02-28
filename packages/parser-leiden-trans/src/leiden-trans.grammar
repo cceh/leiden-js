@@ -1,4 +1,4 @@
-@precedence { termEquals @cut, inlineEquals }
+@precedence { left @left, termEquals @cut, inlineEquals }
 
 @top Document {
     (Whitespace | Translation)+
@@ -8,15 +8,20 @@ Translation {
     TranslationStart[group=Delims, closedBy=TranslationEnd] {
         "<T=" ( "." LanguageId )?
     }
-    ( block | Whitespace )*
+    Whitespace? (pContent | divContent )
     TranslationEnd[group=Delims, openedBy=TranslationStart] {
         "=T>"
     }
 }
 
+pContent { P (Whitespace | P)*}
+divContent { Div (Whitespace | Div)* }
+
+P { "<=" ( inline )* "=>" }
+Div { "<D=." N { divWord } ( "." Subtype { divWord } )? space ( block | Whitespace )+ "=D>" }
+
 block {
-    P { "<=" ( block | inline )* "=>" } |
-    Div { "<D=." N { divWord } ( "." Subtype { divWord } )? space ( block | Whitespace )+ "=D>" }
+    P | Div
 }
 
 topLevelRules[@isGroup=topLevel] { LineNum | LineNumBreak | Erasure | Note | Foreign | Term | App | Gap }

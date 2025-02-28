@@ -1,6 +1,6 @@
 import {Snippets} from "@leiden-plus/lib/language";
 
-export const snippets: Snippets = {
+export const snippets = {
     vestigChars: {
         template: "vestig.${num}char",
 		completion: {
@@ -1159,4 +1159,4 @@ export const snippets: Snippets = {
     }
 
 
-}
+} satisfies Snippets

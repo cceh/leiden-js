@@ -40,11 +40,15 @@ export const toolbarTheme = EditorView.baseTheme({
         "--menu-shadow": "rgba(0, 0, 0, 0.1)",
         "--color-hover-bg": "color-mix(in srgb, var(--color-button-bg), black 10%)",
         "--color-menu-secondary-text": "color-mix(in srgb, currentColor, white 50%)",
+        "--color-button-text-disabled": "color-mix(in srgb, currentColor, white 70%)",
+        "--color-menu-text-disabled": "color-mix(in srgb, currentColor, white 70%)"
     },
     "&dark": {
         "--menu-shadow": "rgba(0, 0, 0, 0.7)",
         "--color-hover-bg": "color-mix(in srgb, var(--color-button-bg), white 10%)",
         "--color-menu-secondary-text": "color-mix(in srgb, currentColor, black 50%)",
+        "--color-button-text-disabled": "color-mix(in srgb, currentColor, black 40%)",
+        "--color-menu-text-disabled": "color-mix(in srgb, currentColor, black 45%)"
     },
 
     /* Toolbar container */
@@ -71,7 +75,11 @@ export const toolbarTheme = EditorView.baseTheme({
         color: "var(--color-button-text)"
     },
 
-    ".cm-ljs-toolbar-button:hover, .cm-ljs-toolbar-button[aria-expanded=\"true\"]": {
+    ".cm-ljs-toolbar-button[disabled]": {
+      color: "var(--color-button-text-disabled)",
+    },
+
+    ".cm-ljs-toolbar-button:hover:not([disabled]), .cm-ljs-toolbar-button[aria-expanded=\"true\"]": {
         background: "var(--color-hover-bg)"
     },
 
@@ -191,6 +199,10 @@ export const toolbarTheme = EditorView.baseTheme({
         color: "var(--color-menu-text, var(--cm-panel-text-color))"
     },
 
+    ".cm-ljs-toolbar-menu-item[disabled]": {
+        color: "var(--color-menu-text-disabled)"
+    },
+
     ".cm-ljs-toolbar-menu-item .cm-ljs-toolbar-info": {
         color: "var(--color-menu-secondary-text)",
     },
@@ -199,7 +211,7 @@ export const toolbarTheme = EditorView.baseTheme({
         paddingInlineStart: "1em"
     },
 
-    ".cm-ljs-toolbar-menu-item:hover, .cm-ljs-toolbar-menu-item:focus-visible, .cm-ljs-toolbar-menu-item[aria-expanded=true]": {
+    ".cm-ljs-toolbar-menu-item:hover:not([disabled]), .cm-ljs-toolbar-menu-item:focus-visible, .cm-ljs-toolbar-menu-item[aria-expanded=true]": {
         background: "var(--color-hover-bg)"
     },
 
