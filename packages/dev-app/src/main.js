@@ -235,7 +235,7 @@ highlightStyleSelect.addEventListener('change', (e) => {
 })
 
 const languageSelect = document.querySelector('#language-select');
-languageSelect.value = localStorage.getItem('leiden-variant') || 'leiden-plus'
+languageSelect.value = localStorage.getItem('leiden-variant') || 'leiden-plus.Document'
 languageSelect.addEventListener('change', (e) => {
     localStorage.setItem('leiden-variant', e.target.value)
     window.leidenEditorView.dispatch({
