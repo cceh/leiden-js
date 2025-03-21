@@ -5,4 +5,5 @@ export {
     leidenHighlightStyleDark,
 } from "./syntaxHighlight.js"
 export { SnippetDef, Snippets, applySnippet } from "./snippets.js"
-export { insertBeforeEndBracket, deleteRange, CommandTarget } from "./editorOperations.js"
+export { insertAt, appendContent, deleteRange, CommandTarget } from "./editorOperations.js"
+export { blockIndent } from "./indent.js"

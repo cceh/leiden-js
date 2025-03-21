@@ -3,14 +3,24 @@ import {
     MenuItem,
     MenuTrigger,
     setPreviewHighlights,
-    toolbar,
+    toolbar, ToolbarActionItem,
     toolbarConfig
 } from "@leiden-plus/ui-toolbar";
 import {Extension} from "@codemirror/state";
-import {inlineContentAllowed, snippets} from "@leiden-plus/codemirror-lang-leiden-plus";
+import {
+    acceptsCertLow,
+    inlineContentAllowed,
+    addCertLowAtCursorPosition,
+    findClosestCertLowAncestor,
+    snippets,
+    hasCertLow,
+    addCertLow,
+    removeCertLow
+} from "@leiden-plus/codemirror-lang-leiden-plus";
 import {applySnippet} from "@leiden-plus/lib/language";
 import {addCombiningMarks, removeCombiningMarks} from "@leiden-plus/lib/util";
 import {syntactialDiacritRanges} from "./syntacticalDiacritRanges.js";
+import {syntaxTree} from "@codemirror/language";
 
 const ancientDiacrits = {
     Acute: "´",
@@ -332,6 +342,49 @@ export const leidenPlusToolbar: Extension[] = [
             ])
         }
 
+        const contextItems: ToolbarActionItem[] = [];
+        const certLowAncestor = findClosestCertLowAncestor(state)
+        if (certLowAncestor) {
+            if (!hasCertLow(certLowAncestor)) {
+                contextItems.push({
+                    type: "action",
+                    id: "context-item-cert-low-add",
+                    label: "( ? )",
+                    action: (view) => {
+                        addCertLow(view, certLowAncestor)
+                    }
+                })
+            } else {
+                const label = document.createElement("span")
+                label.innerHTML = `
+                    <span style="position: relative; display: inline-block;">
+                        ( ? ) 
+                        <svg viewBox="0 0 100 100" style="
+                          position: absolute;
+                          top: 0;
+                          left: 0;
+                          width: 100%;
+                          height: 100%;
+                          pointer-events: none;
+                        ">
+                            <!--suppress CssUnresolvedCustomProperty -->
+                            <line x1="0" y1="100" x2="100" y2="0" stroke-width="20" stroke-linecap="round" style="
+                                stroke: var(--cm-panel-bg-color);
+                            "/>
+                            <line x1="0" y1="100" x2="100" y2="0" stroke-width="8" stroke-linecap="round" stroke="currentColor"/>
+                        </svg>
+                   </span>`
+
+                contextItems.push({
+                    type: "action",
+                    id: "context-item-cert-low-remove",
+                    label,
+                    action: (view) => {
+                        removeCertLow(view, certLowAncestor)
+                    }
+                })
+            }
+        }
 
         return ({
             items: [
@@ -374,6 +427,16 @@ export const leidenPlusToolbar: Extension[] = [
                 // SHORTCUT BUTTONS
                 {
                     type: "split",
+                    id: "supplied-lost",
+                    label: "[abc]",
+                    tooltip: "Supplied text, lost in lacuna",
+                    menuTooltip: "More supplied text markup",
+                    action: (view) => applySnippet(view, snippets.suppliedLost),
+                    items: createMenuItemsFor(["suppliedLostParallel", "suppliedParallel", "suppliedOmitted"]),
+                    active: inlineAllowed
+                },
+                {
+                    type: "split",
                     id: "abbreviation",
                     label: "(a(bc))",
                     action: (view) => applySnippet(view, snippets.abbreviation),
@@ -392,19 +455,29 @@ export const leidenPlusToolbar: Extension[] = [
                 },
                 {
                     type: "split",
-                    id: "supplied-lost",
-                    label: "[abc]",
-                    tooltip: "Lost text, supplied/restored",
-                    menuTooltip: "More lost text markup",
-                    action: (view) => applySnippet(view, snippets.suppliedLost),
-                    items: createMenuItemsFor([
-                        "gapLostChars", "gapLostCharsCa", "gapLostCharsRange", "gapLostCharsUnknown"
-                    ]),
+                    id: "split-illegibles",
+                    label: ".1",
+                    tooltip: "Illegible chars., known quantity",
+                    menuTooltip: "More illegible markup",
+                    action: (view) => applySnippet(view, snippets.illegibleChars),
+                    items: createMenuItemsFor(["illegibleCharsRange", "illegibleCharsCa",
+                        "illegibleCharsUnknown", "illegibleLines", "illegibleLinesRange",
+                        "illegibleLinesCa"]),
+                    active: inlineAllowed
+                }, {
+                    type: "split",
+                    id: "split-lacunae",
+                    label: "[.1]",
+                    tooltip: "Lacuna, known quantity of chars.",
+                    menuTooltip: "More markup for lacunae",
+                    action: (view) => applySnippet(view, snippets.gapLostChars),
+                    items: createMenuItemsFor(["gapLostCharsCa", "gapLostCharsRange", "gapLostCharsUnknown",
+                        "gapLostLines", "gapLostLinesRange", "gapLostLinesCa", "gapLostLinesUnknown"]),
                     active: inlineAllowed
                 },
                 {
                     type: "split",
-                    id: "deletion",
+                    id: "split-deletions",
                     label: "⟦abc⟧",
                     tooltip: "Deleted text",
                     menuTooltip: "More deletion markup",
@@ -414,9 +487,10 @@ export const leidenPlusToolbar: Extension[] = [
                 },
                 {
                     type: "split",
-                    id: "number",
+                    id: "split-numbers",
                     label: "№",
                     tooltip: "Number",
+                    menuTooltip: "More number markup",
                     action: (view) => {
                         applySnippet(view, snippets.number);
                     },
@@ -485,7 +559,8 @@ export const leidenPlusToolbar: Extension[] = [
                     }
                 },
                 {type: "divider"}
-            ]
+            ],
+            contextItems
         });
     }),
     // toolbarConfig.of(() => ({

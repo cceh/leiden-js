@@ -1,4 +1,4 @@
-import {BeforeProcessHook, processDir, BeforeXmlCompareHook} from "./scripts/idp-test";
+import {BeforeProcessHook, processDir, BeforeXmlCompareHook} from "./utils/idp";
 import {toXml, fromXml} from "../packages/transformer-leiden-trans/src";
 import {JSDOM} from "jsdom";
 

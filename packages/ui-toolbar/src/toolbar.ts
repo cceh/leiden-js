@@ -115,7 +115,7 @@ export class Toolbar implements Panel {
 
         render(html`
             ${config.items.map(this.renderToolbarItem)}
-            ${config.contextItems ? html`<div class="cm-ljs-toolbar-context-separator">
+            ${config.contextItems ? html`<div class="cm-ljs-toolbar-context-items">
                 ${config.contextItems.map(this.renderToolbarItem)}
             </div>` : nothing}
         `, this.dom)

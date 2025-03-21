@@ -4,7 +4,7 @@ import {EditorView} from "@codemirror/view";
 // Base properties
 interface BaseProps {
     id: string;
-    label: string;
+    label: string | HTMLElement;
     active?: boolean;
 }
 

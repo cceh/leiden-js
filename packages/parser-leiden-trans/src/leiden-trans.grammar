@@ -1,14 +1,17 @@
 @precedence { left @left, termEquals @cut, inlineEquals }
 
-@top Document {
-    (Whitespace | Translation)+
-}
+@top Document { (Whitespace | Translation)+ }
+@top SingleTranslation { Whitespace? Translation Whitespace? }
+@top SingleDiv { Whitespace? Div Whitespace? }
+@top SingleP { Whitespace? P Whitespace? }
+@top BlockContent { blockContent }
+@top InlineContent { inline* }
 
 Translation {
     TranslationStart[group=Delims, closedBy=TranslationEnd] {
         "<T=" ( "." LanguageId )?
     }
-    Whitespace? (pContent | divContent )
+    blockContent
     TranslationEnd[group=Delims, openedBy=TranslationStart] {
         "=T>"
     }
@@ -16,13 +19,11 @@ Translation {
 
 pContent { P (Whitespace | P)*}
 divContent { Div (Whitespace | Div)* }
+blockContent { Whitespace? ((pContent divContent?) | divContent) }
 
-P { "<=" ( inline )* "=>" }
-Div { "<D=." N { divWord } ( "." Subtype { divWord } )? space ( block | Whitespace )+ "=D>" }
+P { "<=" inline* "=>" }
+Div { "<D=." N { divWord } ( "." Subtype { divWord } )? space blockContent "=D>" }
 
-block {
-    P | Div
-}
 
 topLevelRules[@isGroup=topLevel] { LineNum | LineNumBreak | Erasure | Note | Foreign | Term | App | Gap }
 inline { Text | topLevelRules }

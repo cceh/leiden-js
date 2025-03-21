@@ -1,35 +1,22 @@
 import {Facet, StateEffect, StateField} from "@codemirror/state";
-import {Decoration, DecorationSet, EditorView, ViewPlugin, ViewUpdate} from "@codemirror/view";
+import {Decoration, DecorationSet, EditorView, ViewPlugin, ViewUpdate, PluginValue} from "@codemirror/view";
 import {syntaxTree} from "@codemirror/language";
 import {SyntaxNode} from "@lezer/common";
 
 interface NodeHighlightConfig {
     nodeNames: string[];
-    activeClass?: string;
-    activeBackgroundColor?: string;
-    hoverClass?: string;
-    hoverBackgroundColor?: string;
 }
 
-// Create a facet for the configuration
 const nodeHighlightConfig = Facet.define<NodeHighlightConfig, NodeHighlightConfig>({
     combine(configs) {
-        // Combine multiple configurations if present
-        // Last config takes precedence
         return configs.length ? configs[configs.length - 1] : {
-            nodeNames: [],
-            activeClass: "cm-active-syntax-node",
-            activeBackgroundColor: "rgba(128, 128, 255, 0.2)",
-            hoverClass: "cm-hover-syntax-node",
-            hoverBackgroundColor: "rgba(128, 128, 255, 0.1)"
+            nodeNames: []
         }
     }
 })
 
-// Effect for updating hover position
-const setHoverPos = StateEffect.define<number>()
-
 // State field for tracking hover position
+const setHoverPos = StateEffect.define<number>()
 const hoverState = StateField.define<number>({
     create() {
         return -1
@@ -42,17 +29,15 @@ const hoverState = StateField.define<number>({
     }
 })
 
-
-// Create a mark decoration for highlighting
 const highlightMark = Decoration.mark({
-    class: "cm-active-syntax-node"
+    class: "cm-leiden-active-syntax-node"
 })
 
 // Create a ViewPlugin that tracks the cursor position and updates decorations
-const activeNodeHighlightViewPlugin = ViewPlugin.fromClass(class {
+const activeNodeHighlightViewPlugin = ViewPlugin.fromClass(class implements PluginValue {
     decorations: DecorationSet
 
-    constructor(view: EditorView, nodeNames: string[] = []) {
+    constructor(view: EditorView) {
         this.decorations = this.getSyntaxNodeDecoration(view);
     }
 
@@ -69,7 +54,7 @@ const activeNodeHighlightViewPlugin = ViewPlugin.fromClass(class {
         const config = view.state.facet(nodeHighlightConfig);
 
 
-        // Only proceed if we have a valid cursor position
+        let selectionHighlighted: SyntaxNode | null = null
         if (selection.empty) {
             const pos = selection.from
             const tree = syntaxTree(view.state)
@@ -81,6 +66,7 @@ const activeNodeHighlightViewPlugin = ViewPlugin.fromClass(class {
                 if (node && node.to - node.from > 0) {
                     if (config.nodeNames.includes(node.name) || node.type.is("topLevel")) {
                         decorations.push(highlightMark.range(node.from, node.to))
+                        selectionHighlighted = node
                         break;
                     }
                 }
@@ -95,7 +81,10 @@ const activeNodeHighlightViewPlugin = ViewPlugin.fromClass(class {
 
             while (node) {
                 if (config.nodeNames.includes(node.type.name) || node.type.is("topLevel")) {
-                    decorations.push(highlightMark.range(node.from, node.to))
+                    if (node !== selectionHighlighted) {
+                        decorations.push(highlightMark.range(node.from, node.to))
+                    }
+                    break;
                 }
                 node = node.parent
             }
@@ -119,18 +108,16 @@ const activeNodeHighlightViewPlugin = ViewPlugin.fromClass(class {
     }
 })
 
-// CSS styles for the highlight
-const activeNodeHighlightStyles = EditorView.baseTheme({
-    ".cm-active-syntax-node": {
+const activeNodeHighlightTheme = EditorView.baseTheme({
+    ".cm-leiden-active-syntax-node": {
         backgroundColor: "rgba(148,148,195,0.16)",
         borderBottom: "1px dotted rgba(148,148,195)"
     }
 })
 
-// Extension that combines the plugin and styles
 export const highlightActiveNode = [
     // nodeHighlightConfig.of({nodeNames: ["Deletion", "Gap", "Abbrev", "OrthoReg", "EditorialCorrection"]}),
     activeNodeHighlightViewPlugin,
-    activeNodeHighlightStyles,
+    activeNodeHighlightTheme,
     hoverState
 ]

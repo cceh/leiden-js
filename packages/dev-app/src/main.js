@@ -195,12 +195,15 @@ function statusBarPanel(view) {
     }
 }
 
-
-
-function getLanguage(variant) {
+function getLanguage(selectValue) {
+    const [variant, topNode] = selectValue.split('.')
+    const config = {
+        highlightStyle: getHighlightStyle(),
+        topNode
+    }
     return variant === 'leiden-plus'
-        ? [leidenPlus(getHighlightStyle()), leidenPlusToolbar]
-        : [leidenTranslation(), leidenTransToolbar]
+        ? [leidenPlus(config), leidenPlusToolbar]
+        : [leidenTranslation(config), leidenTransToolbar]
 }
 
 function getTheme(dark) {
@@ -231,8 +234,6 @@ highlightStyleSelect.addEventListener('change', (e) => {
     })
 })
 
-
-
 const languageSelect = document.querySelector('#language-select');
 languageSelect.value = localStorage.getItem('leiden-variant') || 'leiden-plus'
 languageSelect.addEventListener('change', (e) => {
@@ -260,11 +261,10 @@ themeCheckbox.addEventListener('change', (e) => {
 
 
 function convertToXml(leiden) {
-    if (languageSelect.value === 'leiden-plus') {
-        return leidenPlusToXml(leiden)
-    } else {
-        return leidenTransToXml(leiden)
-    }
+    const [variant, topNode] = languageSelect.value.split('.')
+    return variant === 'leiden-plus'
+        ? leidenPlusToXml(leiden, topNode)
+        : leidenTransToXml(leiden, topNode);
 }
 
 function convertToLeiden(xml) {
@@ -409,6 +409,7 @@ const xmlStateField = StateField.define({
             return []
         }
 
+
         if (tr.docChanged || tr.reconfigured) {
             const doc = new DOMParser().parseFromString(tr.state.doc.toString(), 'text/xml').documentElement
             try {
@@ -423,11 +424,19 @@ const xmlStateField = StateField.define({
                 }
             } catch (e) {
                 if (e instanceof LeidenPlusTransformationError || e instanceof LeidenTransTransformationError) {
+                    if (e.path.length > 0 && e.path[e.path.length - 1][0] === "parsererror") {
+                        return [{
+                            from: 0,
+                            to: tr.state.doc.length,
+                            severity: "error",
+                            message: "Invalid XML"
+                        }]
+                    }
+
                     const node = findNodeByPath(tr.state, e.path)
                     if (!node) {
                         return []
                     }
-
                     return [{
                         from: node.from,
                         to: node.to,

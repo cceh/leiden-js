@@ -15,9 +15,9 @@ global.Element = dom.window.Element;
 global.Node = dom.window.Node;
 
 
-function testTransform(name, leiden, xml) {
+function testTransform(name, leiden, xml, topNode = "InlineContent") {
     it("Leiden → XML: " + (name ?? leiden), () => {
-        const resultXml = toXml(leiden);
+        const resultXml = toXml(leiden, topNode);
         const wrappedXml = `<root>${resultXml}</root>`;
         const wrappedResultXml = `<root>${xml}</root>`;
         // chai.expect(wrappedXml, wrappedXml).xml.to.be.valid();
@@ -55,7 +55,7 @@ describe('expansions', () => {
 
     testTransform(null, '(ab(c)def(gh)i(j))', '<expan>ab<ex>c</ex>def<ex>gh</ex>i<ex>j</ex></expan>');
 
-    testTransform(null, '<=abc[def] ([gh]i(jk))=>', '<ab>abc<supplied reason="lost">def</supplied> <expan><supplied reason="lost">gh</supplied>i<ex>jk</ex></expan></ab>');
+    testTransform(null, '<=abc[def] ([gh]i(jk))=>', '<ab>abc<supplied reason="lost">def</supplied> <expan><supplied reason="lost">gh</supplied>i<ex>jk</ex></expan></ab>', "SingleAb");
     testTransform(null, '(a[b(cd)])', '<expan>a<supplied reason="lost">b<ex>cd</ex></supplied></expan>');
     testTransform(null, '([(eton)])', '<expan><supplied reason="lost"><ex>eton</ex></supplied></expan>');
 
@@ -1342,12 +1342,11 @@ describe('linenumber_specials', () => {
 // end
 
 describe('multiple_ab', () => {
-    // TODO: Don't know how that works in the xsugar suite with incomplete abs
     // everything is wrappen in abs before testing? but some tests have abs...
     // testTransform(null, '{.1ab}=><=12. {ab.1}', '<surplus><gap reason="illegible" quantity="1" unit="character"/>ab</surplus></ab><ab><lb n="12"/><surplus>ab<gap reason="illegible" quantity="1" unit="character"/></surplus>');
 
     // so here with explicit abs
-    testTransform(null, '<={.1ab}=><=12. {ab.1}=>', '<ab><surplus><gap reason="illegible" quantity="1" unit="character"/>ab</surplus></ab><ab><lb n="12"/><surplus>ab<gap reason="illegible" quantity="1" unit="character"/></surplus></ab>');
+    testTransform(null, '<={.1ab}=><=12. {ab.1}=>', '<ab><surplus><gap reason="illegible" quantity="1" unit="character"/>ab</surplus></ab><ab><lb n="12"/><surplus>ab<gap reason="illegible" quantity="1" unit="character"/></surplus></ab>', "BlockContent");
 });
 
 // TODO: round trip tests
@@ -1541,6 +1540,14 @@ describe('own_tests', () => {
    // maybe someone finds glyphs erased with slashes...
     testTransform(null, '〚/*asfd*〛', '<del rend="slashes"><g type="asfd"/></del>');
 
+    // Document structure
+    testTransform("One Div", "<S=.grc\n<D=.r <= => =D>", "<div xml:lang=\"grc\" type=\"edition\" xml:space=\"preserve\">\n<div n=\"r\" type=\"textpart\"> <ab> </ab> </div></div>", "Document")
+    testTransform("Two Divs", "<S=.grc\n<D=.r <= => =D>\n<D=.v <= => =D>", "<div xml:lang=\"grc\" type=\"edition\" xml:space=\"preserve\">\n<div n=\"r\" type=\"textpart\"> <ab> </ab> </div>\n<div n=\"v\" type=\"textpart\"> <ab> </ab> </div></div>", "Document")
+    testTransform("One Ab and two Divs", "<S=.grc\n<= =>\n<D=.r <= => =D>\n<D=.v <= => =D>", "<div xml:lang=\"grc\" type=\"edition\" xml:space=\"preserve\">\n<ab> </ab>\n<div n=\"r\" type=\"textpart\"> <ab> </ab> </div>\n<div n=\"v\" type=\"textpart\"> <ab> </ab> </div></div>", "Document")
+    testTransform("Two Abs and two Divs", "<S=.grc\n<= =>\n<= =>\n<D=.r <= => =D>\n<D=.v <= => =D>", "<div xml:lang=\"grc\" type=\"edition\" xml:space=\"preserve\">\n<ab> </ab>\n<ab> </ab>\n<div n=\"r\" type=\"textpart\"> <ab> </ab> </div>\n<div n=\"v\" type=\"textpart\"> <ab> </ab> </div></div>", "Document")
+    testTransform("Two Abs", "<S=.grc\n<= =>\n<= =>", "<div xml:lang=\"grc\" type=\"edition\" xml:space=\"preserve\">\n<ab> </ab>\n<ab> </ab></div>", "Document")
+    testTransform("One Ab and one Div inside Div", "<S=.grc\n<D=.r<=\n=><D=.i.column<=\n=>=D>\n=D>", "<div xml:lang=\"grc\" type=\"edition\" xml:space=\"preserve\">\n<div n=\"r\" type=\"textpart\"><ab>\n</ab><div n=\"i\" subtype=\"column\" type=\"textpart\"><ab>\n</ab></div>\n</div></div>", "Document")
+
     // aegyptus;90;44
    testTransform(null, 'ἕ̣ν̣̄'.normalize("NFC"), '<unclear>ἕ</unclear><hi rend="supraline"><unclear>ν</unclear></hi>'.normalize("NFC"));
 
@@ -1716,7 +1723,7 @@ describe('idp_errors', () => {
     testTransform(null, '.̄1̄[.̄1̄]', '<hi rend="supraline">.1</hi><supplied reason="lost"><hi rend="supraline">.1</hi></supplied>');
 
     // p.koeln.16.647 (div corresp not starting with #)
-    testTransform(null, '<S=.grc <D=.a.b.fragment <= => =D>', '<div xml:lang="grc" type="edition" xml:space="preserve"> <div n="a" subtype="b" type="textpart" corresp="fragment"> <ab> </ab> </div></div>')
+    testTransform(null, '<S=.grc <D=.a.b.fragment <= => =D>', '<div xml:lang="grc" type="edition" xml:space="preserve"> <div n="a" subtype="b" type="textpart" corresp="fragment"> <ab> </ab> </div></div>', "Document")
 
     // o.douch.2.104 (empty filler
     testTransform(null, '*filler*', '<g type="filler"/>')

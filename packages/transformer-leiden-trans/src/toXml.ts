@@ -5,7 +5,7 @@ function text(input: string, node: TreeCursor) {
     return input.substring(node.from, node.to);
 }
 
-export function toXml(input: string, root = parser.parse(input)) {
+export function toXml(input: string, topNode = "Document", root = parser.configure({top: topNode}).parse(input)) {
     const xml: string[] = [];
     const selfClosingNodeSet = new WeakSet<SyntaxNode>();
 
@@ -101,6 +101,7 @@ export function toXml(input: string, root = parser.parse(input)) {
                     node.prevSibling(); // Definition
                     xml.push(` target="${text(input, node)}"`);
 
+                    node.prevSibling(); // =
                     node.prevSibling(); // Either LanguageId or Content
                     if (node.name === "LanguageId") {
                         xml.push(` xml:lang="${text(input, node)}"`);
@@ -127,12 +128,11 @@ export function toXml(input: string, root = parser.parse(input)) {
 
                     xml.push('<app');
                     node.lastChild(); // :>
-                    node.prevSibling(); // |
 
-                    node.prevSibling() // AppResp or AppType or "|"
+                    node.prevSibling() // AppResp or AppType
                     if (node.name === "AppResp") {
                         appResp = text(input, node);
-                        node.prevSibling(); // AppType or "|"
+                        node.prevSibling(); // AppType
                     }
                     if (node.name === "AppType") {
                         xml.push(` type="${text(input, node)}"`);

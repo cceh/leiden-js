@@ -1,7 +1,6 @@
 import {
-    bracketMatchingHandle,
-    defaultHighlightStyle,
-    HighlightStyle,
+    bracketMatchingHandle, foldInside, foldNodeProp,
+    HighlightStyle, indentNodeProp,
     LanguageSupport,
     LRLanguage,
     syntaxHighlighting
@@ -10,14 +9,27 @@ import {Extension} from "@codemirror/state"
 import {parser} from "@leiden-plus/parser-leiden-plus";
 import {leidenPlusHighlighting} from "./syntaxHighlight.js";
 import {leidenPlusLinterExtension} from "@leiden-plus/linter-leiden-plus";
-import {highlightActiveNode} from "@leiden-plus/lib/language";
+import {highlightActiveNode, leidenHighlightStyle, blockIndent} from "@leiden-plus/lib/language";
 import {completeFromList, CompletionContext, snippetCompletion} from "@codemirror/autocomplete";
 import {snippets} from "./snippets.js";
 
+export type TopNode = "Document" | "InlineContent" | "SingleDiv" | "SingleAb" | "BlockContent"
 
-export const leidenPlusLanguage = LRLanguage.define({
+export const leidenPlusLanguage = (topNode: TopNode = "Document") => LRLanguage.define({
     parser: parser.configure({
-        props: [leidenPlusHighlighting]
+        top: topNode,
+        props: [
+            leidenPlusHighlighting,
+            indentNodeProp.add({
+                "Document SingleTranslation SingleP": blockIndent(),
+                "Div": blockIndent(/^\s*=D>/),
+                "Ab": blockIndent(/^\s*=>/),
+                "topLevel": () => null
+            }),
+            foldNodeProp.add({
+                "Div Ab Foreign OrthoReg AlternateReading ScribalCorrection SpellingCorrection EditorialCorrection EditorialNote": foldInside
+            })
+        ]
     }),
     languageData: {
         autocomplete: (context: CompletionContext) => {
@@ -29,19 +41,33 @@ export const leidenPlusLanguage = LRLanguage.define({
             )(context)
         },
         matchBrackets: bracketMatchingHandle,
+        languageData: {
+            indentOnInput: /^\s*=[TD]?>|^.$/
+        }
     }
 })
 
-export function leidenPlus(highlightStyle: HighlightStyle = defaultHighlightStyle): Extension[] {
+export interface LeidenPlusConfig {
+    topNode: TopNode,
+    highlightStyle: HighlightStyle,
+}
+
+const defaultConfig: LeidenPlusConfig = {
+    topNode: "Document",
+    highlightStyle: leidenHighlightStyle,
+}
+
+export function leidenPlus(options: Partial<LeidenPlusConfig> = {}): Extension[] {
+    const config = {...defaultConfig, ...options}
     return [
-        new LanguageSupport(leidenPlusLanguage),
-        syntaxHighlighting(highlightStyle),
+        new LanguageSupport(leidenPlusLanguage(config.topNode)),
+        syntaxHighlighting(config.highlightStyle),
         leidenPlusLinterExtension,
-        highlightActiveNode,
-        // bracketMatching({brackets: ""})
+        highlightActiveNode
     ]
 }
 
 export { snippets } from "./snippets.js"
 export {leidenHighlightStyle, leidenHighlightStyleDark} from "@leiden-plus/lib/language";
 export { inlineContentAllowed, atomicRules } from "./syntax.js"
+export {acceptsCertLow, hasCertLow, getCertLow, addCertLowAtCursorPosition, removeCertLow, findClosestCertLowAncestor, addCertLow} from './certLow.js'

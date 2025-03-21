@@ -30,26 +30,53 @@
   divAttr @cut,
 
   eq @cut,
-  text
+  text,
+  ws @left
 }
 
 @top Document {
-    EditionStart { "<S=" (!langId "." LanguageId )? }?
-    (
-        block
-    )+
+    EditionStart { "<S=" (!langId "." LanguageId )? }
+    blockContent
 }
+
+@top SingleDiv { Whitespace? Div Whitespace? }
+@top SingleAb { Whitespace? Ab Whitespace? }
+@top BlockContent { blockContent }
+@top InlineContent { inline* }
+
+Whitespace[@name=Text] { (!ws whitespace)+ }
+
+// Document Structure
+// ----------------------------------------------------
+//
+// The XSugar grammar allows block content on root level (after
+// document start "<S="). Block content can be:
+//
+// 1. One or more Abs: <= =>
+// 2. One or more Abs followed by one or more Divs: <= => <D=.r =D> <D=.v =D>
+// 3. One or more Divs: <D=.r =D> <D=.v =D>
+//
+// It does not allow Divs followed by Abs.
+//
+// A Div must have always at least one Ab or one Div.
+
+
+Div { "<D=." divNum ( divSubtype divRef? )? blockContent "=D>" } 
+Ab { "<=" ( inline )* "=>" }
 
 // divRef should enforce hash at the beginning but XSugar grammar doesn't
 divRef { !divAttr "." Ref { "#"? divTypeSubtype } }
 divSubtype { !divAttr ("." Subtype { divTypeSubtype } ) }
 divNum { Num { divTypeSubtype} }
 
-block {
-    Ab { "<=" ( block )* "=>" } |
-    Div { "<D=." divNum ( divSubtype divRef? )? ( block )+ "=D>" } |
-    inline
-}
+divContent { Div (Whitespace | Div)* }
+abContent { Ab (Whitespace | Ab)* }
+blockContent { Whitespace? ((abContent divContent?) | divContent) }
+
+// INLINE CONTENT
+// ----------------------------------------------------
+//
+// The following rules are allowed inside Abs.
 
 textInline {
     Text | Unclear | supralineMacron
@@ -679,7 +706,7 @@ Unclear { multiUnclear | singleUnclear }
 //      - Char with underdot double diacritic
 //
 // XSugar grammar allows CertLow only for diaeresis - on purpose?: " a(¨)(?)""
-//    - Implemented preliminarily in the current Diacritical rule which makes it so complex
+//    - Implemented restrictions in the current Diacritical rule which makes it so complex
 
 DiacritChar { single_char | single_latinChar | single_num | space }
 diacritical[@dynamicPrecedence=1] { // without @dynamicPrecedence this interferes with abbrev expansions e.g. "(abc d(¨) ef(g)) "
@@ -858,7 +885,7 @@ lineNum[@dynamicPrecedence=1]<suffix> {
 // A pattern rule for prefixed "missing" patterns such as .4, .5-9, .vestig.ca.5lin(?).
 // - "(?) " allowed for each variant (space after required, e.g. ".1-3(?) ")
 prefixPattern<prefix, content> {
-    prefix content ~certLow (CertLow space)?
+    prefix content ~certLow CertLowSpace[@name=CertLow] { CertLow space }?
 }
 
 // -- Illegible characters
@@ -995,6 +1022,9 @@ Number { num ~lb }
 Infix[group=Delims]<infix> { infix }
 MultiInfix[group=Delims]<infix> { infix }
 
+space { @extend<whitespace, " "> }
+newLine { @extend<whitespace, "\n"> }
+
 @external tokens supralineUnclearToken from "./tokens.js" { SupralineUnclear }
 @external tokens supralineToken from "./tokens.js" { SupralineMacronContent }
 @external tokens unclearToken from "./tokens.js" { multiUnclear, singleUnclear }
@@ -1078,8 +1108,7 @@ MultiInfix[group=Delims]<infix> { infix }
 
     @precedence { "/", "lost", "vac", ",", digits }
 
-    space { " " }
-    newLine  { "\n" }
+    whitespace { @whitespace }
 
     CertLow { "(?)" }
     QuestionMark { "?" }
@@ -1139,7 +1168,7 @@ MultiInfix[group=Delims]<infix> { infix }
     @precedence {".-", ".", GlyphWord}
 
     @precedence {
-         HorizontalRule, Paragraphos, Coronis, space, "-",
+         HorizontalRule, Paragraphos, Coronis, "-",
          "lost", "vac", GlyphWord
     }
 

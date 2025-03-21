@@ -224,8 +224,21 @@
       <div class="language-select">
         <label for="language-select">Language variant: </label>
         <select id="language-select">
-          <option value="leiden-plus">Leiden+</option>
-          <option value="leiden-trans">Leiden Translation</option>
+          <optgroup label="Leiden+">
+            <option value="leiden-plus.Document">Leiden+ (Full Document)</option>
+            <option value="leiden-plus.SingleDiv">Leiden+ (Single Div)</option>
+            <option value="leiden-plus.SingleAb">Leiden+ (Single Ab)</option>
+            <option value="leiden-plus.BlockContent">Leiden+ (Block Content)</option>
+            <option value="leiden-plus.InlineContent">Leiden+ (Inline Content)</option>
+          </optgroup>
+          <optgroup label="Leiden Translation">
+            <option value="leiden-trans.Document">Leiden Translation (Full Document)</option>
+            <option value="leiden-trans.SingleTranslation">Leiden Translation (Single Translation)</option>
+            <option value="leiden-trans.SingleDiv">Leiden Translation (Single Div)</option>
+            <option value="leiden-trans.SingleP">Leiden Translation (Single P)</option>
+            <option value="leiden-trans.BlockContent">Leiden Translation (Block Content)</option>
+            <option value="leiden-trans.InlineContent">Leiden Translation (InlineContent)</option>
+          </optgroup>
         </select>
         <input type="checkbox" id="theme-checkbox" />
         <label for="theme-checkbox">Dark</label>

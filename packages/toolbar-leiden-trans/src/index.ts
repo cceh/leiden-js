@@ -36,7 +36,7 @@ export const leidenTransToolbar: Extension[] = [
                 type: "action",
                 id,
                 label: label ?? snippetDef.completion.info,
-                tooltip: snippetDef.completion.displayLabel,
+                tooltip: `${snippetDef.completion.displayLabel}${"detail" in snippetDef.completion ? ", " + snippetDef.completion.detail : ""}`,
                 action: (view) => applySnippet(view, snippetDef),
                 active: inlineAllowed
             }
@@ -53,14 +53,14 @@ export const leidenTransToolbar: Extension[] = [
             type: "menu",
             id: "gaps",
             label: "Gap",
-            items: createMenuItemsFor(["lacuna", "omitted"])
+            items: createMenuItemsFor(["lacuna", "illegible"])
         }
 
         const termMenu: MenuTrigger = {
             type: "menu",
             id: "term",
-            label: "Term definition",
-            items: createMenuItemsFor(["termGreek", "termLatin", "termWithLanguage", "term"])
+            label: "Term",
+            items: createMenuItemsFor(["termGreek", "termLatin", "termGreekLatin", "termWithLanguage", "term"])
         }
 
         const foreignMenu: MenuTrigger = {
@@ -88,7 +88,8 @@ export const leidenTransToolbar: Extension[] = [
             .map(({key, snippet}) => ({
                 type: "action",
                 id: "entry-translation-" + key,
-                label: `${snippet.completion.displayLabel}, ${snippet.completion.info}`,
+                label: `${snippet.completion.displayLabel}, ${snippet.completion.detail}`,
+                info: snippet.completion.info,
                 action: (view) => addTranslation(view, key),
                 active: true
             }))
@@ -102,7 +103,8 @@ export const leidenTransToolbar: Extension[] = [
             .map(({key, snippet}) => ({
                 type: "action",
                 id: "entry-division-" + key,
-                label: `${snippet.completion.displayLabel}, ${snippet.completion.info}`,
+                label: `${snippet.completion.displayLabel}, ${snippet.completion.detail}`,
+                info: snippet.completion.info,
                 action: (view) => addDivision(view, key),
                 active: canAddDivision(state)
             }))
@@ -161,7 +163,7 @@ export const leidenTransToolbar: Extension[] = [
                 },
                 {type: "divider"},
                 createActionFor("lacuna", "btn-lacuna"),
-                createActionFor("omitted", "btn-omitted"),
+                createActionFor("illegible", "btn-illegible"),
                 {type: "divider"},
                 createActionFor("deletion", "btn-deletion"),
                 {type: "divider"},

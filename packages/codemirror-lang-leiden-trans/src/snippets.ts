@@ -7,7 +7,7 @@ export const snippets = {
             label: "<T=${translation}=T>",
             displayLabel: "Translation",
             detail: "no language specified",
-            info: "<T= translation =T>"
+            info: "<T= ... =T>"
         }
     },
     translationWithLanguage: {
@@ -16,7 +16,7 @@ export const snippets = {
             label: "<T=.${langId} ${translation}=T>",
             displayLabel: "Translation",
             detail: "other language",
-            info: "<T=.lang translation =T>"
+            info: "<T=.lang ... =T>"
         }
     },
     translationEnglish: {
@@ -25,7 +25,7 @@ export const snippets = {
             label: "<T=.en ${translation}=T>",
             displayLabel: "Translation",
             detail: "English",
-            info: "<T=.en translation =T>"
+            info: "<T=.en ... =T>"
         }
     },
     translationGerman: {
@@ -124,17 +124,15 @@ export const snippets = {
         template: "[...]",
         completion: {
             label: "[...]",
-            displayLabel: "Lacuna (lost text)",
-            detail: "",
+            displayLabel: "Lacuna",
             info: "[...]"
         }
     },
-    omitted: {
+    illegible: {
         template: "...",
         completion: {
             label: "...",
-            displayLabel: "Omitted",
-            detail: "illegible or otherwise untranslatable",
+            displayLabel: "Illegible",
             info: "..."
         }
     },
@@ -150,7 +148,7 @@ export const snippets = {
         template: "<${translation}=${term}>",
         completion: {
             label: "<${translation}=${term}>",
-            displayLabel: "Term definition",
+            displayLabel: "Term",
             detail: "without language",
             info: "<definition=term>"
         }
@@ -159,7 +157,7 @@ export const snippets = {
         template: "<${translation}~{language id}=${term}>",
         completion: {
             label: "<${translation}~{language id}=${term}>",
-            displayLabel: "Term definition",
+            displayLabel: "Term",
             detail: "other language",
             info: "<definition~lang=translation>"
         }
@@ -169,8 +167,8 @@ export const snippets = {
         template: "<${translation}~la=${term}>",
         completion: {
             label: "<${translation}~la=${term}>",
-            displayLabel: "Term definition",
-            detail: "Latin term",
+            displayLabel: "Term",
+            detail: "Latin",
             info: "<definition~la=translation>"
         }
     },
@@ -179,9 +177,19 @@ export const snippets = {
         template: "<${translation}~grc=${term}>",
         completion: {
             label: "<${translation}~grc=${term}>",
-            displayLabel: "Term definition",
-            detail: "Greek term",
+            displayLabel: "Term",
+            detail: "Greek",
             info: "<definition~grc=translation>"
+        }
+    },
+
+    termGreekLatin: {
+        template: "<${translation}~grc-Latn=${term}>",
+        completion: {
+            label: "<${translation}~grc-Latn=${term}>",
+            displayLabel: "Term",
+            detail: "Greek Latin",
+            info: "<definition~grc-Latn=translation>"
         }
     },
 

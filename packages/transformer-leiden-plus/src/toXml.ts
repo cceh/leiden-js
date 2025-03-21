@@ -46,7 +46,7 @@ function findNumber(input: string, node: TreeCursor) {
     return value;
 }
 
-export function toXml(input: string, root = parser.parse(input)) {
+export function toXml(input: string, topNode = "Document", root = parser.configure({top: topNode}).parse(input)) {
 
     const xml: string[] = [];
     let needsCloseEdition = false;
@@ -54,6 +54,10 @@ export function toXml(input: string, root = parser.parse(input)) {
     const selfClosingNodeSet = new WeakSet<SyntaxNode>() // TODO: use lezer NodeWeakMap?
     root.iterate({
         enter: (node: TreeCursor) => {
+            if (node.type.isTop) {
+                return;
+            }
+
             if (node.type.isError || node.type.is("Error")) {
                 xml.push(`<!-- Error:${text(input, node)} -->`);
                 return false;
@@ -82,13 +86,10 @@ export function toXml(input: string, root = parser.parse(input)) {
             }
 
             switch (name) {
-                case 'Document':
-                    break;
-
                 case 'Text':
-                case 'Number':
+                // case 'Number':
                     xml.push(text(input, node));
-                    break;
+                    return false;
 
                 case 'IncompletePattern':
                     const nodeStart = node.from;
@@ -871,8 +872,6 @@ export function toXml(input: string, root = parser.parse(input)) {
         },
         leave: (node) => {
             switch (node.name) {
-                case 'Document':
-                    break;
                 case 'AbbrevUnresolved':
                     xml.push('</abbr>');
                     break;

@@ -159,9 +159,6 @@ function transform(node: Node|null, output: string[]) {
 }
 
 export function fromXml(root: Node): string {
-    if (!(root instanceof Element)) {
-        return '';
-    }
     const output: string[] = [];
     transform(root, output);
     return output.join('');
