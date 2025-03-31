@@ -1,6 +1,5 @@
-import {Snippets} from "@leiden-plus/lib/language";
-import {ActionItem, MenuItem} from "./config.js";
-import {applySnippet} from "@leiden-plus/lib/language";
+import { applySnippet, Snippets } from "@leiden-plus/lib/language";
+import { MenuItem } from "./config.js";
 
 export function createMenuItemFromSnippet<T extends Snippets>(
     snippets: T,

@@ -1,5 +1,5 @@
-import {EditorState, Facet, StateField, Transaction} from "@codemirror/state";
-import {EditorView} from "@codemirror/view";
+import { EditorState, Facet, StateField, Transaction } from "@codemirror/state";
+import { EditorView } from "@codemirror/view";
 
 // Base properties
 interface BaseProps {
@@ -72,24 +72,24 @@ export type ToolbarConfigProvider = (state: EditorState) => ToolbarConfig;
 
 export const toolbarConfig = Facet.define<ToolbarConfigProvider, ToolbarConfigProvider>({
     combine(inputs) {
-        return inputs[inputs.length - 1]
+        return inputs[inputs.length - 1];
     }
-})
+});
 
 const applyConfig = (state: EditorState): ToolbarConfig => {
-    const configFn = state.facet(toolbarConfig)
-    return configFn(state)
-}
+    const configFn = state.facet(toolbarConfig);
+    return configFn(state);
+};
 
 export const toolbarConfigStateField = StateField.define<ToolbarConfig>({
     create(state) {
-        return applyConfig(state)
+        return applyConfig(state);
     },
     update(value: ToolbarConfig, transaction: Transaction) {
         if (transaction.reconfigured || transaction.docChanged || transaction.selection) {
-            return applyConfig(transaction.state)
+            return applyConfig(transaction.state);
         }
 
-        return value
+        return value;
     }
-})
+});

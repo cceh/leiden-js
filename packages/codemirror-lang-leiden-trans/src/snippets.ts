@@ -1,4 +1,4 @@
-import {Snippets} from "@leiden-plus/lib/language";
+import { Snippets } from "@leiden-plus/lib/language";
 
 export const snippets = {
     translation: {
@@ -272,4 +272,4 @@ export const snippets = {
         }
     },
 
-} satisfies Snippets
+} satisfies Snippets;

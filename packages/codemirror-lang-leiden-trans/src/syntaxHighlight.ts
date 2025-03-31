@@ -1,6 +1,6 @@
-import {styleTags, tags as t} from "@lezer/highlight";
-import {NodePropSource} from "@lezer/common";
-import {leidenTags as leiden} from "@leiden-plus/lib/language";
+import { styleTags, tags as t } from "@lezer/highlight";
+import { NodePropSource } from "@lezer/common";
+import { leidenTags as leiden } from "@leiden-plus/lib/language";
 
 export const leidenTranslationHighlighting: NodePropSource =  styleTags({
     "Translation/Delims": leiden.blockLevel1,
@@ -23,4 +23,4 @@ export const leidenTranslationHighlighting: NodePropSource =  styleTags({
     "App App/Delims App/Content/Text": leiden.app2,
     "AppType": [t.emphasis, leiden.app2Right],
     "AppResp": [t.emphasis, leiden.app2Left],
-})
+});

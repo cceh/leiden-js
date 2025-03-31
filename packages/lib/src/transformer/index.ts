@@ -1,1 +1,1 @@
-export { TransformationError } from "./from-xml/transformationError.js"
+export { TransformationError } from "./from-xml/transformationError.js";

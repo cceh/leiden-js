@@ -3,24 +3,22 @@ import {
     MenuItem,
     MenuTrigger,
     setPreviewHighlights,
-    toolbar, ToolbarActionItem,
+    toolbar,
+    ToolbarActionItem,
     toolbarConfig
 } from "@leiden-plus/ui-toolbar";
-import {Extension} from "@codemirror/state";
+import { Extension } from "@codemirror/state";
 import {
-    acceptsCertLow,
-    inlineContentAllowed,
-    addCertLowAtCursorPosition,
-    findClosestCertLowAncestor,
-    snippets,
-    hasCertLow,
     addCertLow,
-    removeCertLow
+    findClosestCertLowAncestor,
+    hasCertLow,
+    inlineContentAllowed,
+    removeCertLow,
+    snippets
 } from "@leiden-plus/codemirror-lang-leiden-plus";
-import {applySnippet} from "@leiden-plus/lib/language";
-import {addCombiningMarks, removeCombiningMarks} from "@leiden-plus/lib/util";
-import {syntactialDiacritRanges} from "./syntacticalDiacritRanges.js";
-import {syntaxTree} from "@codemirror/language";
+import { applySnippet } from "@leiden-plus/lib/language";
+import { addCombiningMarks, removeCombiningMarks } from "@leiden-plus/lib/util";
+import { syntactialDiacritRanges } from "./syntacticalDiacritRanges.js";
 
 const ancientDiacrits = {
     Acute: "´",
@@ -29,15 +27,15 @@ const ancientDiacrits = {
     Diaeresis: "¨",
     Grave: "`",
     Lenis: " ᾿",
-}
+};
 
 
 export const leidenPlusToolbar: Extension[] = [
     toolbarConfig.of((state) => {
-        const inlineAllowed = inlineContentAllowed(state)
+        const inlineAllowed = inlineContentAllowed(state);
 
         const createMenuItemsFor = (keys: (keyof typeof snippets)[]) =>
-            createMenuItemsFromSnippets(snippets, keys, inlineAllowed)
+            createMenuItemsFromSnippets(snippets, keys, inlineAllowed);
 
 
         const abbreviationsMenu: MenuTrigger = {
@@ -45,7 +43,7 @@ export const leidenPlusToolbar: Extension[] = [
             id: "abbreviations",
             label: "Abbreviations",
             items: createMenuItemsFor(["abbreviation", "abbreviationUnresolved"])
-        }
+        };
 
         const apparratusMenu: MenuTrigger = {
             type: "menu",
@@ -55,14 +53,14 @@ export const leidenPlusToolbar: Extension[] = [
                 "modernRegularization", "modernCorrection", "scribalCorrection", "alternateReading",
                 "editorialCorrection"
             ])
-        }
+        };
         
         const deletionsMenu: MenuTrigger = {
             type: "menu",
             id: "deletions",
             label: "Deletion/cancellation",
             items: createMenuItemsFor(["deletion", "deletionSlashes", "deletionCrossStrokes"]),
-        }
+        };
 
         const docDivisionsMenu: MenuTrigger = {
             type: "menu",
@@ -72,14 +70,14 @@ export const leidenPlusToolbar: Extension[] = [
                 "divisionRecto", "divisionVerso", "divisionColumn", "divisionFolio", "divisionFragment",
                 "divisionOther", "divisionOtherRef"
             ])
-        }
+        };
 
         const foreignLanguageMenu: MenuTrigger = {
             type: "menu",
             id: "foreign-lang",
             label: "Foreign language",
             items: createMenuItemsFor(["foreignLatin", "foreignGreek", "foreign"])
-        }
+        };
 
         const gapsMenu: MenuTrigger = {
             type: "menu",
@@ -126,7 +124,7 @@ export const leidenPlusToolbar: Extension[] = [
                     items: createMenuItemsFor(["gapOmittedChars", "gapOmittedCharsUnknown"])
                 }
             ],
-        }
+        };
 
         const nonTranscribedMenu: MenuTrigger = {
             type: "menu",
@@ -176,7 +174,7 @@ export const leidenPlusToolbar: Extension[] = [
                     ])
                 }
             ]
-        }
+        };
 
         const insertionsMenu: MenuTrigger = {
             type: "menu",
@@ -194,7 +192,7 @@ export const leidenPlusToolbar: Extension[] = [
                 "insertionMarginUnderline",
                 "insertionInterlinear"
             ])
-        }
+        };
 
         const lineNumbersMenu: MenuTrigger = {
             type: "menu",
@@ -226,7 +224,7 @@ export const leidenPlusToolbar: Extension[] = [
                     ])
                 }
             ],
-        }
+        };
 
         const numbersMenu: MenuTrigger = {
             type: "menu",
@@ -242,7 +240,7 @@ export const leidenPlusToolbar: Extension[] = [
                 "numberTickFraction",
                 "numberTickFractionUnknown"
             ]),
-        }
+        };
 
         const suppliedMenu: MenuTrigger = {
             type: "menu",
@@ -254,7 +252,7 @@ export const leidenPlusToolbar: Extension[] = [
                 "suppliedParallel",
                 "suppliedOmitted"
             ])
-        }
+        };
 
         const textualFeaturesMenu: MenuTrigger = {
             type: "menu",
@@ -267,7 +265,7 @@ export const leidenPlusToolbar: Extension[] = [
                 "textSupraline",
                 "textSupralineUnderline"
             ])
-        }
+        };
 
         const otherMenu: MenuTrigger = {
             type: "menu",
@@ -280,7 +278,7 @@ export const leidenPlusToolbar: Extension[] = [
                 "surplus",
                 "quotation"
             ])
-        }
+        };
 
         const diacritItems = Object.entries(ancientDiacrits).map<MenuItem>(([name, diacrit]) => ({
             type: "action",
@@ -290,9 +288,9 @@ export const leidenPlusToolbar: Extension[] = [
             action: (view) => {
                 applySnippet(view, {
                     template: ` \${char}(${diacrit})`
-                })
+                });
             }
-        }))
+        }));
 
         const doubleDiacritFirstItems = Object.entries(ancientDiacrits).map<MenuTrigger>(([name, diacrit]) => ({
             type: "menu",
@@ -308,10 +306,10 @@ export const leidenPlusToolbar: Extension[] = [
                     action: (view) => {
                         applySnippet(view, {
                             template: ` \${char}(${diacrit}${secondDiacrit})`
-                        })
+                        });
                     }
                 }))
-        }))
+        }));
 
         const ancientDiacriticalsMenu: MenuTrigger = {
             type: "menu",
@@ -326,7 +324,7 @@ export const leidenPlusToolbar: Extension[] = [
                     items: doubleDiacritFirstItems
                 }
             ]
-        }
+        };
 
         const milestoneMenu: MenuTrigger = {
             type: "menu",
@@ -340,10 +338,10 @@ export const leidenPlusToolbar: Extension[] = [
                 "coronis",
                 "textInBox"
             ])
-        }
+        };
 
         const contextItems: ToolbarActionItem[] = [];
-        const certLowAncestor = findClosestCertLowAncestor(state)
+        const certLowAncestor = findClosestCertLowAncestor(state);
         if (certLowAncestor) {
             if (!hasCertLow(certLowAncestor)) {
                 contextItems.push({
@@ -351,11 +349,11 @@ export const leidenPlusToolbar: Extension[] = [
                     id: "context-item-cert-low-add",
                     label: "( ? )",
                     action: (view) => {
-                        addCertLow(view, certLowAncestor)
+                        addCertLow(view, certLowAncestor);
                     }
-                })
+                });
             } else {
-                const label = document.createElement("span")
+                const label = document.createElement("span");
                 label.innerHTML = `
                     <span style="position: relative; display: inline-block;">
                         ( ? ) 
@@ -373,16 +371,16 @@ export const leidenPlusToolbar: Extension[] = [
                             "/>
                             <line x1="0" y1="100" x2="100" y2="0" stroke-width="8" stroke-linecap="round" stroke="currentColor"/>
                         </svg>
-                   </span>`
+                   </span>`;
 
                 contextItems.push({
                     type: "action",
                     id: "context-item-cert-low-remove",
                     label,
                     action: (view) => {
-                        removeCertLow(view, certLowAncestor)
+                        removeCertLow(view, certLowAncestor);
                     }
-                })
+                });
             }
         }
 
@@ -422,7 +420,7 @@ export const leidenPlusToolbar: Extension[] = [
                     ]
                 },
 
-                {type: "divider"},
+                { type: "divider" },
 
                 // SHORTCUT BUTTONS
                 {
@@ -505,31 +503,31 @@ export const leidenPlusToolbar: Extension[] = [
                     ],),
                     active: inlineAllowed
                 },
-                {type: "divider"},
+                { type: "divider" },
                 {
                     type: "action",
                     id: "unclear",
                     label: "ạ",
                     tooltip: "Mark as unclear",
                     action: (view) => {
-                        const availableRanges = view.state.field(syntactialDiacritRanges)
+                        const availableRanges = view.state.field(syntactialDiacritRanges);
                         view.dispatch({
                             changes: availableRanges.map(range => {
-                                const text = view.state.doc.sliceString(range.from, range.to)
+                                const text = view.state.doc.sliceString(range.from, range.to);
                                 const process = range.name === "Unclear" || range.name === "SupralineUnclear"
                                     ? removeCombiningMarks
-                                    : addCombiningMarks
-                                return {from: range.from, to: range.to, insert: process(text, 0x0323)}
+                                    : addCombiningMarks;
+                                return { from: range.from, to: range.to, insert: process(text, 0x0323) };
                             })
-                        })
+                        });
                     },
                     active: state.field(syntactialDiacritRanges).length > 0,
                     hoverAction: {
                         enter: (view) => {
-                            const availableRanges = view.state.field(syntactialDiacritRanges)
-                            view.dispatch({effects: [setPreviewHighlights.of(availableRanges)]})
+                            const availableRanges = view.state.field(syntactialDiacritRanges);
+                            view.dispatch({ effects: [setPreviewHighlights.of(availableRanges)] });
                         },
-                        leave: (view) => view.dispatch({effects: [setPreviewHighlights.of([])]})
+                        leave: (view) => view.dispatch({ effects: [setPreviewHighlights.of([])] })
                     }
                 },
                 {
@@ -538,27 +536,27 @@ export const leidenPlusToolbar: Extension[] = [
                     label: "ā",
                     tooltip: "Supraline",
                     action: (view) => {
-                        const availableRanges = view.state.field(syntactialDiacritRanges)
+                        const availableRanges = view.state.field(syntactialDiacritRanges);
                         view.dispatch({
                             changes: availableRanges.map(range => {
-                                const text = view.state.doc.sliceString(range.from, range.to)
+                                const text = view.state.doc.sliceString(range.from, range.to);
                                 const process = range.name === "SupralineMacronContent" || range.name === "SupralineUnclear"
                                     ? removeCombiningMarks
-                                    : addCombiningMarks
-                                return {from: range.from, to: range.to, insert: process(text, 0x0304)}
+                                    : addCombiningMarks;
+                                return { from: range.from, to: range.to, insert: process(text, 0x0304) };
                             })
-                        })
+                        });
                     },
                     active: state.field(syntactialDiacritRanges).length > 0,
                     hoverAction: {
                         enter: (view) => {
-                            const availableRanges = view.state.field(syntactialDiacritRanges)
-                            view.dispatch({effects: [setPreviewHighlights.of(availableRanges)]})
+                            const availableRanges = view.state.field(syntactialDiacritRanges);
+                            view.dispatch({ effects: [setPreviewHighlights.of(availableRanges)] });
                         },
-                        leave: (view) => view.dispatch({effects: [setPreviewHighlights.of([])]})
+                        leave: (view) => view.dispatch({ effects: [setPreviewHighlights.of([])] })
                     }
                 },
-                {type: "divider"}
+                { type: "divider" }
             ],
             contextItems
         });
@@ -623,4 +621,4 @@ export const leidenPlusToolbar: Extension[] = [
     // })),
     syntactialDiacritRanges,
     toolbar
-]
+];

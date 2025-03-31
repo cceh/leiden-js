@@ -1,6 +1,6 @@
-import {Ref} from "lit-html/directives/ref.js";
-import {html, nothing, TemplateResult} from "lit-html";
-import {ActionCapableItem, MenuItem} from "../config.js";
+import { Ref } from "lit-html/directives/ref.js";
+import { html, nothing, TemplateResult } from "lit-html";
+import { ActionCapableItem, MenuItem } from "../config.js";
 
 
 export function menu(triggerItem: { id: string, label: string, items: MenuItem[] }, actionCallback: (item: ActionCapableItem) => void, ref?: Ref) {
@@ -14,11 +14,11 @@ export function menu(triggerItem: { id: string, label: string, items: MenuItem[]
         >
             ${triggerItem.items.map(item => menuItem(item, actionCallback))}
         </div>
-    `
+    `;
 }
 
 function menuItem(item: MenuItem, actionCallback: (item: ActionCapableItem) => void): TemplateResult {
-    const isMenuTrigger = item.type === "menu"
+    const isMenuTrigger = item.type === "menu";
     return html`
         ${isMenuTrigger ? menu(item, actionCallback) : ""}
         <button
@@ -31,12 +31,12 @@ function menuItem(item: MenuItem, actionCallback: (item: ActionCapableItem) => v
                 id="menu-item-${item.id}"
                 ?disabled="${item.active !== undefined && !item.active}"
                 @click=${item.type === "action" ? (e: MouseEvent) => {
-        e.preventDefault()
-        actionCallback(item)
+        e.preventDefault();
+        actionCallback(item);
     } : nothing}
         >
             <span class="cm-ljs-toolbar-label">${item.label}</span>
             ${item.info ? html`<span class="cm-ljs-toolbar-info">${item.info}</span>` : nothing}
         </button>
-    `
+    `;
 }

@@ -1,5 +1,5 @@
 export function processCombiningMarks(text: string, add: boolean = true, ...combiningCharacters: number[]) {
-    const output = []
+    const output = [];
     for (let i = 0; i < text.length; i++) {
         const codepoint = text.codePointAt(i);
 

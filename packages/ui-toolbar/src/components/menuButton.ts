@@ -1,5 +1,5 @@
-import {ToolbarMenuTrigger} from "../config.js";
-import {html} from "lit-html";
+import { ToolbarMenuTrigger } from "../config.js";
+import { html } from "lit-html";
 
 export const menuButton = (item: ToolbarMenuTrigger, tabIndex = -1) =>
     html`
@@ -14,4 +14,4 @@ export const menuButton = (item: ToolbarMenuTrigger, tabIndex = -1) =>
                 role="button"
         >${item.label}
         </button>
-    `
+    `;

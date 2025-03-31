@@ -1,4 +1,4 @@
-import {ExternalTokenizer} from "@lezer/lr";
+import { ExternalTokenizer } from "@lezer/lr";
 import {
     chars as lp_chars,
     latinChars,
@@ -54,7 +54,7 @@ const skippedForCombiningCheck = [
     AMPERSAND, EXCLAMATION_MARK, COMBINING_MACRON, COMBINING_DOT_BELOW
 ];
 
-const skipped = [...skippedForCombiningCheck, SPACE, COMMA, APOSTROPHE, FULL_STOP]
+const skipped = [...skippedForCombiningCheck, SPACE, COMMA, APOSTROPHE, FULL_STOP];
 
 
 function isNumberCharCode(current) {
@@ -104,7 +104,7 @@ export const charsToken = new ExternalTokenizer((input) => {
 
         // check if the character has an underdot or macron in its combining diacritics
         // if yes, the current character belongs to an unclear or supraline segment
-        const {marks, numSkipped} = checkCombiningMarks(input);
+        const { marks, numSkipped } = checkCombiningMarks(input);
         if (marks.indexOf(COMBINING_DOT_BELOW) > -1 || marks.indexOf(COMBINING_MACRON) > -1) {
             break;
         }
@@ -116,13 +116,13 @@ export const charsToken = new ExternalTokenizer((input) => {
             isNumSequence = true;
 
             // huge ugly workaround for input found in cpr.7.54, should probably be removed (illegible num chars followed by line break)
-            // e. g. .126.-  (XSugar consumes the 6.- as word-wrapping line break preceded by illegible 12 chars)
+            // e.g. .126.-  (XSugar consumes the 6.- as word-wrapping line break preceded by illegible 12 chars)
             let next = nextChar;
             let pos = 1;
             let isLbNoWrap = false;
             let hasSeenNonNumber = false;
             while (next !== END_OF_INPUT) {
-                let isNumber = isNumberCharCode(next)
+                let isNumber = isNumberCharCode(next);
                 if (/\/,a-zA-Z./.test(String.fromCharCode(next)) && (!isNumber || hasSeenNonNumber) && ![SPACE, APOSTROPHE].includes(next) || [COMMA, SLASH, FULL_STOP].includes(next)) {
                     if (!isNumber && !hasSeenNonNumber) {
                         hasSeenNonNumber = true;
@@ -175,7 +175,7 @@ function checkCombiningMarks(input) {
         peek = input.peek(++pos);
     }
 
-    return {marks, numSkipped: pos};
+    return { marks, numSkipped: pos };
 }
 
 function scanCombiningMarks(input, validateMarks) {
@@ -186,7 +186,7 @@ function scanCombiningMarks(input, validateMarks) {
             break;
         }
 
-        const {marks, numSkipped} = checkCombiningMarks(input);
+        const { marks, numSkipped } = checkCombiningMarks(input);
 
         if (validateMarks(marks)) {
             charCount++;
@@ -244,7 +244,7 @@ export function specializeChars(input) {
            }
        }
         if (isSingleCharWithDiacrit) {
-            return single_char
+            return single_char;
         }
    }
 
@@ -260,7 +260,7 @@ export function specializeNum(input) {
         return single_num;
     }
 
-    return -1
+    return -1;
 }
 
 function isHighSurrogate(code) {

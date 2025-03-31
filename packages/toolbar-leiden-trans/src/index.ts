@@ -7,31 +7,29 @@ import {
     ToolbarActionItem,
     toolbarConfig
 } from "@leiden-plus/ui-toolbar";
-import {Extension} from "@codemirror/state";
+import { Extension } from "@codemirror/state";
 import {
+    addDivision,
     addTranslation,
+    canAddDivision,
+    DivisionSnippetKey,
     inlineContentAllowed,
     snippets,
     TranslationSnippetKey
 } from "@leiden-plus/codemirror-lang-leiden-trans";
-import {applySnippet} from "@leiden-plus/lib/language";
-import {
-    addDivision,
-    canAddDivision,
-    DivisionSnippetKey
-} from "@leiden-plus/codemirror-lang-leiden-trans";
+import { applySnippet } from "@leiden-plus/lib/language";
 
 
 export const leidenTransToolbar: Extension[] = [
     toolbarConfig.of((state) => {
-        const inlineAllowed = inlineContentAllowed(state)
+        const inlineAllowed = inlineContentAllowed(state);
 
         const createMenuItemsFor = (keys: (keyof typeof snippets)[]) =>
-            createMenuItemsFromSnippets(snippets, keys, inlineAllowed)
-        const createMenuItemFor = (key: keyof typeof snippets) => createMenuItemFromSnippet(snippets, key, inlineAllowed)
+            createMenuItemsFromSnippets(snippets, keys, inlineAllowed);
+        const createMenuItemFor = (key: keyof typeof snippets) => createMenuItemFromSnippet(snippets, key, inlineAllowed);
 
         const createActionFor = (key: keyof typeof snippets, id: string, label?: string): ToolbarActionItem => {
-            const snippetDef = snippets[key]
+            const snippetDef = snippets[key];
             return {
                 type: "action",
                 id,
@@ -39,36 +37,36 @@ export const leidenTransToolbar: Extension[] = [
                 tooltip: `${snippetDef.completion.displayLabel}${"detail" in snippetDef.completion ? ", " + snippetDef.completion.detail : ""}`,
                 action: (view) => applySnippet(view, snippetDef),
                 active: inlineAllowed
-            }
-        }
+            };
+        };
 
         const lineNumbersMenu: MenuTrigger = {
             type: "menu",
             id: "line-numbers",
             label: "Milestone line number",
             items: createMenuItemsFor(["milestoneLineNumber", "milestoneLineNumberBreak"])
-        }
+        };
 
         const gapsMenu: MenuTrigger = {
             type: "menu",
             id: "gaps",
             label: "Gap",
             items: createMenuItemsFor(["lacuna", "illegible"])
-        }
+        };
 
         const termMenu: MenuTrigger = {
             type: "menu",
             id: "term",
             label: "Term",
             items: createMenuItemsFor(["termGreek", "termLatin", "termGreekLatin", "termWithLanguage", "term"])
-        }
+        };
 
         const foreignMenu: MenuTrigger = {
             type: "menu",
             id: "foreign",
             label: "Foreign text",
             items: createMenuItemsFor(["foreignLatin", "foreignGreek", "foreign"])
-        }
+        };
 
         const appMenu: MenuTrigger = {
             type: "menu",
@@ -77,37 +75,37 @@ export const leidenTransToolbar: Extension[] = [
             items: createMenuItemsFor([
                 "apparatusEntryBGU", "apparatusEntryBGUDDbDP", "apparatusEntryNoRef", "apparatusEntry"
             ])
-        }
+        };
 
 
         const translationKeys: TranslationSnippetKey[] = [
             "translationEnglish", "translationGerman", "translationWithLanguage", "translation"
-        ]
+        ];
         const translationMenuItems: ActionItem[] = translationKeys
-            .map(key => ({key, snippet: snippets[key]}))
-            .map(({key, snippet}) => ({
+            .map(key => ({ key, snippet: snippets[key] }))
+            .map(({ key, snippet }) => ({
                 type: "action",
                 id: "entry-translation-" + key,
                 label: `${snippet.completion.displayLabel}, ${snippet.completion.detail}`,
                 info: snippet.completion.info,
                 action: (view) => addTranslation(view, key),
                 active: true
-            }))
+            }));
 
 
         const divisionKeys: DivisionSnippetKey[] = [
             "divisionRecto", "divisionVerso", "divisionColumn", "divisionFragment", "divisionOtherType", "division"
-        ]
+        ];
         const divisionMenuItems: ActionItem[] = divisionKeys
-            .map(key => ({key, snippet: snippets[key]}))
-            .map(({key, snippet}) => ({
+            .map(key => ({ key, snippet: snippets[key] }))
+            .map(({ key, snippet }) => ({
                 type: "action",
                 id: "entry-division-" + key,
                 label: `${snippet.completion.displayLabel}, ${snippet.completion.detail}`,
                 info: snippet.completion.info,
                 action: (view) => addDivision(view, key),
                 active: canAddDivision(state)
-            }))
+            }));
 
 
         const documentStructureMenu: MenuTrigger = {
@@ -129,7 +127,7 @@ export const leidenTransToolbar: Extension[] = [
                 },
                 createMenuItemFor("block")
             ]
-        }
+        };
 
         return ({
             items: [
@@ -161,12 +159,12 @@ export const leidenTransToolbar: Extension[] = [
                     label: "+ Division",
                     items: divisionMenuItems
                 },
-                {type: "divider"},
+                { type: "divider" },
                 createActionFor("lacuna", "btn-lacuna"),
                 createActionFor("illegible", "btn-illegible"),
-                {type: "divider"},
+                { type: "divider" },
                 createActionFor("deletion", "btn-deletion"),
-                {type: "divider"},
+                { type: "divider" },
                 createActionFor("milestoneLineNumber", "btn-milestoneLineNumber"),
                 createActionFor("milestoneLineNumberBreak", "btn-milestoneLineNumberBreak")
 
@@ -174,4 +172,4 @@ export const leidenTransToolbar: Extension[] = [
         });
     }),
     toolbar
-]
+];

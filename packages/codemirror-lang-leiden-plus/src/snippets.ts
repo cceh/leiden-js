@@ -1,10 +1,10 @@
-import {Snippets} from "@leiden-plus/lib/language";
+import { Snippets } from "@leiden-plus/lib/language";
 
 export const snippets = {
     vestigChars: {
         template: "vestig.${num}char",
 		completion: {
-            label: "vestig.\dchar",
+            label: "vestig.${num}char",
             displayLabel: "Vestiges",
             detail: "no. of chars",
             type: "keyword",
@@ -1159,4 +1159,4 @@ export const snippets = {
     }
 
 
-} satisfies Snippets
+} satisfies Snippets;

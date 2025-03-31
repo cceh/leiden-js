@@ -7,23 +7,23 @@ import {
     LRLanguage,
     syntaxHighlighting
 } from "@codemirror/language";
-import {parser} from "@leiden-plus/parser-leiden-trans";
-import {leidenTransLinterExtension} from "@leiden-plus/linter-leiden-trans";
+import { parser } from "@leiden-plus/parser-leiden-trans";
+import { leidenTransLinterExtension } from "@leiden-plus/linter-leiden-trans";
 import {
     blockIndent,
     highlightActiveNode,
     leidenHighlightStyle as leidenTransHighlightStyle,
     leidenHighlightStyleDark as leidenTransHighlightStyleDark
 } from "@leiden-plus/lib/language";
-import {leidenTranslationHighlighting} from "./syntaxHighlight.js";
+import { leidenTranslationHighlighting } from "./syntaxHighlight.js";
 
 export {
     leidenTranslationHighlighting,
     leidenTransHighlightStyle,
     leidenTransHighlightStyleDark,
-}
+};
 
-export type TopNode = "Document" | "SingleTranslation" | "SingleDiv" | "SingleP" | "BlockContent" | "InlineContent"
+export type TopNode = "Document" | "SingleTranslation" | "SingleDiv" | "SingleP" | "BlockContent" | "InlineContent";
 
 export const leidenTranslationLanguage = (topNode: TopNode = "Document") => LRLanguage.define({
     parser: parser.configure({
@@ -45,7 +45,7 @@ export const leidenTranslationLanguage = (topNode: TopNode = "Document") => LRLa
     languageData: {
         indentOnInput: /^\s*=[TD]?>|^.$/
     }
-})
+});
 
 export interface LeidenTransConfig {
     topNode: TopNode
@@ -55,17 +55,17 @@ export interface LeidenTransConfig {
 const defaultConfig: LeidenTransConfig = {
     topNode: "Document",
     highlightStyle: leidenTransHighlightStyle,
-}
+};
 
 export function leidenTranslation(options: Partial<LeidenTransConfig> = {}) {
-    const config = {...defaultConfig, ...options}
+    const config = { ...defaultConfig, ...options };
     return [
         new LanguageSupport(leidenTranslationLanguage(config.topNode)),
         syntaxHighlighting(config.highlightStyle),
         leidenTransLinterExtension,
         highlightActiveNode
-    ]
+    ];
 }
 
-export {snippets} from './snippets.js'
-export {inlineContentAllowed, addTranslation, TranslationSnippetKey, canAddDivision, addDivision, DivisionSnippetKey} from './syntax.js'
+export { snippets } from "./snippets.js";
+export { inlineContentAllowed, addTranslation, TranslationSnippetKey, canAddDivision, addDivision, DivisionSnippetKey } from "./syntax.js";

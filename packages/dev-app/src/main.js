@@ -1,3 +1,6 @@
+/* global leidenEditorView */
+/* global xmlEditorView */
+
 import {
     drawSelection,
     EditorView,
@@ -6,9 +9,9 @@ import {
     keymap,
     lineNumbers,
     showPanel
-} from "@codemirror/view"
-import {basicSetup} from "codemirror"
-import {leidenHighlightStyle, leidenHighlightStyleDark, leidenPlus} from "@leiden-plus/codemirror-lang-leiden-plus";
+} from "@codemirror/view";
+import { basicSetup } from "codemirror";
+import { leidenHighlightStyle, leidenHighlightStyleDark, leidenPlus } from "@leiden-plus/codemirror-lang-leiden-plus";
 import {
     bracketMatching,
     foldGutter,
@@ -18,8 +21,8 @@ import {
     syntaxTree,
     syntaxTreeAvailable
 } from "@codemirror/language";
-import {leidenTranslation} from "@leiden-plus/codemirror-lang-leiden-trans";
-import {Annotation, Compartment, StateField} from "@codemirror/state";
+import { leidenTranslation } from "@leiden-plus/codemirror-lang-leiden-trans";
+import { Annotation, Compartment, StateField } from "@codemirror/state";
 import {
     fromXml as xmlToLeidenPlus,
     toXml as leidenPlusToXml,
@@ -31,17 +34,17 @@ import {
     TransformationError as LeidenTransTransformationError
 } from "@leiden-plus/transformer-leiden-trans";
 
-import {xml} from "@codemirror/lang-xml";
-import {linter, lintGutter, lintKeymap, setDiagnosticsEffect} from "@codemirror/lint";
-import {defaultKeymap, history, historyKeymap} from "@codemirror/commands";
-import './styles/cardo.css'
-import {oneDarkTheme} from "@codemirror/theme-one-dark";
-import {leidenPlusToolbar} from "@leiden-plus/toolbar-leiden-plus";
-import {leidenTransToolbar} from "@leiden-plus/toolbar-leiden-trans";
-import {closeBracketsKeymap, completionKeymap} from "@codemirror/autocomplete";
-import {searchKeymap} from "@codemirror/search";
+import { xml } from "@codemirror/lang-xml";
+import { linter, lintGutter, lintKeymap, setDiagnosticsEffect } from "@codemirror/lint";
+import { defaultKeymap, history, historyKeymap } from "@codemirror/commands";
+import "./styles/cardo.css";
+import { oneDarkTheme } from "@codemirror/theme-one-dark";
+import { leidenPlusToolbar } from "@leiden-plus/toolbar-leiden-plus";
+import { leidenTransToolbar } from "@leiden-plus/toolbar-leiden-trans";
+import { closeBracketsKeymap, completionKeymap } from "@codemirror/autocomplete";
+import { searchKeymap } from "@codemirror/search";
 
-import {clearParseTree, highlightCurrentNodeInTree, initTreeView, updateDebugInfo, updateParseTree} from "./treeView";
+import { clearParseTree, highlightCurrentNodeInTree, initTreeView, updateDebugInfo, updateParseTree } from "./treeView";
 
 
 /* LINTING / DIAGNOSTICS */
@@ -65,123 +68,123 @@ const diagnosticsStateField = StateField.define({
 
 // Create a status bar panel that shows only one diagnostic
 function statusBarPanel(view) {
-    let dom = document.createElement("div")
+    let dom = document.createElement("div");
     return {
         dom,
         update(update) {
-            const diagnostics = update.state.field(diagnosticsStateField)
-            const firstDiagnostic = diagnostics?.[0]
+            const diagnostics = update.state.field(diagnosticsStateField);
+            const firstDiagnostic = diagnostics?.[0];
             if (firstDiagnostic && firstDiagnostic.to <= update.state.doc.length) {
-                const line = view.state.doc.lineAt(firstDiagnostic.from)
-                dom.textContent = `${firstDiagnostic.message}: Line ${line.number}`
+                const line = view.state.doc.lineAt(firstDiagnostic.from);
+                dom.textContent = `${firstDiagnostic.message}: Line ${line.number}`;
             } else {
-                dom.innerText = ''
+                dom.innerText = "";
             }
         }
-    }
+    };
 }
 
 
 /* LANGUAGE FEATURES */
 
 // Re-configurable editor extension compartment for the language extensions
-const language = new Compartment
+const language = new Compartment;
 
 function getLanguageExtensions(selectValue) {
-    const [variant, topNode] = selectValue.split('.')
+    const [variant, topNode] = selectValue.split(".");
     const config = {
         highlightStyle: getHighlightStyle(),
         topNode
-    }
-    return variant === 'leiden-plus'
+    };
+    return variant === "leiden-plus"
         ? [leidenPlus(config), leidenPlusToolbar]
-        : [leidenTranslation(config), leidenTransToolbar]
+        : [leidenTranslation(config), leidenTransToolbar];
 }
 
 function convertToXml(leiden) {
-    const [variant, topNode] = languageSelect.value.split('.')
-    return variant === 'leiden-plus'
+    const [variant, topNode] = languageSelect.value.split(".");
+    return variant === "leiden-plus"
         ? leidenPlusToXml(leiden, topNode)
         : leidenTransToXml(leiden, topNode);
 }
 
 function convertToLeiden(xml) {
-    const [variant] = languageSelect.value.split('.')
-    if (variant === 'leiden-plus') {
-        return xmlToLeidenPlus(xml)
+    const [variant] = languageSelect.value.split(".");
+    if (variant === "leiden-plus") {
+        return xmlToLeidenPlus(xml);
     } else {
-        return xmlToLeidenTrans(xml)
+        return xmlToLeidenTrans(xml);
     }
 }
 
 
 // Set up language select button
-const languageSelect = document.querySelector('#language-select');
-languageSelect.value = localStorage.getItem('leiden-variant') || 'leiden-plus.Document'
-languageSelect.addEventListener('change', () => {
-    const value = languageSelect.value
-    localStorage.setItem('leiden-variant', value)
-    window.leidenEditorView.dispatch({
+const languageSelect = document.querySelector("#language-select");
+languageSelect.value = localStorage.getItem("leiden-variant") || "leiden-plus.Document";
+languageSelect.addEventListener("change", () => {
+    const value = languageSelect.value;
+    localStorage.setItem("leiden-variant", value);
+    leidenEditorView.dispatch({
         effects: language.reconfigure(getLanguageExtensions(value)),
         changes: {
             from: 0,
-            to: window.leidenEditorView.state.doc.length,
+            to: leidenEditorView.state.doc.length,
             insert: localStorage.getItem(`doc-${value}`)
         }
-    })
-})
+    });
+});
 
 
 
 /* THEME AND HIGHLIGHTING */
 
 function getTheme(isDark) {
-    return isDark === 'true' ? oneDarkTheme : [];
+    return isDark === "true" ? oneDarkTheme : [];
 }
 
 // Re-configurable editor extension compartment for the theme extension
-const theme = new Compartment
+const theme = new Compartment;
 
-const highlightStyles = {leidenHighlightStyle, leidenHighlightStyleDark}
+const highlightStyles = { leidenHighlightStyle, leidenHighlightStyleDark };
 function getHighlightStyle() {
-    return highlightStyles[localStorage.getItem('highlight-style') || Object.keys(highlightStyles)[0]]
+    return highlightStyles[localStorage.getItem("highlight-style") || Object.keys(highlightStyles)[0]];
 }
 
 // Set up highlight style select button
-const highlightStyleSelect = document.querySelector('#highlight-style-select');
+const highlightStyleSelect = document.querySelector("#highlight-style-select");
 highlightStyleSelect.append(...Object.keys(highlightStyles).map(style => Object.assign(document.createElement("option"), {
     textContent: style,
     value: style
-})))
-highlightStyleSelect.value = localStorage.getItem('highlight-style') || Object.keys(highlightStyles)[0]
-highlightStyleSelect.addEventListener('change', () => {
-    const value = highlightStyleSelect.value
-    localStorage.setItem('highlight-style', value)
-    window.leidenEditorView.dispatch({
-        effects: language.reconfigure(getLanguageExtensions(localStorage.getItem('leiden-variant'), value))
-    })
-})
+})));
+highlightStyleSelect.value = localStorage.getItem("highlight-style") || Object.keys(highlightStyles)[0];
+highlightStyleSelect.addEventListener("change", () => {
+    const value = highlightStyleSelect.value;
+    localStorage.setItem("highlight-style", value);
+    leidenEditorView.dispatch({
+        effects: language.reconfigure(getLanguageExtensions(localStorage.getItem("leiden-variant"), value))
+    });
+});
 
 // Set up dark theme checkbox
-const themeCheckbox = document.querySelector("#theme-checkbox")
-themeCheckbox.checked = (localStorage.getItem('dark') || 'false') === 'true'
-themeCheckbox.addEventListener('change', () => {
-    const isDark = themeCheckbox.checked ? "true" : "false"
-    localStorage.setItem('dark', isDark)
-    window.leidenEditorView.dispatch({
+const themeCheckbox = document.querySelector("#theme-checkbox");
+themeCheckbox.checked = (localStorage.getItem("dark") || "false") === "true";
+themeCheckbox.addEventListener("change", () => {
+    const isDark = themeCheckbox.checked ? "true" : "false";
+    localStorage.setItem("dark", isDark);
+    leidenEditorView.dispatch({
         effects: theme.reconfigure(getTheme(isDark))
-    })
-})
+    });
+});
 
 
 function updateXml(leidenContent) {
-    window.xmlEditorView.dispatch({changes: {
+    xmlEditorView.dispatch({ changes: {
             from: 0,
-            to: window.xmlEditorView.state.doc.length,
+            to: xmlEditorView.state.doc.length,
             insert: convertToXml(leidenContent)
         },
         annotations: syncAnnotation.of(true)
-    })
+    });
 }
 
 /*
@@ -189,10 +192,10 @@ function updateXml(leidenContent) {
  */
 
 // Initially load doc for current language from local storage
-const doc = localStorage.getItem(`doc-${languageSelect.value}`) || "Test your markup here"
+const doc = localStorage.getItem(`doc-${languageSelect.value}`) || "Test your markup here";
 
 // Create a transaction annotation for preventing infinite sync cycles when updating XML/Leiden
-const syncAnnotation = Annotation.define()
+const syncAnnotation = Annotation.define();
 
 
 /* SET UP THE LEIDEN EDITOR */
@@ -233,37 +236,37 @@ window.leidenEditorView = new EditorView({
         // React to document changes
         EditorView.updateListener.of(async update => {
             if (update.transactions.some(tr => tr.annotation(syncAnnotation) === true)) {
-                return
+                return;
             }
 
-            const isReconfigured = update.transactions.some(tr => tr.reconfigured)
+            const isReconfigured = update.transactions.some(tr => tr.reconfigured);
             if (update.docChanged || update.selectionSet || isReconfigured) {
 
-                localStorage.setItem(`doc-${languageSelect.value}`, update.view.state.doc.toString())
-                if (localStorage.getItem('xml-open') === 'true') {
-                    updateXml(update.view.state.doc.toString())
+                localStorage.setItem(`doc-${languageSelect.value}`, update.view.state.doc.toString());
+                if (localStorage.getItem("xml-open") === "true") {
+                    updateXml(update.view.state.doc.toString());
                 }
 
-                if (localStorage.getItem('debug-open') === 'true') {
+                if (localStorage.getItem("debug-open") === "true") {
                     requestIdleCallback(async () => {
-                        forceParsing(leidenEditorView, leidenEditorView.state.selection.main.head)
+                        forceParsing(leidenEditorView, leidenEditorView.state.selection.main.head);
                         await updateParseTree(update.view);
-                        highlightCurrentNodeInTree(update.state)
-                    })
+                        highlightCurrentNodeInTree(update.state);
+                    });
                 }
             }
         }),
         diagnosticsStateField,
         lintGutter(),
         showPanel.of(statusBarPanel),
-        theme.of(getTheme(localStorage.getItem('dark') ?? 'false')),
+        theme.of(getTheme(localStorage.getItem("dark") ?? "false")),
         EditorView.theme({
             ".cm-content": {
-                fontFamily: `"Cardo", "Lucida Grande", "IFAO-Grec Unicode", "Arial Unicode MS", "New Athena Unicode", "Athena Unicode", "Lucida Grande", "Verdana", "Tahoma"`
+                fontFamily: "\"Cardo\", \"Lucida Grande\", \"IFAO-Grec Unicode\", \"Arial Unicode MS\", \"New Athena Unicode\", \"Athena Unicode\", \"Lucida Grande\", \"Verdana\", \"Tahoma\""
             }
         })
     ],
-    parent: document.querySelector('.leiden-editor')
+    parent: document.querySelector(".leiden-editor")
 });
 
 
@@ -295,27 +298,27 @@ function findNodeByPath(state, path) {
 // Leiden editor and tracks any transformation errors
 const xmlStateField = StateField.define({
     create() {
-        return []
+        return [];
     },
     update(value, tr) {
         if (tr.annotation(syncAnnotation) === true) {
-            return []
+            return [];
         }
 
 
         if (tr.docChanged || tr.reconfigured) {
-            const doc = new DOMParser().parseFromString(tr.state.doc.toString(), 'text/xml').documentElement
+            const doc = new DOMParser().parseFromString(tr.state.doc.toString(), "text/xml").documentElement;
             try {
-                window.leidenEditorView.dispatch({
+                leidenEditorView.dispatch({
                     changes: {
                         from: 0,
-                        to: window.leidenEditorView.state.doc.length,
+                        to: leidenEditorView.state.doc.length,
                         insert: convertToLeiden(doc)
                     },
                     annotations: syncAnnotation.of(true)
-                })
+                });
             } catch (e) {
-                console.log(e)
+                console.log(e);
                 if (e instanceof LeidenPlusTransformationError || e instanceof LeidenTransTransformationError) {
                     if (e.path.length > 0 && e.path[e.path.length - 1][0] === "parsererror") {
                         return [{
@@ -323,45 +326,45 @@ const xmlStateField = StateField.define({
                             to: tr.state.doc.length,
                             severity: "error",
                             message: "Invalid XML"
-                        }]
+                        }];
                     }
 
-                    const node = findNodeByPath(tr.state, e.path)
+                    const node = findNodeByPath(tr.state, e.path);
                     if (!node) {
-                        return []
+                        return [];
                     }
                     return [{
                         from: node.from,
                         to: node.to,
                         severity: "error",
                         message: e.message
-                    }]
+                    }];
                 } else {
-                    throw e
+                    throw e;
                 }
             }
-            return []
+            return [];
         }
 
         return value;
     }
-})
+});
 
 
 // Set up buttons for toggling XML editor
-const xmlToggleButton = document.querySelector('#xml-toggle-button')
+const xmlToggleButton = document.querySelector("#xml-toggle-button");
 xmlToggleButton.addEventListener("click", () => {
-    const panel = document.querySelector('.xml-container')
-    panel.classList.toggle('hidden')
-    const open = !panel.classList.contains('hidden')
-    localStorage.setItem('xml-open', `${open}`);
-    const content = open ? window.leidenEditorView.state.doc.toString() : ""
-    updateXml(content)
-})
+    const panel = document.querySelector(".xml-container");
+    panel.classList.toggle("hidden");
+    const open = !panel.classList.contains("hidden");
+    localStorage.setItem("xml-open", `${open}`);
+    const content = open ? leidenEditorView.state.doc.toString() : "";
+    updateXml(content);
+});
 
-const xmlPane = document.querySelector('.xml-container')
-const xmlOpen = localStorage.getItem('xml-open') === 'true'
-xmlPane.classList.toggle('hidden', !xmlOpen)
+const xmlPane = document.querySelector(".xml-container");
+const xmlOpen = localStorage.getItem("xml-open") === "true";
+xmlPane.classList.toggle("hidden", !xmlOpen);
 
 // Set up the XML editor
 window.xmlEditorView = new EditorView({
@@ -380,27 +383,27 @@ window.xmlEditorView = new EditorView({
                         to: node.to,
                         severity: "error",
                         message: "Syntax error",
-                    })
+                    });
                 }
-            })
-            return diagnostics
+            });
+            return diagnostics;
         }),
         linter(view => view.state.field(xmlStateField)),
         lintGutter(),
         showPanel.of(statusBarPanel),
     ],
-    parent: document.querySelector('.xml-editor')
-})
+    parent: document.querySelector(".xml-editor")
+});
 
 
 /* SET UP DEBUG AREA */
 
-const debugToggleButton = document.querySelector('#debug-toggle-button');
+const debugToggleButton = document.querySelector("#debug-toggle-button");
 debugToggleButton.addEventListener("click",  () => {
     const bodyElement = document.body;
-    bodyElement.classList.toggle('debug-closed');
-    const open = !bodyElement.classList.contains('debug-closed');
-    localStorage.setItem('debug-open', `${open}`);
+    bodyElement.classList.toggle("debug-closed");
+    const open = !bodyElement.classList.contains("debug-closed");
+    localStorage.setItem("debug-open", `${open}`);
 
     if (open) {
         updateDebugInfo(leidenEditorView);
@@ -413,10 +416,10 @@ debugToggleButton.addEventListener("click",  () => {
 // Force CodeMirror to parse the whole document, then initialize the syntax tree view
 new Promise((resolve) => {
     while (!syntaxTreeAvailable(leidenEditorView.state)) {
-        forceParsing(leidenEditorView, leidenEditorView.state.doc.length)
+        forceParsing(leidenEditorView, leidenEditorView.state.doc.length);
     }
-    resolve()
+    resolve();
 
 }).then(() => {
-    initTreeView(window.leidenEditorView);
-})
+    initTreeView(leidenEditorView);
+});

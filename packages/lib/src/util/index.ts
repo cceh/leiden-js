@@ -1,1 +1,1 @@
-export {processCombiningMarks, addCombiningMarks, removeCombiningMarks} from "./combiningMarks.js"
+export { processCombiningMarks, addCombiningMarks, removeCombiningMarks } from "./combiningMarks.js";

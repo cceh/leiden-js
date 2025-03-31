@@ -1,5 +1,5 @@
-import {html, nothing} from "lit-html";
-import {ActionCapableItem, HoverActionCapableItem, ToolbarActionItem, ToolbarSplitItem} from "../config.js";
+import { html, nothing } from "lit-html";
+import { ActionCapableItem, HoverActionCapableItem, ToolbarActionItem, ToolbarSplitItem } from "../config.js";
 
 export const actionButton = (
     item: ToolbarActionItem | ToolbarSplitItem,
@@ -16,14 +16,14 @@ export const actionButton = (
                 ?disabled="${item.active !== undefined && !item.active}"
                 @click="${(e: Event) => {
                     e.preventDefault();
-                    actionCallback(item)
+                    actionCallback(item);
                 }}"
                 @mouseenter="${hoverEnterCallback ? () => {
-                    hoverEnterCallback(item)
+                    hoverEnterCallback(item);
                 } : nothing}"
                 @mouseleave="${hoverLeaveCallback ? () => {
-                    hoverLeaveCallback(item)
+                    hoverLeaveCallback(item);
                 } : nothing}"
         >${item.label}
         </button>
-`
+`;

@@ -1,22 +1,24 @@
-import {Diagnostic, linter } from "@codemirror/lint";
-import {syntaxTree} from "@codemirror/language";
-import {SyntaxNodeRef, TreeCursor} from "@lezer/common";
+import { Diagnostic, linter } from "@codemirror/lint";
+import { syntaxTree } from "@codemirror/language";
+import { SyntaxNodeRef, TreeCursor } from "@lezer/common";
 
 export type NodeLinter = (doc: string, node: SyntaxNodeRef) => Diagnostic[] | undefined | null | void;
-export type LeidenLinter = (doc: string, rootCursor: TreeCursor, nodeLinter?: NodeLinter) => Diagnostic[]
+export type LeidenLinter = (doc: string, rootCursor: TreeCursor, nodeLinter?: NodeLinter) => Diagnostic[];
 
 export const leidenBaseLinter: LeidenLinter = (doc: string, rootCursor: TreeCursor, nodeLinter?: NodeLinter): Diagnostic[] => {
-    const diagnostics: Diagnostic[] = []
-    let skip = false
+    const diagnostics: Diagnostic[] = [];
+    let skip = false;
     rootCursor.iterate(node => {
         if (skip) {
-            return
+            return;
         }
-        const nodeDiagnostics: Diagnostic[] = []
+        const nodeDiagnostics: Diagnostic[] = [];
 
         if (nodeLinter) {
-            const result = nodeLinter(doc, node)
-            result && nodeDiagnostics.push(...result)
+            const result = nodeLinter(doc, node);
+            if (result) {
+                nodeDiagnostics.push(...result);
+            }
         }
 
         if (nodeDiagnostics.length === 0 && node.type.isError) {
@@ -25,17 +27,17 @@ export const leidenBaseLinter: LeidenLinter = (doc: string, rootCursor: TreeCurs
                 to: node.to,
                 severity: "error",
                 message: "Syntax error",
-            })
+            });
         }
 
-        diagnostics.push(...nodeDiagnostics)
+        diagnostics.push(...nodeDiagnostics);
         if (diagnostics.length > 0) {
-            skip = true
-            return false
+            skip = true;
+            return false;
         }
-    })
-    return diagnostics
-}
+    });
+    return diagnostics;
+};
 
 export const leidenLinterExtension = (nodeLinter?: NodeLinter) =>
-    linter(view => leidenBaseLinter(view.state.doc.toString(), syntaxTree(view.state).cursor(), nodeLinter))
+    linter(view => leidenBaseLinter(view.state.doc.toString(), syntaxTree(view.state).cursor(), nodeLinter));

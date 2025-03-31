@@ -1,6 +1,6 @@
-import {html, nothing} from "lit-html";
-import {actionButton} from "./actionButton.js";
-import {ActionCapableItem, HoverActionCapableItem, ToolbarSplitItem} from "../config.js";
+import { html, nothing } from "lit-html";
+import { actionButton } from "./actionButton.js";
+import { ActionCapableItem, HoverActionCapableItem, ToolbarSplitItem } from "../config.js";
 
 export const splitButton = (
     item: ToolbarSplitItem,
@@ -23,5 +23,5 @@ export const splitButton = (
                         role="button"
                 ></button>
             </div>
-        `
-}
+        `;
+};

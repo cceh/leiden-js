@@ -1,6 +1,6 @@
-import {SyntaxNode, TreeCursor} from "@lezer/common";
-import {parser, rendProp, unitProp} from "@leiden-plus/parser-leiden-plus";
-import {removeCombiningMarks} from "@leiden-plus/lib/util";
+import { SyntaxNode, TreeCursor } from "@lezer/common";
+import { parser, rendProp, unitProp } from "@leiden-plus/parser-leiden-plus";
+import { removeCombiningMarks } from "@leiden-plus/lib/util";
 
 function text(input: string, node: TreeCursor) {
     return input.substring(node.from, node.to);
@@ -8,20 +8,20 @@ function text(input: string, node: TreeCursor) {
 
 function diacriticValue(input: string) {
     switch (input) {
-        case ' ῾':
-            return 'asper';
-        case '´':
-            return 'acute';
-        case '¨':
-            return 'diaeresis';
-        case '`':
-            return 'grave';
-        case '^':
-            return 'circumflex';
-        case ' ᾿':
-            return 'lenis';
+        case " ῾":
+            return "asper";
+        case "´":
+            return "acute";
+        case "¨":
+            return "diaeresis";
+        case "`":
+            return "grave";
+        case "^":
+            return "circumflex";
+        case " ᾿":
+            return "lenis";
         default:
-            return '';
+            return "";
     }
 }
 
@@ -46,12 +46,12 @@ function findNumber(input: string, node: TreeCursor) {
     return value;
 }
 
-export function toXml(input: string, topNode = "Document", root = parser.configure({top: topNode}).parse(input)) {
+export function toXml(input: string, topNode = "Document", root = parser.configure({ top: topNode }).parse(input)) {
 
     const xml: string[] = [];
     let needsCloseEdition = false;
     let value;
-    const selfClosingNodeSet = new WeakSet<SyntaxNode>() // TODO: use lezer NodeWeakMap?
+    const selfClosingNodeSet = new WeakSet<SyntaxNode>(); // TODO: use lezer NodeWeakMap?
     root.iterate({
         enter: (node: TreeCursor) => {
             if (node.type.isTop) {
@@ -72,10 +72,10 @@ export function toXml(input: string, topNode = "Document", root = parser.configu
                 "Vacat", "LineBreak", "LostLines", "LineBreakWrapped",
                 "Vestige", "Illegible", "Gap"
             ].includes(name)) {
-                if (node.matchContext(['EditorialNote'])) {
-                    let currentNode = node.node
+                if (node.matchContext(["EditorialNote"])) {
+                    let currentNode = node.node;
                     while (currentNode.parent && currentNode.name !== "EditorialNote") {
-                        currentNode = currentNode.parent
+                        currentNode = currentNode.parent;
                     }
                     const noteContent = text(input, currentNode.cursor());
                     if (!noteContent.includes("\n")) {
@@ -86,12 +86,12 @@ export function toXml(input: string, topNode = "Document", root = parser.configu
             }
 
             switch (name) {
-                case 'Text':
+                case "Text":
                 // case 'Number':
                     xml.push(text(input, node));
                     return false;
 
-                case 'IncompletePattern':
+                case "IncompletePattern": {
                     const nodeStart = node.from;
                     if (node.firstChild()) {
                         const firstChildStart = node.from;
@@ -101,12 +101,12 @@ export function toXml(input: string, topNode = "Document", root = parser.configu
                         xml.push(text(input, node));
                     }
                     break;
-
-                case 'LineBreak':
-                case 'LineBreakWrapped':
-                case 'LineBreakSpecial':
-                case 'LineBreakSpecialWrapped': {
-                    node.firstChild() // Opening delim "("
+                }
+                case "LineBreak":
+                case "LineBreakWrapped":
+                case "LineBreakSpecial":
+                case "LineBreakSpecialWrapped": {
+                    node.firstChild(); // Opening delim "("
                     node.nextSibling(); // Line number node (num)
                     value = text(input, node);
                     xml.push(`<lb n="${value}"`);
@@ -117,15 +117,15 @@ export function toXml(input: string, topNode = "Document", root = parser.configu
                     }
 
                     if (name === "LineBreakWrapped" || name === "LineBreakSpecialWrapped") {
-                        xml.push(` break="no"`);
+                        xml.push(" break=\"no\"");
                     }
 
-                    xml.push('/>')
+                    xml.push("/>");
                     return false;
                 }
 
-                case 'EditionStart':
-                    xml.push(`<div`);
+                case "EditionStart":
+                    xml.push("<div");
                     node.firstChild();
                     if (node.name === "LanguageId") {
                         xml.push(` xml:lang="${text(input, node)}"`);
@@ -136,8 +136,8 @@ export function toXml(input: string, topNode = "Document", root = parser.configu
                     needsCloseEdition = true;
                     break;
 
-                case 'Div':
-                    xml.push(`<div`);
+                case "Div":
+                    xml.push("<div");
                     node.firstChild(); // Opening delim <D=
                     node.nextSibling();
                     if (node.name === "Num") {
@@ -159,68 +159,68 @@ export function toXml(input: string, topNode = "Document", root = parser.configu
                         node.prevSibling();
                     }
 
-                    xml.push(`>`);
+                    xml.push(">");
                     break;
 
-                case 'Ab':
-                    node.firstChild() // <= (opening delim)
-                    node.nextSibling() // content or => (closing delim)
+                case "Ab":
+                    node.firstChild(); // <= (opening delim)
+                    node.nextSibling(); // content or => (closing delim)
                     if (node.type.is("Delims")) {
-                        xml.push("<ab/>")
+                        xml.push("<ab/>");
                         node.parent();
                         return false;
                     }
                     node.prevSibling();
 
-                    xml.push("<ab>")
+                    xml.push("<ab>");
                     break;
 
-                case 'Foreign':
+                case "Foreign": {
                     node.lastChild();
                     const foreignLangId = text(input, node).substring(2);
                     xml.push(`<foreign xml:lang="${foreignLangId}">`);
                     node.parent();
                     break;
-
-                case 'Unclear':
-                case 'SupralineUnclear':
-                    const pos = node.from
-                    node.parent()
+                }
+                case "Unclear":
+                case "SupralineUnclear": {
+                    const pos = node.from;
+                    node.parent();
                     const toStrip = name === "SupralineUnclear" ? [0x323, 0x304] : [0x323];
-                    node.childAfter(pos)
+                    node.childAfter(pos);
 
                     xml.push(`<unclear>${removeCombiningMarks(text(input, node), ...toStrip)}</unclear>`);
                     return false;
-
-                case 'Illegible':
-                case 'Vestige':
-                case 'LostLines':
-                case 'Vacat':
-                case 'Gap':
-                case 'GapOmitted': {
+                }
+                case "Illegible":
+                case "Vestige":
+                case "LostLines":
+                case "Vacat":
+                case "Gap":
+                case "GapOmitted": {
                     node.firstChild(); // GapNumberX or opening delimiter
                     if (node.type.is("Delims")) {
                         // Skip delimiter if necessary
-                        node.nextSibling()
+                        node.nextSibling();
                     }
 
                     let quantityAttrs;
-                    let precAttr = '';
+                    let precAttr = "";
                     let incompleteRange = false;
 
                     // XSugar output: no <desc>Vestiges</desc> for vestig.?lin
-                    let isVestiges = name === 'Vestige' && node.name !== 'GapNumberUnknownLines';
+                    const isVestiges = name === "Vestige" && node.name !== "GapNumberUnknownLines";
 
                     switch (node.name) {
-                        case 'GapNumber':
-                        case 'GapNumberChars':
-                        case 'GapNumberLines':
+                        case "GapNumber":
+                        case "GapNumberChars":
+                        case "GapNumberLines":
                             quantityAttrs = ` quantity="${findNumber(input, node)}"`;
                             break;
 
-                        case 'GapNumberCirca':
-                        case 'GapNumberCircaChars':
-                        case 'GapNumberCircaLines':
+                        case "GapNumberCirca":
+                        case "GapNumberCircaChars":
+                        case "GapNumberCircaLines": {
                             const quantity = findNumber(input, node);
                             if (!quantity) {
                                 node.parent();
@@ -228,12 +228,12 @@ export function toXml(input: string, topNode = "Document", root = parser.configu
                                 return false;
                             }
                             quantityAttrs = ` quantity="${findNumber(input, node)}"`;
-                            precAttr = ` precision="low"`;
+                            precAttr = " precision=\"low\"";
                             break;
-
-                        case 'GapNumberRange':
-                        case 'GapNumberRangeLines':
-                        case 'GapNumberRangeChars':
+                        }
+                        case "GapNumberRange":
+                        case "GapNumberRangeLines":
+                        case "GapNumberRangeChars": {
                             const gapRangeValue = text(input, node);
                             const range = /(\d+)-(\d+)?/.exec(gapRangeValue);
                             // XSugar workaround
@@ -244,11 +244,11 @@ export function toXml(input: string, topNode = "Document", root = parser.configu
                             }
                             quantityAttrs = ` atLeast="${range![1]}" atMost="${range![2]}"`;
                             break;
-
-                        case 'GapNumberUnknown':
-                        case 'GapNumberUnknownLines':
+                        }
+                        case "GapNumberUnknown":
+                        case "GapNumberUnknownLines":
                         case "VestigStandalone":
-                            quantityAttrs = ` extent="unknown"`;
+                            quantityAttrs = " extent=\"unknown\"";
                             break;
 
                         default:
@@ -278,21 +278,21 @@ export function toXml(input: string, topNode = "Document", root = parser.configu
 
                     }
 
-                    // Leave the element open for vestiges or if it contains CertLow
+                    // Leave the element open for vestiges or if it contains CertLow.
                     // CertLow output is handled by the 'CertLow' switch case
                     if (isVestiges) {
-                        xml.push('><desc>vestiges</desc>');
+                        xml.push("><desc>vestiges</desc>");
                     } else {
                         node.nextSibling();
-                        if ((node.name as string) === 'CertLow') {
-                            xml.push('>');
+                        if ((node.name as string) === "CertLow") {
+                            xml.push(">");
                             node.parent();
                         } else {
-                            xml.push('/>');
+                            xml.push("/>");
 
                             // XSugar workaround
                             if (incompleteRange) {
-                                xml.push('-');
+                                xml.push("-");
                             }
 
                             node.parent();
@@ -302,21 +302,21 @@ export function toXml(input: string, topNode = "Document", root = parser.configu
                 }
                     break;
 
-                case 'Deletion':
+                case "Deletion": {
                     const rend = node.type.prop(rendProp);
                     xml.push(`<del rend="${rend}">`);
                     node.firstChild(); // Opening Delimiter
-                    node.nextSibling() // Content
+                    node.nextSibling(); // Content
                     break;
-
-                case 'InsertionAbove':
+                }
+                case "InsertionAbove":
                     xml.push('<add place="above">');
                     break;
-                case 'InsertionBelow':
+                case "InsertionBelow":
                     xml.push('<add place="below">');
                     break;
-                case 'InsertionMargin':
-                    node.firstChild() // AddPlace
+                case "InsertionMargin":
+                    node.firstChild(); // AddPlace
                     value = text(input, node);
                     value = value.substring(2, value.indexOf(":"));
                     if (value) {
@@ -324,49 +324,49 @@ export function toXml(input: string, topNode = "Document", root = parser.configu
                         xml.push(`<add place="${place}">`);
                     }
                     break;
-                case 'InsertionMarginSling':
+                case "InsertionMarginSling":
                     xml.push('<add rend="sling" place="margin">');
                     break;
-                case 'InsertionMarginUnderline':
+                case "InsertionMarginUnderline":
                     xml.push('<add rend="underline" place="margin">');
                     break;
 
-                case 'AbbrevUnresolved':
-                    xml.push('<abbr>');
+                case "AbbrevUnresolved":
+                    xml.push("<abbr>");
                     break;
 
-                case 'Abbrev':
-                    xml.push(`<expan>`);
+                case "Abbrev":
+                    xml.push("<expan>");
                     break;
 
-                case 'AbbrevInnerEx':
+                case "AbbrevInnerEx":
                     node.firstChild(); // opening delim "("
-                    node.nextSibling() // AbbrevInnerExContent
+                    node.nextSibling(); // AbbrevInnerExContent
                     node.firstChild(); // Expansion
                     value = text(input, node);
                     node.nextSibling();
-                    if (node.name === 'QuestionMark') {
-                        xml.push(`<ex cert="low">`);
+                    if (node.name === "QuestionMark") {
+                        xml.push("<ex cert=\"low\">");
                     } else {
-                        xml.push(`<ex>`);
+                        xml.push("<ex>");
                     }
-                    xml.push(value, `</ex>`);
+                    xml.push(value, "</ex>");
                     return false;
 
-                case 'NumberSpecial':
-                case 'NumberSpecialTick':
+                case "NumberSpecial":
+                case "NumberSpecialTick": {
                     // In NumberSpecial lezer sometimes inserts anonymous nodes (probably due to the template pattern
-                    // in ghe grammar).
+                    // in the grammar).
                     // This gets a tree cursor that does not include anonymous nodes
-                    let cursor = node.node.cursor();
+                    const cursor = node.node.cursor();
 
                     cursor.lastChild();                                    // Closing delim "#>"
                     cursor.prevSibling();
-                    let certLow = cursor.name === "CertLow";
-                    cursor.parent()
+                    const certLow = cursor.name === "CertLow";
+                    cursor.parent();
 
-                    cursor.firstChild()                                     // opening delim "<#"
-                    cursor.nextSibling()                                    // Number symbol inline content
+                    cursor.firstChild();                                     // opening delim "<#"
+                    cursor.nextSibling();                                    // Number symbol inline content
 
                     let hasInline = false;
 
@@ -380,10 +380,10 @@ export function toXml(input: string, topNode = "Document", root = parser.configu
                         if (!cursor.nextSibling()) break;
                     }
 
-                    let isTickWithoutContent = name === "NumberSpecialTick" && !hasInline;
+                    const isTickWithoutContent = name === "NumberSpecialTick" && !hasInline;
 
                     // Build num element
-                    xml.push('<num');
+                    xml.push("<num");
                     if (cursor.name === "NumberSpecialValue") {
                         value = text(input, cursor);
                         let numVal = text(input, cursor).substring(value.indexOf("=") + 1);
@@ -412,110 +412,110 @@ export function toXml(input: string, topNode = "Document", root = parser.configu
                     cursor.parent();
                     // Leave element open if needed
                     if (hasInline || certLow || isTickWithoutContent) {
-                        xml.push('>');
+                        xml.push(">");
                         if (isTickWithoutContent) {
-                            xml.push(" '")
+                            xml.push(" '");
                         }
                     } else {
-                        xml.push('/>');
+                        xml.push("/>");
                         return false;
                     }
                     break;
-
-                case 'OrthoReg':
-                    xml.push('<choice>');
+                }
+                case "OrthoReg":
+                    xml.push("<choice>");
                     break;
 
-                case 'OrthoRegReg':
+                case "OrthoRegReg": {
                     node.firstChild();
-                    let langAttr = '';
-                    let certAttr = '';
+                    let langAttr = "";
+                    let certAttr = "";
                     while (node.nextSibling()) {
-                        if (node.name === 'LanguageIdSpec') {
+                        if (node.name === "LanguageIdSpec") {
                             const lang = text(input, node).substring(1);
                             langAttr = ` xml:lang="${lang}"`;
-                        } else if (node.name === 'CertLow') {
+                        } else if (node.name === "CertLow") {
                             certAttr = ' cert="low"';
                         }
                     }
                     xml.push(`<reg${langAttr}${certAttr}>`);
                     node.parent();
                     break;
-
-                case 'OrthoRegOrig':
-                    xml.push('<orig>');
+                }
+                case "OrthoRegOrig":
+                    xml.push("<orig>");
                     break;
 
-                case 'AlternateReading':
+                case "AlternateReading":
                     xml.push('<app type="alternative">');
                     break;
-                case 'AlternateReadingLemma':
+                case "AlternateReadingLemma":
                     if (!node.firstChild()) {
-                        xml.push('<lem/>');
+                        xml.push("<lem/>");
                         return false;
                     } else {
-                        node.parent()
-                        xml.push('<lem>');
+                        node.parent();
+                        xml.push("<lem>");
                     }
                     break;
-                case 'AlternateReadingLemmaEmpty':
-                    xml.push('<lem/>');
+                case "AlternateReadingLemmaEmpty":
+                    xml.push("<lem/>");
                     break;
-                case 'AlternateReadingReading':
+                case "AlternateReadingReading":
                     if (node.firstChild()) {
-                        xml.push('<rdg>');
+                        xml.push("<rdg>");
                         node.parent();
                     } else {
-                        xml.push('<rdg/>');
+                        xml.push("<rdg/>");
                         return false;
                     }
                     break;
-                case 'AlternateReadingReadingEmpty':
-                    xml.push('<rdg/>');
+                case "AlternateReadingReadingEmpty":
+                    xml.push("<rdg/>");
                     break;
 
-                case 'ScribalCorrection':
-                    xml.push('<subst>');
+                case "ScribalCorrection":
+                    xml.push("<subst>");
                     break;
-                case 'ScribalCorrectionAdd':
+                case "ScribalCorrectionAdd":
                     xml.push('<add place="inline"');
                     if (node.firstChild()) {
-                        xml.push('>')
-                        node.parent()
+                        xml.push(">");
+                        node.parent();
                     } else {
-                        xml.push('/>')
+                        xml.push("/>");
                         node.parent();
                         return false;
                     }
                     break;
-                case 'ScribalCorrectionAddEmpty':
+                case "ScribalCorrectionAddEmpty":
                     xml.push('<add place="inline"/>');
                     break;
 
-                case 'ScribalCorrectionDel':
+                case "ScribalCorrectionDel":
                     xml.push('<del rend="corrected">');
                     break;
 
-                case 'SpellingCorrection':
-                    xml.push('<choice>');
+                case "SpellingCorrection":
+                    xml.push("<choice>");
                     break;
-                case 'SpellingCorrectionCorr':
+                case "SpellingCorrectionCorr":
                     node.lastChild();
-                    if (node.name === 'CertLow') {
+                    if (node.name === "CertLow") {
                         xml.push('<corr cert="low">');
                     } else {
-                        xml.push('<corr>');
+                        xml.push("<corr>");
                     }
                     node.parent();
                     break;
-                case 'SpellingCorrectionSic':
-                    xml.push('<sic>');
+                case "SpellingCorrectionSic":
+                    xml.push("<sic>");
                     break;
 
-                case 'EditorialCorrection':
+                case "EditorialCorrection":
                     xml.push('<app type="editorial">');
                     break;
-                case 'EditorialCorrectionLemma':
+                case "EditorialCorrectionLemma":
                     node.firstChild();
                     if (node.name === "Citation") {
                         xml.push(`<lem resp="${text(input, node).substring(1)}"/>`);
@@ -529,17 +529,17 @@ export function toXml(input: string, topNode = "Document", root = parser.configu
                     if (node.name === "Citation") {
                         xml.push(`<lem resp="${text(input, node).substring(1)}">`);
                     } else {
-                        xml.push('<lem>');
+                        xml.push("<lem>");
                     }
                     node.parent();
                     break;
-                case 'EditorialCorrectionLemmaEmpty':
-                    xml.push('<lem/>');
+                case "EditorialCorrectionLemmaEmpty":
+                    xml.push("<lem/>");
                     break;
-                case 'EditorialCorrectionReading':
+                case "EditorialCorrectionReading": {
                     const isEmpty = !node.firstChild();
                     if (isEmpty) {
-                        xml.push('<rdg/>');
+                        xml.push("<rdg/>");
                         node.parent();
                         return false;
                     }
@@ -556,20 +556,21 @@ export function toXml(input: string, topNode = "Document", root = parser.configu
                     if (node.name === "Citation") {
                         xml.push(`<rdg resp="${text(input, node).substring(1)}">`);
                     } else {
-                        xml.push('<rdg>');
+                        xml.push("<rdg>");
                     }
-                    node.parent()
+                    node.parent();
                     break;
-                case 'EditorialCorrectionReadingEmpty':
-                    xml.push('<rdg/>');
+                }
+                case "EditorialCorrectionReadingEmpty":
+                    xml.push("<rdg/>");
                     break;
 
-                case 'SuppliedOmitted':
-                case 'SuppliedLost':
-                case 'AbbrevInnerSuppliedLost':
-                case 'SuppliedParallel':
-                case 'AbbrevInnerSuppliedParallel':
-                case 'SuppliedParallelLost':
+                case "SuppliedOmitted":
+                case "SuppliedLost":
+                case "AbbrevInnerSuppliedLost":
+                case "SuppliedParallel":
+                case "AbbrevInnerSuppliedParallel":
+                case "SuppliedParallelLost": {
                     let reason;
                     switch (name) {
                         case "SuppliedOmitted":
@@ -586,7 +587,7 @@ export function toXml(input: string, topNode = "Document", root = parser.configu
                             break;
                     }
 
-                    let evidenceAttr = name === "SuppliedParallel" || name === "SuppliedParallelLost" || name === "AbbrevInnerSuppliedParallel"
+                    const evidenceAttr = name === "SuppliedParallel" || name === "SuppliedParallelLost" || name === "AbbrevInnerSuppliedParallel"
                         ? ' evidence="parallel"' : "";
 
                     // find CertLow?
@@ -595,41 +596,41 @@ export function toXml(input: string, topNode = "Document", root = parser.configu
                         node.prevSibling();
                     }
                     const certLowAttr = node.name === "CertLow"
-                        ? ` cert="low"` : "";
+                        ? " cert=\"low\"" : "";
 
                     xml.push(`<supplied${evidenceAttr} reason="${reason}"${certLowAttr}>`);
 
                     node.parent();
                     break;
-
-                case 'TextTall':
+                }
+                case "TextTall":
                     xml.push('<hi rend="tall">');
                     break;
-                case 'TextSuperscript':
+                case "TextSuperscript":
                     xml.push('<hi rend="superscript">');
                     break;
-                case 'TextSubscript':
+                case "TextSubscript":
                     xml.push('<hi rend="subscript">');
                     break;
-                case 'Supraline':
+                case "Supraline":
                     xml.push('<hi rend="supraline">');
                     break;
-                case 'SupralineMacronContent':
+                case "SupralineMacronContent":
                     xml.push(removeCombiningMarks(text(input, node), 0x304));
                     return false;
-                case 'SupralineUnderline':
+                case "SupralineUnderline":
                     xml.push('<hi rend="supraline-underline">');
                     break;
 
-                case 'Surplus':
-                    xml.push('<surplus>');
+                case "Surplus":
+                    xml.push("<surplus>");
                     break;
 
-                case 'EditorialNote':
+                case "EditorialNote":
                     xml.push('<note xml:lang="en">');
                     break;
 
-                case 'EditorialNoteRef': {
+                case "EditorialNoteRef": {
                     node.firstChild();
                     const ref = text(input, node);
                     node.nextSibling();
@@ -637,30 +638,30 @@ export function toXml(input: string, topNode = "Document", root = parser.configu
                     return false;
                 }
 
-                case 'Quotation':
-                    xml.push('<q>');
+                case "Quotation":
+                    xml.push("<q>");
                     break;
 
-                case 'Orig':
+                case "Orig":
                     node.firstChild(); // Opening Delim
                     node.nextSibling(); // Content
                     xml.push(`<orig>${text(input, node)}</orig>`);
                     return false;
 
-                case 'Milestone':
+                case "Milestone":
                     xml.push(`<milestone rend="${node.type.prop(rendProp)}" unit="undefined"/>`);
                     return false;
 
-                case 'Handshift':
+                case "Handshift":
                     node.firstChild(); // HandshiftHand
                     xml.push(`<handShift new="${text(input, node)}"`);
                     if (node.nextSibling()) { // can only be CertLow per grammar
                         xml.push(' cert="low"');
                     }
-                    xml.push('/>');
+                    xml.push("/>");
                     break;
 
-                case 'Diacritical':
+                case "Diacritical": {
                     node.firstChild(); // GapNumber, DiacriticUnclear, DiacritChar or "[" (LostNumber open)
 
                     // Xsugar compatibility workaround
@@ -675,16 +676,16 @@ export function toXml(input: string, topNode = "Document", root = parser.configu
                     }
 
                     value = text(input, node);
-                    let innerXml = '';
+                    let innerXml = "";
                     switch (node.name) {
                         case "GapNumber":
-                            innerXml = `<gap reason="illegible" quantity="${findNumber(input, node)}" unit="character"/>`
+                            innerXml = `<gap reason="illegible" quantity="${findNumber(input, node)}" unit="character"/>`;
                             break;
                         case "LostNumber":
                             innerXml = `<gap reason="lost" quantity="${findNumber(input, node)}" unit="character"/>`;
                             break;
                         case "DiacriticUnclear":
-                            innerXml = `<unclear>${removeCombiningMarks(text(input, node), 0x323)}</unclear>`
+                            innerXml = `<unclear>${removeCombiningMarks(text(input, node), 0x323)}</unclear>`;
                             break;
                         case "DiacritChar":
                             innerXml = text(input, node);
@@ -695,39 +696,40 @@ export function toXml(input: string, topNode = "Document", root = parser.configu
                     }
                     node.nextSibling(); // "(" (DiacriticSymbol open)
                     node.nextSibling(); // DiacriticSymbol
-                    let closeHiTags = `</hi>`;
+                    let closeHiTags = "</hi>";
                     xml.push(`<hi rend="${diacriticValue(text(input, node))}">`);
 
                     if (node.nextSibling() && node.name === "DiacriticSymbol") { // second DiacriticSymbol
                         xml.push(`<hi rend="${diacriticValue(text(input, node))}">`);
-                        closeHiTags += `</hi>`
+                        closeHiTags += "</hi>";
                     }
 
                     node.parent(); // Diacritical
                     node.lastChild(); // ")" or CertLow
-                    xml.push(innerXml, node.name === "CertLow" ? '<certainty match=".." locus="value"/>' : '', closeHiTags);
+                    xml.push(innerXml, node.name === "CertLow" ? '<certainty match=".." locus="value"/>' : "", closeHiTags);
                     node.parent();
                     return false;
-                case 'Glyph': {
+                }
+                case "Glyph": {
                     node.firstChild(); // Opening Delim
                     node.nextSibling();
                     const glyphType = text(input, node);
                     node.nextSibling();
 
-                    const isUnclear = node.name === 'QuestionMark';
+                    const isUnclear = node.name === "QuestionMark";
                     if (isUnclear) {
-                        xml.push('<unclear>');
+                        xml.push("<unclear>");
                         node.nextSibling();
                     }
 
                     xml.push(`<g type="${glyphType}"`);
 
-                    if (node.name === 'Text') {
-                        xml.push('>');
+                    if (node.name === "Text") {
+                        xml.push(">");
                     } else {
-                        xml.push('/>');
+                        xml.push("/>");
                         if (isUnclear) {
-                            xml.push('</unclear>');
+                            xml.push("</unclear>");
                         }
                         node.parent();
                         selfClosingNodeSet.add(node.node);
@@ -737,45 +739,45 @@ export function toXml(input: string, topNode = "Document", root = parser.configu
                     node.prevSibling();
                     break;
                 }
-                case 'Filler': {
+                case "Filler": {
                     node.firstChild(); // Opening Delim
                     node.nextSibling();
                     const rendValue = text(input, node); // GlyphWord
                     node.nextSibling(); // Closing filler delim ")"
                     node.nextSibling();
 
-                    const isUnclear = node.name === 'QuestionMark';
+                    const isUnclear = node.name === "QuestionMark";
                     if (isUnclear) {
-                        xml.push('<unclear>');
+                        xml.push("<unclear>");
                     }
 
                     xml.push(`<g rend="${rendValue}" type="filler"/>`);
 
                     if (isUnclear) {
-                        xml.push('</unclear>');
+                        xml.push("</unclear>");
                     }
 
                     return false;
                 }
-                case 'Figure':
+                case "Figure":
                     node.firstChild(); // FigureDesc
-                    xml.push(`<figure><figDesc>${text(input, node)}</figDesc></figure>`)
+                    xml.push(`<figure><figDesc>${text(input, node)}</figDesc></figure>`);
                     return false;
-                case 'OmittedLanguage': {
+                case "OmittedLanguage": {
                     node.firstChild(); // Opening delim: "(Lang:"
                     node.nextSibling(); // Language
                     const language = text(input, node);
                     node.nextSibling();
 
-                    let quantityOrExtent = '';
-                    let precisionAttr = '';
+                    let quantityOrExtent = "";
+                    let precisionAttr = "";
 
-                    if (node.name === 'GapNumberCirca') {
+                    if (node.name === "GapNumberCirca") {
                         quantityOrExtent = ` quantity="${text(input, node).substring(3)}"`;
                         precisionAttr = ' precision="low"';
-                    } else if (node.name === 'GapNumber') {
+                    } else if (node.name === "GapNumber") {
                         quantityOrExtent = ` quantity="${text(input, node)}"`;
-                    } else if (node.name === 'QuestionMark') {
+                    } else if (node.name === "QuestionMark") {
                         quantityOrExtent = ' extent="unknown"';
                     }
 
@@ -783,30 +785,30 @@ export function toXml(input: string, topNode = "Document", root = parser.configu
                     xml.push(`<gap reason="ellipsis"${quantityOrExtent} unit="${node.type.prop(unitProp)}"${precisionAttr}><desc>${language}</desc>`);
 
                     node.lastChild(); // check for CertLow
-                    if (node.name === 'CertLow') {
+                    if (node.name === "CertLow") {
                         xml.push('<certainty match=".." locus="name"/>');
                     }
-                    xml.push('</gap>');
+                    xml.push("</gap>");
                     return false;
                 }
-                case 'Untranscribed': {
-                    let quantityOrExtent = '';
-                    let precisionAttr = '';
+                case "Untranscribed": {
+                    let quantityOrExtent = "";
+                    let precisionAttr = "";
 
                     node.firstChild(); // Opening delim
                     node.nextSibling(); // number/range/question mark
 
-                    if (node.name === 'GapNumberCirca') {
+                    if (node.name === "GapNumberCirca") {
                         quantityOrExtent = ` quantity="${text(input, node).substring(3)}"`;
                         precisionAttr = ' precision="low"';
-                    } else if (node.name === 'GapNumber') {
+                    } else if (node.name === "GapNumber") {
                         quantityOrExtent = ` quantity="${text(input, node)}"`;
-                    } else if (node.name === 'GapNumberRange') {
+                    } else if (node.name === "GapNumberRange") {
                         const range = /(\d+)-(\d+)/.exec(text(input, node));
                         if (range) {
                             quantityOrExtent = ` atLeast="${range[1]}" atMost="${range[2]}"`;
                         }
-                    } else if (node.name === 'QuestionMark') {
+                    } else if (node.name === "QuestionMark") {
                         quantityOrExtent = ' extent="unknown"';
                     }
 
@@ -815,50 +817,50 @@ export function toXml(input: string, topNode = "Document", root = parser.configu
 
                     node.lastChild(); // Closing delim ")"
                     node.prevSibling();
-                    if (node.name === 'CertLow') {
+                    if (node.name === "CertLow") {
                         xml.push('<certainty match=".." locus="name"/>');
                     }
 
-                    xml.push('</gap>');
+                    xml.push("</gap>");
                     return false;
                 }
-                case 'Inline':
+                case "Inline":
                     break;
 
-                case 'CertLow':
+                case "CertLow": {
                     const parent = node.node.parent;
                     if (parent) {
-                        if (['AbbrevUnresolved'
+                        if (["AbbrevUnresolved"
                         ].includes(parent.name)) {
                             xml.push('<certainty locus="name" match=".."/>');
-                        } else if (['Illegible',
-                            'Vestige', 'Gap', 'GapPrecLow', 'InsertionBelow', 'InsertionAbove', 'InsertionMargin',
-                            'InsertionMarginUnderline', 'InsertionMarginSling', 'LostLines', 'GapOmitted',
-                            'Vacat'].includes(parent.name)) {
+                        } else if (["Illegible",
+                            "Vestige", "Gap", "GapPrecLow", "InsertionBelow", "InsertionAbove", "InsertionMargin",
+                            "InsertionMarginUnderline", "InsertionMarginSling", "LostLines", "GapOmitted",
+                            "Vacat"].includes(parent.name)) {
                             xml.push('<certainty match=".." locus="name"/>');
-                        } else if (['EditorialCorrectionLemma', 'EditorialCorrectionReading', 'AlternateReadingLemma',
-                            'AlternateReadingReading', 'ScribalCorrectionAdd', 'ScribalCorrectionDel', 'SpellingCorrectionSic',
-                            'TextSubscript', 'Surplus', 'Deletion', 'OrthoRegOrig'
+                        } else if (["EditorialCorrectionLemma", "EditorialCorrectionReading", "AlternateReadingLemma",
+                            "AlternateReadingReading", "ScribalCorrectionAdd", "ScribalCorrectionDel", "SpellingCorrectionSic",
+                            "TextSubscript", "Surplus", "Deletion", "OrthoRegOrig"
                         ].includes(parent.name)) {
                             xml.push('<certainty match=".." locus="value"/>');
-                        } else if (['NumberSpecial', 'NumberSpecialTick'].includes(parent.name)) {
+                        } else if (["NumberSpecial", "NumberSpecialTick"].includes(parent.name)) {
                             xml.push('<certainty match="../@value" locus="value"/>');
                         }
                     }
                     return false;
-
-                case 'GlyphContent':
-                case 'LanguageIdSpec':
-                case 'Citation':
-                case 'NumberSpecialValue':
-                case 'NumberSpecialTickNoContent':
-                case 'FracPart':
-                case 'RangePart':
-                case 'FracNoValue':
-                case 'QuestionMark':
+                }
+                case "GlyphContent":
+                case "LanguageIdSpec":
+                case "Citation":
+                case "NumberSpecialValue":
+                case "NumberSpecialTickNoContent":
+                case "FracPart":
+                case "RangePart":
+                case "FracNoValue":
+                case "QuestionMark":
                     return false;
 
-                case 'AbbrevInner':
+                case "AbbrevInner":
                     // node.firstChild()
                     break;
 
@@ -872,144 +874,144 @@ export function toXml(input: string, topNode = "Document", root = parser.configu
         },
         leave: (node) => {
             switch (node.name) {
-                case 'AbbrevUnresolved':
-                    xml.push('</abbr>');
+                case "AbbrevUnresolved":
+                    xml.push("</abbr>");
                     break;
-                case 'Abbrev':
-                    xml.push('</expan>');
+                case "Abbrev":
+                    xml.push("</expan>");
                     break;
-                case 'Ab':
+                case "Ab":
                     if (!selfClosingNodeSet.has(node.node)) {
-                        xml.push('</ab>');
+                        xml.push("</ab>");
                     }
                     break;
-                case 'Div':
-                case 'Recto':
-                case 'Verso':
-                case 'Fragment':
-                case 'Part':
-                case 'Column':
-                case 'Folio':
-                case 'Side':
-                    xml.push('</div>');
+                case "Div":
+                case "Recto":
+                case "Verso":
+                case "Fragment":
+                case "Part":
+                case "Column":
+                case "Folio":
+                case "Side":
+                    xml.push("</div>");
                     break;
-                case 'SuppliedOmitted':
-                case 'SuppliedLost':
-                case 'SuppliedParallel':
-                case 'SuppliedParallelLost':
-                case 'AbbrevInnerSuppliedLost':
-                case 'AbbrevInnerSuppliedParallel':
+                case "SuppliedOmitted":
+                case "SuppliedLost":
+                case "SuppliedParallel":
+                case "SuppliedParallelLost":
+                case "AbbrevInnerSuppliedLost":
+                case "AbbrevInnerSuppliedParallel":
                     if (!selfClosingNodeSet.has(node.node)) {
-                        xml.push('</supplied>');
+                        xml.push("</supplied>");
                     }
                     break;
-                case 'Deletion':
-                case 'ScribalCorrectionDel':
-                    xml.push('</del>');
+                case "Deletion":
+                case "ScribalCorrectionDel":
+                    xml.push("</del>");
                     break;
-                case 'InsertionAbove':
-                case 'InsertionBelow':
-                case 'InsertionMargin':
-                case 'InsertionMarginSling':
-                case 'InsertionMarginUnderline':
-                case 'ScribalCorrectionAdd':
+                case "InsertionAbove":
+                case "InsertionBelow":
+                case "InsertionMargin":
+                case "InsertionMarginSling":
+                case "InsertionMarginUnderline":
+                case "ScribalCorrectionAdd":
                     if (!selfClosingNodeSet.has(node.node)) {
-                        xml.push('</add>');
+                        xml.push("</add>");
                     }
                     break;
-                case 'TextTall':
-                case 'TextSuperscript':
-                case 'TextSubscript':
-                case 'Supraline':
-                case 'SupralineUnderline':
-                    xml.push('</hi>');
+                case "TextTall":
+                case "TextSuperscript":
+                case "TextSubscript":
+                case "Supraline":
+                case "SupralineUnderline":
+                    xml.push("</hi>");
                     break;
-                case 'Surplus':
-                    xml.push('</surplus>');
+                case "Surplus":
+                    xml.push("</surplus>");
                     break;
-                case 'EditorialNote':
-                    xml.push('</note>');
+                case "EditorialNote":
+                    xml.push("</note>");
                     break;
-                case 'Quotation':
-                    xml.push('</q>');
+                case "Quotation":
+                    xml.push("</q>");
                     break;
-                case 'Foreign':
-                    xml.push('</foreign>');
+                case "Foreign":
+                    xml.push("</foreign>");
                     break;
-                case 'OrthoRegReg':
-                    xml.push('</reg>');
+                case "OrthoRegReg":
+                    xml.push("</reg>");
                     break;
-                case 'OrthoRegOrig':
-                    xml.push('</orig>');
+                case "OrthoRegOrig":
+                    xml.push("</orig>");
                     break;
-                case 'OrthoReg':
-                case 'SpellingCorrection':
-                    xml.push('</choice>')
+                case "OrthoReg":
+                case "SpellingCorrection":
+                    xml.push("</choice>");
                     break;
-                case 'AlternateReading':
-                case 'EditorialCorrection':
-                    xml.push('</app>');
+                case "AlternateReading":
+                case "EditorialCorrection":
+                    xml.push("</app>");
                     break;
-                case 'AlternateReadingLemma':
-                case 'EditorialCorrectionLemma':
+                case "AlternateReadingLemma":
+                case "EditorialCorrectionLemma":
                     if (!selfClosingNodeSet.has(node.node)) {
-                        xml.push('</lem>');
+                        xml.push("</lem>");
                     }
                     break;
-                case 'AlternateReadingReading':
-                case 'EditorialCorrectionReading':
-                    xml.push('</rdg>')
+                case "AlternateReadingReading":
+                case "EditorialCorrectionReading":
+                    xml.push("</rdg>");
                     break;
-                case 'ScribalCorrection':
-                    xml.push('</subst>');
+                case "ScribalCorrection":
+                    xml.push("</subst>");
                     break;
-                case 'SpellingCorrectionCorr':
-                    xml.push('</corr>');
+                case "SpellingCorrectionCorr":
+                    xml.push("</corr>");
                     break;
-                case 'SpellingCorrectionSic':
-                    xml.push('</sic>')
+                case "SpellingCorrectionSic":
+                    xml.push("</sic>");
                     break;
-                case 'NumberSpecial':
-                case 'NumberSpecialTick':
+                case "NumberSpecial":
+                case "NumberSpecialTick":
                     if (!selfClosingNodeSet.has(node.node)) {
-                        xml.push('</num>');
+                        xml.push("</num>");
                     }
                     break;
-                case 'Vestige':
-                case 'Gap':
-                case 'GapOmitted':
-                case 'GapPrecLow':
-                case 'Illegible':
-                case 'LostLines':
+                case "Vestige":
+                case "Gap":
+                case "GapOmitted":
+                case "GapPrecLow":
+                case "Illegible":
+                case "LostLines":
                     if (!selfClosingNodeSet.has(node.node)) {
-                        xml.push(`</gap>`)
+                        xml.push("</gap>");
                     }
                     break;
-                case 'Vacat':
+                case "Vacat":
                     if (!selfClosingNodeSet.has(node.node)) {
-                        xml.push(`</space>`)
+                        xml.push("</space>");
                     }
                     break;
-                case 'Glyph':
+                case "Glyph":
                     if (!selfClosingNodeSet.has(node.node)) {
-                        xml.push('</g>');
+                        xml.push("</g>");
 
                         // need to close unclear?
-                        if (node.node.getChild('QuestionMark')) {
-                            xml.push('</unclear>');
+                        if (node.node.getChild("QuestionMark")) {
+                            xml.push("</unclear>");
                         }
                     }
                     break;
             }
         }
     });
-    if (root.type.name === 'Inline') {
-        xml.push('</ab>');
+    if (root.type.name === "Inline") {
+        xml.push("</ab>");
     }
 
     if (needsCloseEdition) {
-        xml.push(`</div>`);
+        xml.push("</div>");
     }
 
-    return xml.join('');
+    return xml.join("");
 }

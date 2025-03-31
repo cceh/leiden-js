@@ -1,24 +1,22 @@
-import { promises as fs } from 'fs';
-import { dirname, join } from 'path';
-import { JSDOM } from 'jsdom';
-import { Agent } from 'http';
-
+import { promises as fs } from "fs";
+import { dirname, join } from "path";
+import { JSDOM } from "jsdom";
 
 
 const configs = {
     edition: {
-        sourcePath: 'test/data/idp.data/DDB_EpiDoc_XML',
-        targetPath: 'test/data/roundtrips/DDB_EpiDoc_XML',
+        sourcePath: "test/data/idp.data/DDB_EpiDoc_XML",
+        targetPath: "test/data/roundtrips/DDB_EpiDoc_XML",
         selector: 'div[type="edition"]',
-        type: 'edition',
-        conversion: 'epidoc'
+        type: "edition",
+        conversion: "epidoc"
     },
     translation: {
-        sourcePath: 'test/data/idp.data/HGV_trans_EpiDoc',
-        targetPath: 'test/data/roundtrips/HGV_trans_EpiDoc',
-        selector: 'body',
-        type: 'translation',
-        conversion: 'translation_epidoc'
+        sourcePath: "test/data/idp.data/HGV_trans_EpiDoc",
+        targetPath: "test/data/roundtrips/HGV_trans_EpiDoc",
+        selector: "body",
+        type: "translation",
+        conversion: "translation_epidoc"
     }
 };
 
@@ -33,7 +31,7 @@ async function getXmlFiles(dir: string): Promise<string[]> {
 
             if (entry.isDirectory()) {
                 await traverse(path);
-            } else if (entry.name.endsWith('.xml')) {
+            } else if (entry.name.endsWith(".xml")) {
                 xmlPaths.push(path);
             }
         }
@@ -43,13 +41,13 @@ async function getXmlFiles(dir: string): Promise<string[]> {
     return xmlPaths;
 }
 
-async function xsugarConvert(input: string, direction: 'xml2nonxml' | 'nonxml2xml', conversion: string): Promise<string> {
+async function xsugarConvert(input: string, direction: "xml2nonxml" | "nonxml2xml", conversion: string): Promise<string> {
     const encodedInput = encodeURIComponent(input);
     const postData = `content=${encodedInput}&type=${conversion}&direction=${direction}`;
-    const response = await fetch('http://localhost:9999', {
-        method: 'POST',
+    const response = await fetch("http://localhost:9999", {
+        method: "POST",
         headers: {
-            'Content-Type': 'application/x-www-form-urlencoded'
+            "Content-Type": "application/x-www-form-urlencoded"
         },
         body: postData
     });
@@ -68,16 +66,16 @@ async function xsugarConvert(input: string, direction: 'xml2nonxml' | 'nonxml2xm
 
 async function processXmlFile(
     filePath: string,
-    config: typeof configs['edition'] | typeof configs['translation'],
+    config: typeof configs["edition"] | typeof configs["translation"],
     currentIndex: number,
     totalFiles: number
 ): Promise<void> {
     const txtFilePath = filePath
         .replace(config.sourcePath, config.targetPath)
-        .replace('.xml', '.txt');
+        .replace(".xml", ".txt");
     const roundtripFilePath = filePath
         .replace(config.sourcePath, config.targetPath)
-        .replace('.xml', '.roundtrip.xml');
+        .replace(".xml", ".roundtrip.xml");
 
     await fs.mkdir(dirname(roundtripFilePath), { recursive: true });
     await fs.mkdir(dirname(txtFilePath), { recursive: true });
@@ -94,8 +92,8 @@ async function processXmlFile(
 
     try {
         // Read and process XML
-        const xmlContent = await fs.readFile(filePath, 'utf-8');
-        const dom = new JSDOM(xmlContent, { contentType: 'text/xml' });
+        const xmlContent = await fs.readFile(filePath, "utf-8");
+        const dom = new JSDOM(xmlContent, { contentType: "text/xml" });
         const element = dom.window.document.querySelector(config.selector);
 
         if (!element) {
@@ -104,18 +102,18 @@ async function processXmlFile(
         }
 
         // Prepare and encode XML
-        const processedXml = element.outerHTML.replace(` xmlns="http://www.tei-c.org/ns/1.0"`, '');
+        const processedXml = element.outerHTML.replace(" xmlns=\"http://www.tei-c.org/ns/1.0\"", "");
 
         // STEP 1: Convert to leiden
-        const xsugarLeiden = await xsugarConvert(processedXml, 'xml2nonxml', config.conversion);
+        const xsugarLeiden = await xsugarConvert(processedXml, "xml2nonxml", config.conversion);
 
         // STEP 2: Roundtrip to XML
-        const xsugarXml = await xsugarConvert(xsugarLeiden, 'nonxml2xml', config.conversion);
+        const xsugarXml = await xsugarConvert(xsugarLeiden, "nonxml2xml", config.conversion);
         await fs.writeFile(roundtripFilePath, xsugarXml);
         console.log(`[${currentIndex}/${totalFiles}] Created ${roundtripFilePath}`);
 
         // STEP 3: Roundtrip-XML to Roundtrip-Leiden
-        const roundtripLeiden = await xsugarConvert(xsugarXml, 'xml2nonxml', config.conversion);
+        const roundtripLeiden = await xsugarConvert(xsugarXml, "xml2nonxml", config.conversion);
         await fs.writeFile(txtFilePath, roundtripLeiden);
         console.log(`[${currentIndex}/${totalFiles}] Created ${txtFilePath}`);
 
@@ -138,7 +136,7 @@ async function processFiles(configType: keyof typeof configs) {
         }
         console.log(`Processing complete for ${configType}`);
     } catch (error) {
-        console.error('Error:', error.message);
+        console.error("Error:", error.message);
         process.exit(1);
     }
 }
@@ -147,8 +145,8 @@ async function processFiles(configType: keyof typeof configs) {
 const type = process.argv[2] as keyof typeof configs;
 
 if (!type || !configs[type]) {
-    console.error('Provide a valid type of data to prepare: edition or translation');
-    console.error('Usage: tsx script.ts <type>');
+    console.error("Provide a valid type of data to prepare: edition or translation");
+    console.error("Usage: tsx script.ts <type>");
     process.exit(1);
 }
 

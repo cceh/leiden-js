@@ -1,7 +1,7 @@
-import {CommandTarget, appendContent, deleteRange, insertAt} from "@leiden-plus/lib/language";
-import {SyntaxNode} from "@lezer/common";
-import {EditorState} from "@codemirror/state";
-import {syntaxTree} from "@codemirror/language";
+import { appendContent, CommandTarget, deleteRange, insertAt } from "@leiden-plus/lib/language";
+import { SyntaxNode } from "@lezer/common";
+import { EditorState } from "@codemirror/state";
+import { syntaxTree } from "@codemirror/language";
 
 const certLowWrappingNodes = [
     "OrthoRegReg", "OrthoRegOrig", "AlternateReadingLemma", "AlternateReadingReading", "ScribalCorrectionAdd",
@@ -10,59 +10,60 @@ const certLowWrappingNodes = [
     "SuppliedLost", "Deletion", "AbbrevUnresolved", "AbbrevInnerEx", "AbbrevInnerSuppliedLost", "Surplus",
     "InsertionAbove", "InsertionBelow", "InsertionMargin", "InsertionMarginSling", "InsertionMarginUnderline",
     "TextSubscript", "NumberSpecial", "NumberSpecialTick", "GapOmitted", "Gap", "OmittedLanguage", "Untranscribed"
-]
+];
 
 const certLowAtomicNodes = [
     "Diacritical", "Handshift", "Illegible", "Vestige", "LostLines", "Vacat"
-]
+];
 
-const certLowNodes = [...certLowWrappingNodes, ...certLowAtomicNodes]
+const certLowNodes = [...certLowWrappingNodes, ...certLowAtomicNodes];
 
 
 function addCertLowToWrappingNode(target: CommandTarget, wrappingNode: SyntaxNode): boolean {
     if (wrappingNode.name === "AbbrevInnerEx") {
-        return appendContent(target, wrappingNode, "?")
+        return appendContent(target, wrappingNode, "?");
     } else {
-        return appendContent(target, wrappingNode, "(?)")
+        return appendContent(target, wrappingNode, "(?)");
     }
 }
 
 function addCertLowToAtomicNode(target: CommandTarget, atomicNode: SyntaxNode): boolean {
     if (atomicNode.name === "Handshift") {
-        const handshiftHand = atomicNode.getChild("HandshiftHand")
+        const handshiftHand = atomicNode.getChild("HandshiftHand");
         if (!handshiftHand) {
-            return false
+            return false;
         }
-        return appendContent(target, handshiftHand, "(?)")
+        return appendContent(target, handshiftHand, "(?)");
     } else if (atomicNode.name === "Diacritical") {
-        return appendContent(target, atomicNode, "(?)")
+        return appendContent(target, atomicNode, "(?)");
     } else if (atomicNode.name === "Vestige") {
         if (atomicNode.getChild("VestigStandalone")) {
-            return insertAt(target, atomicNode.to - 1, "(?)")
+            return insertAt(target, atomicNode.to - 1, "(?)");
         }
 
     }
 
-    return appendContent(target, atomicNode, "(?) ")
+    return appendContent(target, atomicNode, "(?) ");
 }
 
 export function removeCertLow(target: CommandTarget, parentNode: SyntaxNode) {
-    const certLow = getCertLow(parentNode)
+    const certLow = getCertLow(parentNode);
     if (!certLow) {
-        console.error("No certLow node found")
-        return false
+        console.error("No certLow node found");
+        return false;
     }
 
-    let {from, to} = certLow
+    const { from } = certLow;
+    let { to } = certLow;
     const nodeName = parentNode.name;
     if (certLowAtomicNodes.includes(nodeName)) {
-        let isStandaloneVestige = parentNode.getChild("VestigStandalone")
+        const isStandaloneVestige = parentNode.getChild("VestigStandalone");
         if (nodeName !== "Handshift" && nodeName !== "Diacritical" && !isStandaloneVestige) {
             to = to + 1;
         }
     }
 
-    return deleteRange(target, {from, to})
+    return deleteRange(target, { from, to });
 }
 
 export function findClosestCertLowAncestor(state: EditorState) {
@@ -70,9 +71,9 @@ export function findClosestCertLowAncestor(state: EditorState) {
     let current: SyntaxNode | null = tree.resolve(state.selection.ranges[0].from);
     while (current) {
         if (acceptsCertLow(state, current)) {
-            break
+            break;
         }
-        current = current.parent
+        current = current.parent;
     }
 
     return current;
@@ -81,25 +82,25 @@ export function findClosestCertLowAncestor(state: EditorState) {
 export function addCertLowAtCursorPosition(target: CommandTarget) {
     const availableAncestor = findClosestCertLowAncestor(target.state);
     if (availableAncestor && hasCertLow(availableAncestor)) {
-        addCertLowToWrappingNode(target, availableAncestor)
+        addCertLowToWrappingNode(target, availableAncestor);
     }
 }
 
 export function addCertLow(target: CommandTarget, node: SyntaxNode) {
     if (certLowWrappingNodes.includes(node.name)) {
-        addCertLowToWrappingNode(target, node)
+        addCertLowToWrappingNode(target, node);
     } else {
-        addCertLowToAtomicNode(target, node)
+        addCertLowToAtomicNode(target, node);
     }
 }
 
 export function acceptsCertLow(state: EditorState, node: SyntaxNode) {
     if (node.name === "Diacritical") {
-        const symbolNode = node.getChild("DiacriticSymbol")
+        const symbolNode = node.getChild("DiacriticSymbol");
         if (!symbolNode) {
-            return false
+            return false;
         }
-        const symbol = state.doc.sliceString(symbolNode.from, symbolNode.to)
+        const symbol = state.doc.sliceString(symbolNode.from, symbolNode.to);
         return symbol === "¨";
     }
 

@@ -1,4 +1,4 @@
-import * as chai from 'chai';
+import * as chai from "chai";
 import { readdirSync, readFileSync } from "fs";
 import { join } from "path";
 import { JSDOM } from "jsdom";
@@ -25,7 +25,7 @@ function getTextFiles(dir: string): string[] {
 
                 if (entry.isDirectory()) {
                     traverse(path);
-                } else if (entry.isFile() && entry.name.endsWith('.txt')) {
+                } else if (entry.isFile() && entry.name.endsWith(".txt")) {
                     textPaths.push(path);
                 }
             }
@@ -58,8 +58,8 @@ export function processDir(
 
     textFiles.forEach(textFile => {
         it(textFile, function () {
-            const fileName = textFile.split('/').pop() || '';
-            const basename = fileName.substring(0, fileName.lastIndexOf('.'));
+            const fileName = textFile.split("/").pop() || "";
+            const basename = fileName.substring(0, fileName.lastIndexOf("."));
 
             // Check ignore list first
             if (ignore.includes(basename)) {
@@ -69,19 +69,19 @@ export function processDir(
             }
 
             // Read file content once
-            const textContent = readFileSync(textFile, 'utf-8');
+            const textContent = readFileSync(textFile, "utf-8");
 
             // Run the content hook
             beforeProcess.call(this, textFile, textContent);
 
             if (this.pending === false) {
-                console.log(this)
+                console.log(this);
             }
 
             // If the test wasn't skipped, continue processing
-            const xmlFilePath = textFile.replace('.txt', '.roundtrip.xml');
-            const origXml = readFileSync(xmlFilePath, 'utf-8')
-                .replace(` xmlns:xml="http://www.w3.org/XML/1998/namespace"`, "");
+            const xmlFilePath = textFile.replace(".txt", ".roundtrip.xml");
+            const origXml = readFileSync(xmlFilePath, "utf-8")
+                .replace(" xmlns:xml=\"http://www.w3.org/XML/1998/namespace\"", "");
             const myXml = toXml(textContent);
 
             const myXmlNorm = myXml.normalize();
