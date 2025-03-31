@@ -403,7 +403,7 @@ export const leidenHighlightStyle = HighlightStyle.define([
 
 
 export const leidenHighlightStyleDark = HighlightStyle.define([
-    ...defaultHighlightStyle.specs,
+    ...oneDarkHighlightStyle.specs,
 
     {tag: leidenTags.gapNumber,
         filter: "brightness(130%)"},
