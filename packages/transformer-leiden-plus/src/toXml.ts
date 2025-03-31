@@ -50,7 +50,6 @@ export function toXml(input: string, topNode = "Document", root = parser.configu
 
     const xml: string[] = [];
     let needsCloseEdition = false;
-    let value;
     const selfClosingNodeSet = new WeakSet<SyntaxNode>(); // TODO: use lezer NodeWeakMap?
     root.iterate({
         enter: (node: TreeCursor) => {
@@ -108,8 +107,8 @@ export function toXml(input: string, topNode = "Document", root = parser.configu
                 case "LineBreakSpecialWrapped": {
                     node.firstChild(); // Opening delim "("
                     node.nextSibling(); // Line number node (num)
-                    value = text(input, node);
-                    xml.push(`<lb n="${value}"`);
+                    const lineNum = text(input, node);
+                    xml.push(`<lb n="${lineNum}"`);
 
                     if (name === "LineBreakSpecial" || name === "LineBreakSpecialWrapped") {
                         node.nextSibling();
@@ -315,15 +314,16 @@ export function toXml(input: string, topNode = "Document", root = parser.configu
                 case "InsertionBelow":
                     xml.push('<add place="below">');
                     break;
-                case "InsertionMargin":
+                case "InsertionMargin": {
                     node.firstChild(); // AddPlace
-                    value = text(input, node);
-                    value = value.substring(2, value.indexOf(":"));
-                    if (value) {
-                        const place = value === "interlin" ? "interlinear" : value;
+                    let addPlace = text(input, node);
+                    addPlace = addPlace.substring(2, addPlace.indexOf(":"));
+                    if (addPlace) {
+                        const place = addPlace === "interlin" ? "interlinear" : addPlace;
                         xml.push(`<add place="${place}">`);
                     }
                     break;
+                }
                 case "InsertionMarginSling":
                     xml.push('<add rend="sling" place="margin">');
                     break;
@@ -339,20 +339,20 @@ export function toXml(input: string, topNode = "Document", root = parser.configu
                     xml.push("<expan>");
                     break;
 
-                case "AbbrevInnerEx":
+                case "AbbrevInnerEx": {
                     node.firstChild(); // opening delim "("
                     node.nextSibling(); // AbbrevInnerExContent
                     node.firstChild(); // Expansion
-                    value = text(input, node);
+                    const expansion = text(input, node);
                     node.nextSibling();
                     if (node.name === "QuestionMark") {
                         xml.push("<ex cert=\"low\">");
                     } else {
                         xml.push("<ex>");
                     }
-                    xml.push(value, "</ex>");
+                    xml.push(expansion, "</ex>");
                     return false;
-
+                }
                 case "NumberSpecial":
                 case "NumberSpecialTick": {
                     // In NumberSpecial lezer sometimes inserts anonymous nodes (probably due to the template pattern
@@ -385,7 +385,7 @@ export function toXml(input: string, topNode = "Document", root = parser.configu
                     // Build num element
                     xml.push("<num");
                     if (cursor.name === "NumberSpecialValue") {
-                        value = text(input, cursor);
+                        const value = text(input, cursor);
                         let numVal = text(input, cursor).substring(value.indexOf("=") + 1);
                         cursor.nextSibling();
                         if ((cursor.name as string) === "RangePart") {
@@ -675,7 +675,6 @@ export function toXml(input: string, topNode = "Document", root = parser.configu
                         node.nextSibling(); // skip "[" (LostNumber open)
                     }
 
-                    value = text(input, node);
                     let innerXml = "";
                     switch (node.name) {
                         case "GapNumber":
