@@ -4,6 +4,5 @@
     "declarationDir": "types",
     "allowJs": true
   },
-  "include": ["src/*.js"],
-  "exclude": ["src/tokens.js"]
+  "include": ["src/*.js"]
 }
