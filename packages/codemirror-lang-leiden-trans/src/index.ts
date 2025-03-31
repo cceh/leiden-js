@@ -7,14 +7,14 @@ import {
     LRLanguage,
     syntaxHighlighting
 } from "@codemirror/language";
-import { parser } from "@leiden-plus/parser-leiden-trans";
-import { leidenTransLinterExtension } from "@leiden-plus/linter-leiden-trans";
+import { parser } from "@leiden-js/parser-leiden-trans";
+import { leidenTransLinterExtension } from "@leiden-js/linter-leiden-trans";
 import {
     blockIndent,
     highlightActiveNode,
     leidenHighlightStyle as leidenTransHighlightStyle,
     leidenHighlightStyleDark as leidenTransHighlightStyleDark
-} from "@leiden-plus/lib/language";
+} from "@leiden-js/lib/language";
 import { leidenTranslationHighlighting } from "./syntaxHighlight.js";
 
 export {

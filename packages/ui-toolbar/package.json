@@ -1,5 +1,5 @@
 {
-  "name": "@leiden-plus/ui-toolbar",
+  "name": "@leiden-js/ui-toolbar",
   "version": "1.0.2",
   "description": "",
   "scripts": {
@@ -34,8 +34,8 @@
     "@codemirror/state": "^6.5.2",
     "@codemirror/view": "^6.36.3",
     "@floating-ui/dom": "^1.6.13",
-    "@leiden-plus/codemirror-lang-leiden-plus": "workspace:*",
-    "@leiden-plus/lib": "workspace:*",
+    "@leiden-js/codemirror-lang-leiden-plus": "workspace:*",
+    "@leiden-js/lib": "workspace:*",
     "lit-html": "^3.2.1"
   },
   "publishConfig": {

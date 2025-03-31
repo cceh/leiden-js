@@ -1,7 +1,7 @@
 import { NodeIterator, SyntaxNode } from "@lezer/common";
 import { EditorState } from "@codemirror/state";
 import { syntaxTree } from "@codemirror/language";
-import { applySnippet, CommandTarget } from "@leiden-plus/lib/language";
+import { applySnippet, CommandTarget } from "@leiden-js/lib/language";
 import { snippets } from "./snippets.js";
 import { insertNewlineKeepIndent } from "@codemirror/commands";
 

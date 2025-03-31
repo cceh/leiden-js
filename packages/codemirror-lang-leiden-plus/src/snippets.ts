@@ -1,4 +1,4 @@
-import { Snippets } from "@leiden-plus/lib/language";
+import { Snippets } from "@leiden-js/lib/language";
 
 export const snippets = {
     vestigChars: {

@@ -1,5 +1,5 @@
 {
-  "name": "@leiden-plus/toolbar-leiden-trans",
+  "name": "@leiden-js/toolbar-leiden-trans",
   "version": "1.0.2",
   "description": "",
   "scripts": {
@@ -26,9 +26,9 @@
     "typescript": "^5.7.3"
   },
   "dependencies": {
-    "@leiden-plus/codemirror-lang-leiden-trans": "workspace:*",
-    "@leiden-plus/lib": "workspace:*",
-    "@leiden-plus/ui-toolbar": "workspace:*"
+    "@leiden-js/codemirror-lang-leiden-trans": "workspace:*",
+    "@leiden-js/lib": "workspace:*",
+    "@leiden-js/ui-toolbar": "workspace:*"
   },
   "publishConfig": {
     "registry": "https://gitlab.dh.uni-koeln.de/api/v4/projects/726/packages/npm/"

@@ -1,5 +1,5 @@
 {
-  "name": "@leiden-plus/codemirror-lang-leiden-trans",
+  "name": "@leiden-js/codemirror-lang-leiden-trans",
   "version": "1.0.2",
   "description": "",
   "scripts": {
@@ -28,9 +28,9 @@
     "@codemirror/language": "^6.10.8",
     "@codemirror/state": "^6.5.2",
     "@codemirror/commands": "^6.8.0",
-    "@leiden-plus/lib": "workspace:*",
-    "@leiden-plus/linter-leiden-trans": "workspace:*",
-    "@leiden-plus/parser-leiden-trans": "workspace:*",
+    "@leiden-js/lib": "workspace:*",
+    "@leiden-js/linter-leiden-trans": "workspace:*",
+    "@leiden-js/parser-leiden-trans": "workspace:*",
     "@lezer/common": "^1.2.3",
     "@lezer/highlight": "^1.2.1"
   },

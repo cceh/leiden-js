@@ -6,7 +6,7 @@ import {
     toolbar,
     ToolbarActionItem,
     toolbarConfig
-} from "@leiden-plus/ui-toolbar";
+} from "@leiden-js/ui-toolbar";
 import { Extension } from "@codemirror/state";
 import {
     addCertLow,
@@ -15,9 +15,9 @@ import {
     inlineContentAllowed,
     removeCertLow,
     snippets
-} from "@leiden-plus/codemirror-lang-leiden-plus";
-import { applySnippet } from "@leiden-plus/lib/language";
-import { addCombiningMarks, removeCombiningMarks } from "@leiden-plus/lib/util";
+} from "@leiden-js/codemirror-lang-leiden-plus";
+import { applySnippet } from "@leiden-js/lib/language";
+import { addCombiningMarks, removeCombiningMarks } from "@leiden-js/lib/util";
 import { syntactialDiacritRanges } from "./syntacticalDiacritRanges.js";
 
 const ancientDiacrits = {

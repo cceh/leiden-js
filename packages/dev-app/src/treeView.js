@@ -5,7 +5,7 @@ import { createRef, ref } from "lit-html/directives/ref.js";
 import { syntaxTree } from "@codemirror/language";
 import { NodeWeakMap } from "@lezer/common";
 import { Annotation } from "@codemirror/state";
-import { findClosestCertLowAncestor } from "@leiden-plus/codemirror-lang-leiden-plus";
+import { findClosestCertLowAncestor } from "@leiden-js/codemirror-lang-leiden-plus";
 
 const syntaxTreeNodeMap = new NodeWeakMap();
 export const selectTreeNodeAnnotation = Annotation.define();

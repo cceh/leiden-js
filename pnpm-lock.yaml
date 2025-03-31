@@ -71,13 +71,13 @@ importers:
       '@codemirror/state':
         specifier: ^6.5.2
         version: 6.5.2
-      '@leiden-plus/lib':
+      '@leiden-js/lib':
         specifier: workspace:*
         version: link:../lib
-      '@leiden-plus/linter-leiden-plus':
+      '@leiden-js/linter-leiden-plus':
         specifier: workspace:*
         version: link:../linter-leiden-plus
-      '@leiden-plus/parser-leiden-plus':
+      '@leiden-js/parser-leiden-plus':
         specifier: workspace:*
         version: link:../parser-leiden-plus
       '@lezer/common':
@@ -108,13 +108,13 @@ importers:
       '@codemirror/state':
         specifier: ^6.5.2
         version: 6.5.2
-      '@leiden-plus/lib':
+      '@leiden-js/lib':
         specifier: workspace:*
         version: link:../lib
-      '@leiden-plus/linter-leiden-trans':
+      '@leiden-js/linter-leiden-trans':
         specifier: workspace:*
         version: link:../linter-leiden-trans
-      '@leiden-plus/parser-leiden-trans':
+      '@leiden-js/parser-leiden-trans':
         specifier: workspace:*
         version: link:../parser-leiden-trans
       '@lezer/common':
@@ -163,22 +163,22 @@ importers:
       '@codemirror/view':
         specifier: ^6.36.3
         version: 6.36.3
-      '@leiden-plus/codemirror-lang-leiden-plus':
+      '@leiden-js/codemirror-lang-leiden-plus':
         specifier: workspace:*
         version: link:../codemirror-lang-leiden-plus
-      '@leiden-plus/codemirror-lang-leiden-trans':
+      '@leiden-js/codemirror-lang-leiden-trans':
         specifier: workspace:*
         version: link:../codemirror-lang-leiden-trans
-      '@leiden-plus/toolbar-leiden-plus':
+      '@leiden-js/toolbar-leiden-plus':
         specifier: workspace:*
         version: link:../toolbar-leiden-plus
-      '@leiden-plus/toolbar-leiden-trans':
+      '@leiden-js/toolbar-leiden-trans':
         specifier: workspace:*
         version: link:../toolbar-leiden-trans
-      '@leiden-plus/transformer-leiden-plus':
+      '@leiden-js/transformer-leiden-plus':
         specifier: workspace:*
         version: link:../transformer-leiden-plus
-      '@leiden-plus/transformer-leiden-trans':
+      '@leiden-js/transformer-leiden-trans':
         specifier: workspace:*
         version: link:../transformer-leiden-trans
       '@lezer/common':
@@ -231,10 +231,10 @@ importers:
       '@codemirror/lint':
         specifier: ^6.8.4
         version: 6.8.4
-      '@leiden-plus/lib':
+      '@leiden-js/lib':
         specifier: workspace:*
         version: link:../lib
-      '@leiden-plus/parser-leiden-plus':
+      '@leiden-js/parser-leiden-plus':
         specifier: workspace:*
         version: link:../parser-leiden-plus
       '@lezer/common':
@@ -256,10 +256,10 @@ importers:
       '@codemirror/lint':
         specifier: ^6.8.4
         version: 6.8.4
-      '@leiden-plus/lib':
+      '@leiden-js/lib':
         specifier: workspace:*
         version: link:../lib
-      '@leiden-plus/parser-leiden-trans':
+      '@leiden-js/parser-leiden-trans':
         specifier: workspace:*
         version: link:../parser-leiden-trans
       '@lezer/common':
@@ -334,13 +334,13 @@ importers:
       '@codemirror/language':
         specifier: ^6.10.8
         version: 6.10.8
-      '@leiden-plus/codemirror-lang-leiden-plus':
+      '@leiden-js/codemirror-lang-leiden-plus':
         specifier: workspace:*
         version: link:../codemirror-lang-leiden-plus
-      '@leiden-plus/lib':
+      '@leiden-js/lib':
         specifier: workspace:*
         version: link:../lib
-      '@leiden-plus/ui-toolbar':
+      '@leiden-js/ui-toolbar':
         specifier: workspace:*
         version: link:../ui-toolbar
     devDependencies:
@@ -359,13 +359,13 @@ importers:
 
   packages/toolbar-leiden-trans:
     dependencies:
-      '@leiden-plus/codemirror-lang-leiden-trans':
+      '@leiden-js/codemirror-lang-leiden-trans':
         specifier: workspace:*
         version: link:../codemirror-lang-leiden-trans
-      '@leiden-plus/lib':
+      '@leiden-js/lib':
         specifier: workspace:*
         version: link:../lib
-      '@leiden-plus/ui-toolbar':
+      '@leiden-js/ui-toolbar':
         specifier: workspace:*
         version: link:../ui-toolbar
     devDependencies:
@@ -384,10 +384,10 @@ importers:
 
   packages/transformer-leiden-plus:
     dependencies:
-      '@leiden-plus/lib':
+      '@leiden-js/lib':
         specifier: workspace:*
         version: link:../lib
-      '@leiden-plus/parser-leiden-plus':
+      '@leiden-js/parser-leiden-plus':
         specifier: workspace:*
         version: link:../parser-leiden-plus
       '@lezer/common':
@@ -400,10 +400,10 @@ importers:
 
   packages/transformer-leiden-trans:
     dependencies:
-      '@leiden-plus/lib':
+      '@leiden-js/lib':
         specifier: workspace:*
         version: link:../lib
-      '@leiden-plus/parser-leiden-trans':
+      '@leiden-js/parser-leiden-trans':
         specifier: workspace:*
         version: link:../parser-leiden-trans
       '@lezer/common':
@@ -431,10 +431,10 @@ importers:
       '@floating-ui/dom':
         specifier: ^1.6.13
         version: 1.6.13
-      '@leiden-plus/codemirror-lang-leiden-plus':
+      '@leiden-js/codemirror-lang-leiden-plus':
         specifier: workspace:*
         version: link:../codemirror-lang-leiden-plus
-      '@leiden-plus/lib':
+      '@leiden-js/lib':
         specifier: workspace:*
         version: link:../lib
       lit-html:

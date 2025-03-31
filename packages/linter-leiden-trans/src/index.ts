@@ -1,4 +1,4 @@
-import { leidenBaseLinter, leidenLinterExtension, NodeLinter } from "@leiden-plus/lib/linter";
+import { leidenBaseLinter, leidenLinterExtension, NodeLinter } from "@leiden-js/lib/linter";
 import { NodeProp, SyntaxNodeRef, TreeCursor } from "@lezer/common";
 import { Diagnostic } from "@codemirror/lint";
 

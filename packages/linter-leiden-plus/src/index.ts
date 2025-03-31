@@ -1,4 +1,4 @@
-import { findDescendant, leidenBaseLinter, leidenLinterExtension, NodeLinter } from "@leiden-plus/lib/linter";
+import { findDescendant, leidenBaseLinter, leidenLinterExtension, NodeLinter } from "@leiden-js/lib/linter";
 import { NodeProp, SyntaxNodeRef, TreeCursor } from "@lezer/common";
 import { Diagnostic } from "@codemirror/lint";
 import {
@@ -39,7 +39,7 @@ import {
     TextSubscript,
     TextSuperscript,
     TextTall
-} from "@leiden-plus/parser-leiden-plus";
+} from "@leiden-js/parser-leiden-plus";
 
 const nodeDescriptions: Record<number, string> = {
     [Abbrev]: "Abbreviation",

@@ -1,6 +1,6 @@
 import { SyntaxNode, TreeCursor } from "@lezer/common";
-import { parser, rendProp, unitProp } from "@leiden-plus/parser-leiden-plus";
-import { removeCombiningMarks } from "@leiden-plus/lib/util";
+import { parser, rendProp, unitProp } from "@leiden-js/parser-leiden-plus";
+import { removeCombiningMarks } from "@leiden-js/lib/util";
 
 function text(input: string, node: TreeCursor) {
     return input.substring(node.from, node.to);

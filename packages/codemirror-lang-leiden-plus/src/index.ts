@@ -9,10 +9,10 @@ import {
     syntaxHighlighting
 } from "@codemirror/language";
 import { Extension } from "@codemirror/state";
-import { parser } from "@leiden-plus/parser-leiden-plus";
+import { parser } from "@leiden-js/parser-leiden-plus";
 import { leidenPlusHighlighting } from "./syntaxHighlight.js";
-import { leidenPlusLinterExtension } from "@leiden-plus/linter-leiden-plus";
-import { blockIndent, highlightActiveNode, leidenHighlightStyle } from "@leiden-plus/lib/language";
+import { leidenPlusLinterExtension } from "@leiden-js/linter-leiden-plus";
+import { blockIndent, highlightActiveNode, leidenHighlightStyle } from "@leiden-js/lib/language";
 import { completeFromList, CompletionContext, snippetCompletion } from "@codemirror/autocomplete";
 import { snippets } from "./snippets.js";
 
@@ -71,6 +71,6 @@ export function leidenPlus(options: Partial<LeidenPlusConfig> = {}): Extension[]
 }
 
 export { snippets } from "./snippets.js";
-export { leidenHighlightStyle, leidenHighlightStyleDark } from "@leiden-plus/lib/language";
+export { leidenHighlightStyle, leidenHighlightStyleDark } from "@leiden-js/lib/language";
 export { inlineContentAllowed, atomicRules } from "./syntax.js";
 export { acceptsCertLow, hasCertLow, getCertLow, addCertLowAtCursorPosition, removeCertLow, findClosestCertLowAncestor, addCertLow } from "./certLow.js";

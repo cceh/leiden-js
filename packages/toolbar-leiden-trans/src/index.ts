@@ -6,7 +6,7 @@ import {
     toolbar,
     ToolbarActionItem,
     toolbarConfig
-} from "@leiden-plus/ui-toolbar";
+} from "@leiden-js/ui-toolbar";
 import { Extension } from "@codemirror/state";
 import {
     addDivision,
@@ -16,8 +16,8 @@ import {
     inlineContentAllowed,
     snippets,
     TranslationSnippetKey
-} from "@leiden-plus/codemirror-lang-leiden-trans";
-import { applySnippet } from "@leiden-plus/lib/language";
+} from "@leiden-js/codemirror-lang-leiden-trans";
+import { applySnippet } from "@leiden-js/lib/language";
 
 
 export const leidenTransToolbar: Extension[] = [

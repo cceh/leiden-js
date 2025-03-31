@@ -1,5 +1,5 @@
 {
-  "name": "@leiden-plus/linter-leiden-trans",
+  "name": "@leiden-js/linter-leiden-trans",
   "version": "1.0.2",
   "description": "",
   "scripts": {
@@ -26,8 +26,8 @@
   },
   "dependencies": {
     "@codemirror/lint": "^6.8.4",
-    "@leiden-plus/lib": "workspace:*",
-    "@leiden-plus/parser-leiden-trans": "workspace:*",
+    "@leiden-js/lib": "workspace:*",
+    "@leiden-js/parser-leiden-trans": "workspace:*",
     "@lezer/common": "^1.2.3"
   },
   "publishConfig": {

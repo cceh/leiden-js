@@ -1,5 +1,5 @@
 import { SyntaxNode, TreeCursor } from "@lezer/common";
-import { parser } from "@leiden-plus/parser-leiden-trans";
+import { parser } from "@leiden-js/parser-leiden-trans";
 
 function text(input: string, node: TreeCursor) {
     return input.substring(node.from, node.to);

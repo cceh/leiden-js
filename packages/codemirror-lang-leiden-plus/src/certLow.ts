@@ -1,4 +1,4 @@
-import { appendContent, CommandTarget, deleteRange, insertAt } from "@leiden-plus/lib/language";
+import { appendContent, CommandTarget, deleteRange, insertAt } from "@leiden-js/lib/language";
 import { SyntaxNode } from "@lezer/common";
 import { EditorState } from "@codemirror/state";
 import { syntaxTree } from "@codemirror/language";

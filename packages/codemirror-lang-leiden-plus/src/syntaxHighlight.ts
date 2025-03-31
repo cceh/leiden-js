@@ -1,6 +1,6 @@
 import { styleTags, tags as t } from "@lezer/highlight";
 import { NodePropSource } from "@lezer/common";
-import { leidenTags as leiden } from "@leiden-plus/lib/language";
+import { leidenTags as leiden } from "@leiden-js/lib/language";
 
 export const leidenPlusHighlighting: NodePropSource = styleTags({
 

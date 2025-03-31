@@ -11,7 +11,7 @@ import {
     showPanel
 } from "@codemirror/view";
 import { basicSetup } from "codemirror";
-import { leidenHighlightStyle, leidenHighlightStyleDark, leidenPlus } from "@leiden-plus/codemirror-lang-leiden-plus";
+import { leidenHighlightStyle, leidenHighlightStyleDark, leidenPlus } from "@leiden-js/codemirror-lang-leiden-plus";
 import {
     bracketMatching,
     foldGutter,
@@ -21,26 +21,26 @@ import {
     syntaxTree,
     syntaxTreeAvailable
 } from "@codemirror/language";
-import { leidenTranslation } from "@leiden-plus/codemirror-lang-leiden-trans";
+import { leidenTranslation } from "@leiden-js/codemirror-lang-leiden-trans";
 import { Annotation, Compartment, StateField } from "@codemirror/state";
 import {
     fromXml as xmlToLeidenPlus,
     toXml as leidenPlusToXml,
     TransformationError as LeidenPlusTransformationError
-} from "@leiden-plus/transformer-leiden-plus";
+} from "@leiden-js/transformer-leiden-plus";
 import {
     fromXml as xmlToLeidenTrans,
     toXml as leidenTransToXml,
     TransformationError as LeidenTransTransformationError
-} from "@leiden-plus/transformer-leiden-trans";
+} from "@leiden-js/transformer-leiden-trans";
 
 import { xml } from "@codemirror/lang-xml";
 import { linter, lintGutter, lintKeymap, setDiagnosticsEffect } from "@codemirror/lint";
 import { defaultKeymap, history, historyKeymap } from "@codemirror/commands";
 import "./styles/cardo.css";
 import { oneDarkTheme } from "@codemirror/theme-one-dark";
-import { leidenPlusToolbar } from "@leiden-plus/toolbar-leiden-plus";
-import { leidenTransToolbar } from "@leiden-plus/toolbar-leiden-trans";
+import { leidenPlusToolbar } from "@leiden-js/toolbar-leiden-plus";
+import { leidenTransToolbar } from "@leiden-js/toolbar-leiden-trans";
 import { closeBracketsKeymap, completionKeymap } from "@codemirror/autocomplete";
 import { searchKeymap } from "@codemirror/search";
 

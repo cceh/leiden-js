@@ -1,5 +1,5 @@
 {
-  "name": "@leiden-plus/transformer-leiden-plus",
+  "name": "@leiden-js/transformer-leiden-plus",
   "version": "1.0.2",
   "description": "",
   "main": "./dist/index.cjs",
@@ -27,8 +27,8 @@
     "tsup": "^8.4.0"
   },
   "dependencies": {
-    "@leiden-plus/lib": "workspace:*",
-    "@leiden-plus/parser-leiden-plus": "workspace:*",
+    "@leiden-js/lib": "workspace:*",
+    "@leiden-js/parser-leiden-plus": "workspace:*",
     "@lezer/common": "^1.2.3"
   }
 }
