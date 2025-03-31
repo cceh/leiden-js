@@ -3,7 +3,7 @@ import { html, nothing, TemplateResult } from "lit-html";
 import { ActionCapableItem, MenuItem } from "../config.js";
 
 
-export function menu(triggerItem: { id: string, label: string, items: MenuItem[] }, actionCallback: (item: ActionCapableItem) => void, ref?: Ref) {
+export function menu(triggerItem: { id: string, label: string | HTMLElement, items: MenuItem[] }, actionCallback: (item: ActionCapableItem) => void, ref?: Ref) {
     return html`
         <div
                 ${ref ?? nothing}
