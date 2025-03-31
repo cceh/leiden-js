@@ -3,169 +3,230 @@
   <head>
     <title>Leiden+ Dev</title>
     <style>
-      body { 
+      :root {
+        --border-color: #ddd;
+        --debug-width: 400px;
+        --toggle-width: 30px;
+        --transition-duration: 0.25s;
+      }
+      
+      /* Basic resets */
+      * {
         margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         height: 100vh;
+        overflow: hidden;
+      }
+      
+      /* Main layout */
+      .app-container {
         display: flex;
-        gap: 5px;
+        flex-direction: column;
+        height: 100vh;
       }
-
-      h3 {
-        margin-top: 4px;
-        margin-bottom: 2px;
-      }
-
+      
+      /* Header */
       .language-select {
-        border-bottom: 1px solid #ddd;
+        padding: 10px;
+        background: #f7f7f7;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        gap: 12px;
       }
+      
+      .language-select label {
+        margin-right: 5px;
+      }
+      
+      /* Main content area */
+      .content-container {
+        display: flex;
+        flex: 1;
+        min-height: 0; /* Important for Firefox */
+      }
+      
+      /* Editors area */
       .editor-pane {
         display: flex;
         flex-direction: column;
-        /*justify-content: stretch;*/
-        /*width: 50%;*/
-        height: 100%;
-        flex: 1 1 auto;
-        /*border-right: 1px solid #ddd;*/
+        flex: 1;
+        min-width: 0; /* Important for Firefox */
       }
-
+      
+      .leiden-editor {
+        flex: 1;
+        position: relative;
+        border-bottom: 1px solid var(--border-color);
+        min-height: 0; /* Important for Firefox */
+      }
+      
       .xml-container {
+        height: 300px;
         display: flex;
         flex-direction: column;
-        height: 50%;
-        /*flex: 1;*/
+        transition: height var(--transition-duration) ease;
+        overflow: hidden;
       }
-
-      .xml-editor {
-        flex: 1;
-      }
-
-      .xml-container.hidden .xml-editor {
-        display: none;
-        height: 0;
-      }
-
+      
       .xml-container.hidden {
-        height: unset;
+        height: 32px; /* Just enough for the button */
       }
-
-      .leiden-editor, .xml-editor {
-        display: flex;
-        flex-direction: column;
-        /*flex: 1 1 0;*/
-        flex: 1;
-        min-height: 0;
-        border-bottom: 1px solid #ddd;
-        position: relative;
-      }
-
-
-
-      .debug-pane {
-        height: 100%;
-        display: flex;
-        flex-direction: row;
-      }
-      .debug-pane:not(.hidden) {
-        width: 400px;
-      }
-
-      .debug-pane.hidden .debug-content {
-        display: none;
-      }
-
-      .debug-content {
-        height: 100%;
-        display: flex;
-        flex-direction: column;
-        flex: 1;
-      }
-
-      .debug-toggle {
-          display: flex;
-          flex-direction: row;
-          align-items: stretch;
-      }
-
-      .debug-toggle button {
-        writing-mode: vertical-rl;
-        padding: 25px 2px 2px 2px;
-        position: relative;
-        text-align: start;
-      }
-
+      
       .xml-container > button {
+        padding: 8px;
         display: flex;
         align-items: center;
         justify-content: center;
-        padding: 2px 2px 2px 2px;
-
+        width: 100%;
+        gap: 5px;
+        background: #f5f5f5;
+        border: none;
+        border-bottom: 1px solid var(--border-color);
+        cursor: pointer;
       }
-
-      .debug-toggle button::after,
-      .xml-container > button::after {
+      
+      .xml-container > button .label {
+        position: relative;
+        display: flex;
+        align-items: center;
+      }
+      
+      .xml-container > button .label::after {
         content: '';
-        width: 5px;
-        height: 5px;
-        border-right: 1px solid currentColor;
-        border-bottom: 1px solid currentColor;
-        transition: transform 0.2s ease;
-      }
-
-      .debug-toggle button::after {
-        position: absolute;
-        top: 8px;
-        left: 50%;
-        transform: translateX(-50%) rotate(-45deg);
-      }
-
-      .xml-container > button::after {
-        display: inline-block;
-        transform: rotate(45deg);
+        width: 8px;
+        height: 8px;
         margin-left: 8px;
+        margin-top: -5px;
+        border-right: 1px solid #555;
+        border-bottom: 1px solid #555;
+        transition: transform var(--transition-duration) ease;
+        transform: rotate(45deg);
       }
-
-      .xml-container.hidden > button::after {
+      
+      .xml-container.hidden > button .label::after {
+        margin-top: 5px;
         transform: rotate(225deg);
       }
-
-      .debug-pane.hidden .debug-toggle button::after {
-        transform: translateX(-50%) rotate(135deg);
+      
+      .xml-editor {
+        position: relative;
+        flex: 1;
+        min-height: 0; /* Important for Firefox */
+        transition: opacity var(--transition-duration) ease;
+      }
+      
+      .xml-container.hidden .xml-editor {
+        opacity: 0;
+        pointer-events: none;
+      }
+      
+      /* Debug panel */
+      .debug-section {
+        display: flex;
+        border-left: 1px solid var(--border-color);
+      }
+      
+      .debug-toggle {
+        width: var(--toggle-width);
+        border-right: 1px solid var(--border-color);
+        background: #f7f7f7;
+        display: flex;
+        flex-direction: column;
+      }
+      
+      .debug-toggle button {
+        writing-mode: vertical-rl;
+        padding: 20px 5px;
+        height: 100px;
+        border: none;
+        background: none;
+        cursor: pointer;
+        flex: 1;
       }
 
+      .debug-toggle button .label {
+        position: relative;
+      }
+      
+      .debug-toggle button .label::before {
+        content: '';
+        position: absolute;
+        top: -20px;
+        width: 8px;
+        height: 8px;
+        border-right: 1px solid #555;
+        border-bottom: 1px solid #555;
+        transform: translateX(-50%) rotate(-45deg);
+        transition: transform var(--transition-duration) ease;
+      }
+      
+      body.debug-closed .debug-toggle button .label::before {
+        margin-left: 10px;
+        transform: translateX(-13%) rotate(135deg);
+      }
+      
+      .debug-content {
+        width: var(--debug-width);
+        display: flex;
+        flex-direction: column;
+        transition: width var(--transition-duration) ease, opacity var(--transition-duration) ease;
+        overflow: hidden;
+      }
+      
+      body.debug-closed .debug-content {
+        width: 0;
+        opacity: 0;
+        pointer-events: none;
+      }
+      
       .parse-tree {
         height: 70%;
         overflow: auto;
-        padding: 1rem;
-        border-bottom: 1px solid #ddd;
+        padding: 10px;
+        border-bottom: 1px solid var(--border-color);
         font-family: monospace;
       }
-
+      
       .tree-controls {
-        margin-bottom: 8px;
+        margin-bottom: 10px;
       }
-
+      
       .debug-info {
         height: 30%;
-        padding: 1rem;
         overflow: auto;
+        padding: 10px;
       }
+      
+      h3 {
+        margin: 0 0 10px 0;
+        font-size: 16px;
+      }
+      
+      /* CodeMirror editors */
       .cm-editor {
         height: 100%;
         position: absolute !important;
         inset: 0;
-        overflow: auto;
       }
+      
       .debug-label {
         font-weight: bold;
-        margin-right: 0.5rem;
+        margin-right: 5px;
       }
-
+      
       /* Tree view styles */
       .tree-node {
         position: relative;
         padding-left: 1.2em;
         cursor: pointer;
       }
+      
       .tree-node::before {
         content: "";
         position: absolute;
@@ -175,6 +236,7 @@
         height: 1px;
         background: #666;
       }
+      
       .tree-node::after {
         content: "";
         position: absolute;
@@ -184,45 +246,44 @@
         width: 1px;
         background: #666;
       }
+      
       .tree-node:last-child::after {
         height: 0.7em;
       }
+      
       .tree-node > .node-content {
         display: flex;
         align-items: center;
         gap: 0.5em;
       }
-      .tree-node > .node-content > .toggle, .tree-node > .node-content > .spacer {
+      
+      .tree-node > .node-content > .toggle, 
+      .tree-node > .node-content > .spacer {
         width: 1em;
         height: 1em;
         line-height: 1em;
         text-align: center;
         cursor: pointer;
       }
+      
       .tree-node.collapsed > .children {
         display: none;
       }
+      
       .tree-node.highlighted {
         background: #e6f3ff;
       }
+      
       .tree-node.highlighted > .node-content {
         font-weight: bold;
-      }
-
-      .language-select {
-        margin: 4px 0 4px 4px;
-        padding: 2px;
-      }
-
-      .language-select label {
-        margin-right: 0.5rem;
       }
     </style>
   </head>
   <body>
-    <div class="editor-pane">
+    <div class="app-container">
+      <!-- Header with language controls -->
       <div class="language-select">
-        <label for="language-select">Language variant: </label>
+        <label for="language-select">Language variant:</label>
         <select id="language-select">
           <optgroup label="Leiden+">
             <option value="leiden-plus.Document">Leiden+ (Full Document)</option>
@@ -240,38 +301,50 @@
             <option value="leiden-trans.InlineContent">Leiden Translation (InlineContent)</option>
           </optgroup>
         </select>
+        
         <input type="checkbox" id="theme-checkbox" />
         <label for="theme-checkbox">Dark</label>
-        <label for="highlight-style-select">Highlight style: </label>
-        <select id="highlight-style-select">
-        </select>
+        
+        <label for="highlight-style-select">Highlight style:</label>
+        <select id="highlight-style-select"></select>
       </div>
-      <div class="leiden-editor">
-      </div>
-      <div class="xml-container">
-        <button id="xml-toggle-button">XML editor</button>
-        <div class="xml-editor">
-        </div>
-      </div>
-    </div>
-    <div class="debug-pane">
-      <div class="debug-toggle">
-        <button id="debug-toggle-button">Parse tree</button>
-      </div>
-      <div class="debug-content">
-        <div class="parse-tree">
-          <h3>Parse Tree</h3>
-          <div class="tree-controls">
-            <input type="checkbox" id="hide-text-nodes" />
-            <label for="hide-text-nodes">Hide Text</label>
-            <input type="checkbox" id="hide-delim-nodes" />
-            <label for="hide-delim-nodes">Hide Delims</label>
+      
+      <!-- Main content area with editors and debug panel -->
+      <div class="content-container">
+        <!-- Left side editors -->
+        <div class="editor-pane">
+          <div class="leiden-editor"></div>
+          <div class="xml-container">
+            <button id="xml-toggle-button">
+              <span class="label">XML editor</span>
+            </button>
+            <div class="xml-editor"></div>
           </div>
-          <div id="parse-tree-content"></div>
         </div>
-        <div class="debug-info">
-          <h3>Debug Info</h3>
-          <div id="debug-info-content"></div>
+        
+        <!-- Right side debug section -->
+        <div class="debug-section">
+          <div class="debug-toggle">
+            <button id="debug-toggle-button">
+              <span class="label">Parse tree</span>
+            </button>
+          </div>
+          <div class="debug-content">
+            <div class="parse-tree">
+              <h3>Parse Tree</h3>
+              <div class="tree-controls">
+                <input type="checkbox" id="hide-text-nodes" />
+                <label for="hide-text-nodes">Hide Text</label>
+                <input type="checkbox" id="hide-delim-nodes" />
+                <label for="hide-delim-nodes">Hide Delims</label>
+              </div>
+              <div id="parse-tree-content"></div>
+            </div>
+            <div class="debug-info">
+              <h3>Debug Info</h3>
+              <div id="debug-info-content"></div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
