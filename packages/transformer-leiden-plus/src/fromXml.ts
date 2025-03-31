@@ -920,10 +920,10 @@ function transformGap(elem: Element, output: string[]) {
         }
         output.push("]");
     } else if (reason === "omitted" && unit === "character") {
-        output.push(">");
         if (certLow) {
             output.push("(?)")
         }
+        output.push(">");
     } else if (reason === "ellipsis") {
         if (isLangEllipsis) {
             output.push(` ${unit === "character" ? "char" : "lines"}`)

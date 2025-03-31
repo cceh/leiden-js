@@ -833,7 +833,7 @@ export function toXml(input: string, topNode = "Document", root = parser.configu
                             xml.push('<certainty locus="name" match=".."/>');
                         } else if (['Illegible',
                             'Vestige', 'Gap', 'GapPrecLow', 'InsertionBelow', 'InsertionAbove', 'InsertionMargin',
-                            'InsertionMarginUnderline', 'InsertionMarginSling', 'LostLines',
+                            'InsertionMarginUnderline', 'InsertionMarginSling', 'LostLines', 'GapOmitted',
                             'Vacat'].includes(parent.name)) {
                             xml.push('<certainty match=".." locus="name"/>');
                         } else if (['EditorialCorrectionLemma', 'EditorialCorrectionReading', 'AlternateReadingLemma',
@@ -977,6 +977,7 @@ export function toXml(input: string, topNode = "Document", root = parser.configu
                     break;
                 case 'Vestige':
                 case 'Gap':
+                case 'GapOmitted':
                 case 'GapPrecLow':
                 case 'Illegible':
                 case 'LostLines':

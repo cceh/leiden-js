@@ -1512,6 +1512,7 @@ describe('own_tests', () => {
     testTransform(null, "[ca.6(?)]", '<gap reason="lost" quantity="6" unit="character" precision="low"><certainty match=".." locus="name"/></gap>');
     testTransform(null, "[ca.6(?)] ", '<gap reason="lost" quantity="6" unit="character" precision="low"><certainty match=".." locus="name"/></gap> ');
     testTransform(null, "Apolliṇạri", "Apolli<unclear>na</unclear>ri")
+    testTransform(null, "<.4(?)>  [.6(?)]", "<gap reason=\"omitted\" quantity=\"4\" unit=\"character\"><certainty match=\"..\" locus=\"name\"/></gap>  <gap reason=\"lost\" quantity=\"6\" unit=\"character\"><certainty match=\"..\" locus=\"name\"/></gap>")
 
    // diacritic certLow vs. wrapped certLow (XSugar is inconsistent here)
     testTransform(null, 'SuppliedLost         [ ⲓ(¨)(?)]', 'SuppliedLost         <supplied reason="lost" cert="low"><hi rend="diaeresis">ⲓ</hi></supplied>');
