@@ -1,4 +1,4 @@
-import { SyntaxNode, TreeCursor } from "@lezer/common";
+import { TreeCursor } from "@lezer/common";
 import { parser, rendProp, unitProp } from "@leiden-js/parser-leiden-plus";
 import { removeCombiningMarks } from "@leiden-js/lib/util";
 
@@ -50,7 +50,6 @@ export function toXml(input: string, topNode = "Document", root = parser.configu
 
     const xml: string[] = [];
     let needsCloseEdition = false;
-    const selfClosingNodeSet = new WeakSet<SyntaxNode>(); // TODO: use lezer NodeWeakMap?
     root.iterate({
         enter: (node: TreeCursor) => {
             if (node.type.isTop) {
@@ -520,7 +519,6 @@ export function toXml(input: string, topNode = "Document", root = parser.configu
                     if (node.name === "Citation") {
                         xml.push(`<lem resp="${text(input, node).substring(1)}"/>`);
                         node.parent();
-                        selfClosingNodeSet.add(node.node);
                         return false;
                     }
 
@@ -547,7 +545,6 @@ export function toXml(input: string, topNode = "Document", root = parser.configu
                     if (node.name === "Citation") {
                         xml.push(`<rdg resp="${text(input, node).substring(1)}"/>`);
                         node.parent();
-                        selfClosingNodeSet.add(node.node);
                         return false;
                     }
 
@@ -731,7 +728,6 @@ export function toXml(input: string, topNode = "Document", root = parser.configu
                             xml.push("</unclear>");
                         }
                         node.parent();
-                        selfClosingNodeSet.add(node.node);
                         return false;
                     }
 
@@ -880,9 +876,7 @@ export function toXml(input: string, topNode = "Document", root = parser.configu
                     xml.push("</expan>");
                     break;
                 case "Ab":
-                    if (!selfClosingNodeSet.has(node.node)) {
-                        xml.push("</ab>");
-                    }
+                    xml.push("</ab>");
                     break;
                 case "Div":
                 case "Recto":
@@ -900,9 +894,7 @@ export function toXml(input: string, topNode = "Document", root = parser.configu
                 case "SuppliedParallelLost":
                 case "AbbrevInnerSuppliedLost":
                 case "AbbrevInnerSuppliedParallel":
-                    if (!selfClosingNodeSet.has(node.node)) {
-                        xml.push("</supplied>");
-                    }
+                    xml.push("</supplied>");
                     break;
                 case "Deletion":
                 case "ScribalCorrectionDel":
@@ -914,9 +906,7 @@ export function toXml(input: string, topNode = "Document", root = parser.configu
                 case "InsertionMarginSling":
                 case "InsertionMarginUnderline":
                 case "ScribalCorrectionAdd":
-                    if (!selfClosingNodeSet.has(node.node)) {
-                        xml.push("</add>");
-                    }
+                    xml.push("</add>");
                     break;
                 case "TextTall":
                 case "TextSuperscript":
@@ -953,9 +943,7 @@ export function toXml(input: string, topNode = "Document", root = parser.configu
                     break;
                 case "AlternateReadingLemma":
                 case "EditorialCorrectionLemma":
-                    if (!selfClosingNodeSet.has(node.node)) {
-                        xml.push("</lem>");
-                    }
+                    xml.push("</lem>");
                     break;
                 case "AlternateReadingReading":
                 case "EditorialCorrectionReading":
@@ -972,9 +960,7 @@ export function toXml(input: string, topNode = "Document", root = parser.configu
                     break;
                 case "NumberSpecial":
                 case "NumberSpecialTick":
-                    if (!selfClosingNodeSet.has(node.node)) {
-                        xml.push("</num>");
-                    }
+                    xml.push("</num>");
                     break;
                 case "Vestige":
                 case "Gap":
@@ -982,25 +968,18 @@ export function toXml(input: string, topNode = "Document", root = parser.configu
                 case "GapPrecLow":
                 case "Illegible":
                 case "LostLines":
-                    if (!selfClosingNodeSet.has(node.node)) {
-                        xml.push("</gap>");
-                    }
+                    xml.push("</gap>");
                     break;
                 case "Vacat":
-                    if (!selfClosingNodeSet.has(node.node)) {
-                        xml.push("</space>");
-                    }
+                    xml.push("</space>");
                     break;
                 case "Glyph":
-                    if (!selfClosingNodeSet.has(node.node)) {
-                        xml.push("</g>");
+                    xml.push("</g>");
 
-                        // need to close unclear?
-                        if (node.node.getChild("QuestionMark")) {
-                            xml.push("</unclear>");
-                        }
+                    // need to close unclear?
+                    if (node.node.getChild("QuestionMark")) {
+                        xml.push("</unclear>");
                     }
-                    break;
             }
         }
     });
