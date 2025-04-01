@@ -2,7 +2,7 @@ import { BeforeProcessHook, BeforeXmlCompareHook, processDir } from "./utils/idp
 import { fromXml, toXml } from "../packages/transformer-leiden-trans/src";
 import { JSDOM } from "jsdom";
 
-const sourceDir = "test/data/roundtrips";
+const sourceDir = "test/leiden-js-idp-test-data/roundtrips";
 const ignoreReasons = {};
 
 const beforeProcess: BeforeProcessHook = function(textFilePath, textFileContent) {

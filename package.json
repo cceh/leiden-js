@@ -6,15 +6,10 @@
   "scripts": {
     "build": "pnpm -r build",
     "test": "TS_NODE_PROJECT=./tsconfig.test.json mocha",
-    "test:idp:get-data": "git submodule update --init --depth 1 test/data/idp.data",
-    "test:idp:xsugar:up": "docker compose -f ./test/docker-compose.yml up --wait xsugar",
-    "test:idp:xsugar:down": "docker compose -f ./test/docker-compose.yml down --volumes --remove-orphans",
-    "test:idp:prepare:edition": "pnpm test:idp:xsugar:up && tsx ./test/scripts/idp-prepare-data.ts edition",
-    "test:idp:prepare:translation": "pnpm test:idp:xsugar:up && tsx ./test/scripts/idp-prepare-data.ts translation",
-    "test:idp:prepare": "pnpm test:idp:prepare:edition && pnpm test:idp:prepare:translation",
+    "test:idp:get-data": "git submodule update --init --depth 1 test/leiden-js-idp-test-data",
     "test:idp:edition": "TS_NODE_PROJECT=./tsconfig.test.json mocha test/idp-edition.test.ts",
     "test:idp:translation": "TS_NODE_PROJECT=./tsconfig.test.json mocha test/idp-translation.test.ts",
-    "test:idp": "pnpm test:idp:get-data && pnpm test:idp:prepare && pnpm test:idp:edition && pnpm test:idp:translation",
+    "test:idp": "pnpm test:idp:get-data && pnpm test:idp:edition && pnpm test:idp:translation",
     "dev": "pnpm --parallel --filter \"dev-app^...\" watch & pnpm --filter dev-app start",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix"
@@ -44,5 +39,8 @@
     "tsx": "^4.19.3",
     "typescript": "^5.7.3",
     "typescript-eslint": "^8.28.0"
+  },
+  "mocha": {
+    "timeout": 10000
   }
 }

@@ -2,7 +2,7 @@ import { BeforeProcessHook, BeforeXmlCompareHook, processDir } from "./utils/idp
 import { fromXml, toXml } from "../packages/transformer-leiden-plus/src";
 import { JSDOM } from "jsdom";
 
-const sourceDir = "test/data/roundtrips/DDB_EpiDoc_XML";
+const sourceDir = "test/leiden-js-idp-test-data/roundtrips/DDB_EpiDoc_XML";
 const ignoreReasons = {
     "analpap.28.31_1": "lb attribute order in IDP XML wrong",
     "apf.63.167": "XSugar produces wrong XML: (θ̄(ε)ῷ̄) produces <hi rend=\"supraline\">ῶ</hi>ͅ with accent on the >",
@@ -123,6 +123,7 @@ describe("aegyptus", function() { process(this.title); });
 describe("analpap", function() { process(this.title); });
 describe("ancsoc", function() { process(this.title); });
 describe("apf", function() { process(this.title); });
+describe("arctos", function() { process(this.title); });
 describe("bacps", function() { process(this.title); });
 describe("basp", function() { process(this.title); });
 describe("bgu", function() { process(this.title); });
@@ -133,12 +134,13 @@ describe("c.illum.pap", function() { process(this.title); });
 describe("c.jud.syr.eg", function() { process(this.title); });
 describe("c.pap.gr", function() { process(this.title); });
 describe("c.pap.jud", function() { process(this.title); });
+describe("c.pap.lat", function() { process(this.title); });
 describe("cde", function() { process(this.title); });
 describe("chiron", function() { process(this.title); });
 describe("chla", function() { process(this.title); });
 describe("chr.mitt", function() { process(this.title); });
 describe("chr.wilck", function() { process(this.title); });
-describe("cpl", function() { process(this.title); });
+// describe("cpl", function() { process(this.title); }); (removed in current idp.data)
 describe("cpr", function() { process(this.title); });
 describe("crai", function() { process(this.title); });
 describe("ddbdp", function() { process(this.title); });
@@ -502,6 +504,7 @@ describe("sb", function() { process(this.title); });
 describe("sb.kopt", function() { process(this.title); });
 describe("short.texts", function() { process(this.title); });
 describe("simblos", function() { process(this.title); });
+// describe("sosol", function() { process(this.title); }); (currently empty)
 describe("stud.pal", function() { process(this.title); });
 describe("symboslo", function() { process(this.title); });
 describe("t.alb", function() { process(this.title); });
@@ -509,8 +512,10 @@ describe("t.bm.arlt", function() { process(this.title); });
 describe("t.mom.louvre", function() { process(this.title); });
 describe("t.varie", function() { process(this.title); });
 describe("t.vindol", function() { process(this.title); });
+describe("t.vindon", function() { process(this.title); });
 describe("travmem", function() { process(this.title); });
 describe("tyche", function() { process(this.title); });
 describe("upz", function() { process(this.title); });
 describe("vdi", function() { process(this.title); });
 describe("zpe", function() { process(this.title); });
+describe("zrg", function() { process(this.title); });
