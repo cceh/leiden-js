@@ -8,6 +8,7 @@ export default defineConfig([
     globalIgnores([
         "**/dist/",
         "packages/parser-*/types/",
+        "packages/parser-*/src/parser.*",
         "test/leiden-js-idp-test-data",
         ".mocharc.cjs"
     ]),
