@@ -68,7 +68,7 @@ export function toXml(input: string, topNode = "Document", root = parser.configu
             // expanded in multi-line editorial notes
             if ([
                 "Vacat", "LineBreak", "LostLines", "LineBreakWrapped",
-                "Vestige", "Illegible", "Gap"
+                "Vestige", "Illegible", "Gap", "Handshift"
             ].includes(name)) {
                 if (node.matchContext(["EditorialNote"])) {
                     let currentNode = node.node;
@@ -652,7 +652,7 @@ export function toXml(input: string, topNode = "Document", root = parser.configu
                 case "Handshift":
                     node.firstChild(); // HandshiftHand
                     xml.push(`<handShift new="${text(input, node)}"`);
-                    if (node.nextSibling()) { // can only be CertLow per grammar
+                    if (node.nextSibling() && node.name === "CertLow") {
                         xml.push(' cert="low"');
                     }
                     xml.push("/>");

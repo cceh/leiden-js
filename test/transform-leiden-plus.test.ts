@@ -1666,6 +1666,9 @@ describe("own_tests", () => {
 
     // p.petr.kleon.11 (editorial note inside EditorialCorrection rdg
     testTransform(null, "<:γ[ε τὴ]ν=Wilcken||ed||[περὶ τὴ]ν=Mahaffy|[κατὰ τὴ]ν=Wilamowitz|/*also vielleicht ((κατ’)) αὐτήν γ[ε τὴ]ν*/=Van Beek:>".normalize(), '<app type="editorial"><lem resp="Wilcken">γ<supplied reason="lost">ε τὴ</supplied>ν</lem><rdg resp="Mahaffy"><supplied reason="lost">περὶ τὴ</supplied>ν</rdg><rdg resp="Wilamowitz"><supplied reason="lost">κατὰ τὴ</supplied>ν</rdg><rdg resp="Van Beek"><note xml:lang="en">also vielleicht <expan><ex>κατ’</ex></expan> αὐτήν γ<supplied reason="lost">ε τὴ</supplied>ν</note></rdg></app>'.normalize());
+
+    // p.lond.2.328 (XSugar doesn't parse handshift inside one-line editorial note)
+    testTransform(null, "$m7 /*possibly the same as $m1*/".normalize(), '<handShift new="m7"/><note xml:lang="en">possibly the same as $m1</note>'.normalize());
 });
 
 describe("idp_errors", () => {
@@ -1726,6 +1729,6 @@ describe("idp_errors", () => {
     // p.koeln.16.647 (div corresp not starting with #)
     testTransform(null, "<S=.grc <D=.a.b.fragment <= => =D>", '<div xml:lang="grc" type="edition" xml:space="preserve"> <div n="a" subtype="b" type="textpart" corresp="fragment"> <ab> </ab> </div></div>', "Document");
 
-    // o.douch.2.104 (empty filler
+    // o.douch.2.104 (empty filler)
     testTransform(null, "*filler*", '<g type="filler"/>');
 });
