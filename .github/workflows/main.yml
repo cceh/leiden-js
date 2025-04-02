@@ -7,7 +7,7 @@ on:
   pull_request:
 
 jobs:
-  setup:
+  test:
     runs-on: ubuntu-latest
     outputs:
       idp-data-key: ${{ steps.submodule-hash.outputs.hash }}
@@ -33,11 +33,17 @@ jobs:
       - name: Build packages
         run: pnpm build
 
+      - name: Test Leiden+
+        run: pnpm test:leiden-plus
+
+      - name: Test Leiden Translation
+        run: pnpm test:leiden-trans
+
       - name: Get IDP Data
         run: pnpm test:idp:get-data
 
-      - name: Test edition
+      - name: IDP tests – edition
         run: pnpm test:idp:edition
 
-      - name: Test translation
+      - name: IDP tests – translation
         run: pnpm test:idp:translation

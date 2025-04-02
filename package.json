@@ -5,7 +5,9 @@
   "description": "",
   "scripts": {
     "build": "pnpm -r build",
-    "test": "TS_NODE_PROJECT=./tsconfig.test.json mocha",
+    "test:leiden-plus": "TS_NODE_PROJECT=./tsconfig.test.json mocha test/transform-leiden-plus.test.ts",
+    "test:leiden-trans": "TS_NODE_PROJECT=./tsconfig.test.json mocha test/transform-leiden-trans.test.ts",
+    "test": "pnpm run test:leiden-plus && pnpm run test:leiden-trans",
     "test:idp:get-data": "git submodule update --init --depth 1 test/leiden-js-idp-test-data",
     "test:idp:edition": "TS_NODE_PROJECT=./tsconfig.test.json mocha test/idp-edition.test.ts",
     "test:idp:translation": "TS_NODE_PROJECT=./tsconfig.test.json mocha test/idp-translation.test.ts",
