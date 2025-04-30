@@ -1,72 +1,25 @@
-import { findDescendant, leidenBaseLinter, leidenLinterExtension, NodeLinter } from "@leiden-js/lib/linter";
+import { findDescendant, leidenBaseLinter, leidenLinterExtension, NodeLinter } from "@leiden-js/common/linter";
 import { NodeProp, SyntaxNodeRef, TreeCursor } from "@lezer/common";
 import { Diagnostic } from "@codemirror/lint";
-import {
-    Abbrev,
-    AbbrevInnerEx,
-    AbbrevInnerSuppliedLost,
-    AbbrevInnerSuppliedLostEx,
-    AbbrevInnerSuppliedParallel,
-    AbbrevInvalid,
-    AbbrevUnresolved,
-    AlternateReading,
-    EditorialCorrection,
-    EditorialNote,
-    Filler,
-    Foreign,
-    Gap,
-    GapOmitted,
-    Glyph,
-    InsertionAbove,
-    InsertionBelow,
-    InsertionMargin,
-    InsertionMarginSling,
-    InsertionMarginUnderline,
-    LineBreakSpecial,
-    LineBreakSpecialWrapped,
-    NumberSpecial,
-    Orig,
-    OrthoReg,
-    Quotation,
-    ScribalCorrection,
-    SuppliedLost,
-    SuppliedOmitted,
-    SuppliedParallel,
-    SuppliedParallelLost,
-    SupralineSpan,
-    SupralineUnderline,
-    Surplus,
-    TextSubscript,
-    TextSuperscript,
-    TextTall
-} from "@leiden-js/parser-leiden-plus";
+import { wrappingRules } from "@leiden-js/codemirror-lang-leiden-plus";
 
-const nodeDescriptions: Record<number, string> = {
-    [Abbrev]: "Abbreviation",
-    [AbbrevInvalid]: "Abbreviation",
-    [AbbrevInnerEx]: "Abbreviation expansion",
-    [SuppliedLost]: "Lost text",
-    [Gap]: "Lost text",
-    [SuppliedParallel]: "Supplied (parallel)",
-    [LineBreakSpecial]: "Special line break",
-    [LineBreakSpecialWrapped]: "Special line break (wrapped)",
-    [SuppliedOmitted]: "Omitted text",
-    [GapOmitted]: "Omitted text",
-    [Surplus]: "Surplus text"
+const nodeDescriptions: Record<string, string> = {
+    Abbrev: "Abbreviation",
+    AbbrevInvalid: "Abbreviation",
+    AbbrevInnerEx: "Abbreviation expansion",
+    SuppliedLost: "Lost text",
+    Gap: "Lost text",
+    SuppliedParallel: "Supplied (parallel)",
+    LineBreakSpecial: "Special line break",
+    LineBreakSpecialWrapped: "Special line break (wrapped)",
+    SuppliedOmitted: "Omitted text",
+    GapOmitted: "Omitted text",
+    Surplus: "Surplus text"
 };
 
 const nodeDescription = (node: SyntaxNodeRef): string => {
-    return nodeDescriptions[node.type.id] || node.type.name;
+    return nodeDescriptions[node.name] || node.type.name;
 };
-
-// TODO: Deletion, Ab, Div
-const wrappingRules: number[] = [
-    Abbrev, AbbrevInnerEx, AbbrevInnerSuppliedLost, AbbrevInnerSuppliedLostEx, AbbrevInnerSuppliedParallel, AbbrevInvalid,
-    AbbrevUnresolved, AlternateReading, EditorialCorrection, EditorialNote, Filler, Foreign, Gap, GapOmitted, Glyph,
-    InsertionAbove, InsertionBelow, InsertionMargin, InsertionMarginSling, InsertionMarginUnderline, NumberSpecial,
-    Orig, OrthoReg, Quotation, ScribalCorrection, SuppliedLost, SuppliedOmitted, SuppliedParallel, SuppliedParallelLost,
-    Surplus, SupralineSpan, SupralineUnderline, TextSubscript, TextSuperscript, TextTall
-];
 
 const unclosedExpression = (node: SyntaxNodeRef, errPos: number, close: string): Diagnostic => {
     return ({
@@ -88,7 +41,7 @@ export const leidenPlusNodeLinter: NodeLinter = (doc, node) => {
         const parent = node.node.parent;
 
         if (!node.node.nextSibling) { // error node is last sibling
-            if (parent && wrappingRules.includes(parent.type.id)) {
+            if (parent && wrappingRules.includes(parent.name)) {
                 const errorPos = node.node.from;
                 const closedBy = parent?.firstChild?.type.prop(NodeProp.closedBy);
                 if (parent && closedBy) {
@@ -97,7 +50,7 @@ export const leidenPlusNodeLinter: NodeLinter = (doc, node) => {
             }
         }
 
-        if (parent?.type.id === NumberSpecial) {
+        if (parent?.name === "NumberSpecial") {
             const nextSibling = node.node.nextSibling;
             if (nextSibling?.name === "#>") {
                 const prevSibling = node.node.prevSibling;
@@ -142,8 +95,7 @@ export const leidenPlusNodeLinter: NodeLinter = (doc, node) => {
 
         const inner = node.node.getChild("AbbrevInner");
         if (!inner) {
-            const name = "SuppliedLost";
-            const suppliedLost = findDescendant(node, name);
+            const suppliedLost = findDescendant(node, "SuppliedLost");
 
             if (suppliedLost) {
                 return [{
@@ -180,6 +132,6 @@ Abbreviation needs at least one
     }
 };
 
-export const leidenPlusLinterExtension = leidenLinterExtension(leidenPlusNodeLinter);
+export const leidenPlusLinter = leidenLinterExtension(leidenPlusNodeLinter);
 export const lintLeidenPlus = (doc: string, rootCursor: TreeCursor) =>
     leidenBaseLinter(doc, rootCursor, leidenPlusNodeLinter);

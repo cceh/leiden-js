@@ -1,12 +1,16 @@
 import { NodeIterator, SyntaxNode } from "@lezer/common";
 import { EditorState } from "@codemirror/state";
 import { syntaxTree } from "@codemirror/language";
-import { applySnippet, CommandTarget } from "@leiden-js/lib/language";
+import { applySnippet, CommandTarget } from "@leiden-js/common/language";
 import { snippets } from "./snippets.js";
 import { insertNewlineKeepIndent } from "@codemirror/commands";
 
 export const atomicRules = [
     "LanguageId", "N", "SubType", "LineNum", "LineNumBreak", "Gap", "Definition", "AppType"
+];
+
+export const wrappingRules: string[] = [
+    "P", "Div", "Erasure", "Note", "Term", "Foreign", "App"
 ];
 
 export function inlineContentAllowed(state: EditorState) {

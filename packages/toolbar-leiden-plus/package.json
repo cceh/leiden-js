@@ -28,7 +28,7 @@
   "dependencies": {
     "@codemirror/language": "^6.10.8",
     "@leiden-js/codemirror-lang-leiden-plus": "workspace:*",
-    "@leiden-js/lib": "workspace:*",
+    "@leiden-js/common": "workspace:*",
     "@leiden-js/ui-toolbar": "workspace:*"
   },
   "publishConfig": {

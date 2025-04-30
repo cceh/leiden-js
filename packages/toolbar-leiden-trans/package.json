@@ -27,7 +27,7 @@
   },
   "dependencies": {
     "@leiden-js/codemirror-lang-leiden-trans": "workspace:*",
-    "@leiden-js/lib": "workspace:*",
+    "@leiden-js/common": "workspace:*",
     "@leiden-js/ui-toolbar": "workspace:*"
   },
   "publishConfig": {

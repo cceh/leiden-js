@@ -35,7 +35,7 @@
     "@codemirror/view": "^6.36.3",
     "@floating-ui/dom": "^1.6.13",
     "@leiden-js/codemirror-lang-leiden-plus": "workspace:*",
-    "@leiden-js/lib": "workspace:*",
+    "@leiden-js/common": "workspace:*",
     "lit-html": "^3.2.1"
   },
   "publishConfig": {

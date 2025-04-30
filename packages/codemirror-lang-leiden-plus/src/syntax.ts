@@ -9,6 +9,14 @@ export const atomicRules = [
     "Citation", "EditorialNoteRef", "Gap", "GapOmitted", "AbbrevInnerEx", "AbbrevInnerSuppliedLost"
 ];
 
+export const wrappingRules: string[] = [
+    "Abbrev", "AbbrevInnerEx", "AbbrevInnerSuppliedLost", "AbbrevInnerSuppliedLostEx", "AbbrevInnerSuppliedParallel", "AbbrevInvalid",
+    "AbbrevUnresolved", "AlternateReading", "EditorialCorrection", "EditorialNote", "Filler", "Foreign", "Gap", "GapOmitted", "Glyph",
+    "InsertionAbove", "InsertionBelow", "InsertionMargin", "InsertionMarginSling", "InsertionMarginUnderline", "NumberSpecial",
+    "Orig", "OrthoReg", "Quotation", "ScribalCorrection", "SuppliedLost", "SuppliedOmitted", "SuppliedParallel", "SuppliedParallelLost",
+    "Surplus", "SupralineSpan", "SupralineUnderline", "TextSubscript", "TextSuperscript", "TextTall", "Deletion", "Ab", "Div"
+];
+
 export function inlineContentAllowed(state: EditorState) {
     const tree = syntaxTree(state);
     let iter: NodeIterator | null  = tree.resolveStack(state.selection.ranges[0].from);
@@ -25,4 +33,3 @@ export function inlineContentAllowed(state: EditorState) {
 
     return true;
 }
-

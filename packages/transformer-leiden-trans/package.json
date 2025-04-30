@@ -27,7 +27,7 @@
     "tsup": "^8.4.0"
   },
   "dependencies": {
-    "@leiden-js/lib": "workspace:*",
+    "@leiden-js/common": "workspace:*",
     "@leiden-js/parser-leiden-trans": "workspace:*",
     "@lezer/common": "^1.2.3"
   }

@@ -1,7 +1,7 @@
 import { Facet, StateEffect, StateField } from "@codemirror/state";
 import { Decoration, DecorationSet, EditorView, PluginValue, ViewPlugin, ViewUpdate } from "@codemirror/view";
-import { syntaxTree } from "@codemirror/language";
 import { SyntaxNode } from "@lezer/common";
+import { syntaxTree } from "@codemirror/language";
 
 interface NodeHighlightConfig {
     nodeNames: string[];
@@ -33,7 +33,7 @@ const highlightMark = Decoration.mark({
     class: "cm-leiden-active-syntax-node"
 });
 
-// Create a ViewPlugin that tracks the cursor position and updates decorations
+// ViewPlugin that tracks the cursor and caret position and updates decorations
 const activeNodeHighlightViewPlugin = ViewPlugin.fromClass(class implements PluginValue {
     decorations: DecorationSet;
 
@@ -115,7 +115,6 @@ const activeNodeHighlightTheme = EditorView.baseTheme({
 });
 
 export const highlightActiveNode = [
-    // nodeHighlightConfig.of({nodeNames: ["Deletion", "Gap", "Abbrev", "OrthoReg", "EditorialCorrection"]}),
     activeNodeHighlightViewPlugin,
     activeNodeHighlightTheme,
     hoverState

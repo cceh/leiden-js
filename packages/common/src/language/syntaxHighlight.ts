@@ -178,7 +178,6 @@ export const leidenTags = {
     unclear: Tag.define(t.annotation),
 };
 
-
 export const leidenHighlightStyle = HighlightStyle.define([
     ...defaultHighlightStyle.specs,
 
@@ -186,7 +185,7 @@ export const leidenHighlightStyle = HighlightStyle.define([
         filter: "brightness(130%)" },
     { tag: leidenTags.id,
         "font-family": "monospace",
-        },
+    },
     { tag: leidenTags.keyword,
         "font-family": "monospace",
         "border": "1px solid color-mix(in srgb, currentColor 15%, transparent)",
@@ -194,7 +193,7 @@ export const leidenHighlightStyle = HighlightStyle.define([
         "padding-inline": "3px",
         "margin-inline": "0.1em",
         "background-color": "rgba(250,250,250, 0.7)",
-        },
+    },
     { tag: leidenTags.bracketedKeywordStart,
         fontFamily: "monospace",
         border: "0 solid color-mix(in srgb, currentColor 15%, transparent)",
@@ -205,13 +204,13 @@ export const leidenHighlightStyle = HighlightStyle.define([
         paddingInlineStart: "2px",
         marginInlineStart: "0.1em",
         backgroundColor: "rgba(250,250,250, 0.7)",
-        },
+    },
     { tag: leidenTags.bracketedKeywordContent,
         fontFamily: "monospace",
         border: "0 solid color-mix(in srgb, currentColor 15%, transparent)",
         borderBlockWidth: "1px",
         backgroundColor: "rgba(250,250,250, 0.7)",
-        },
+    },
     { tag: leidenTags.bracketedKeywordEnd,
         fontFamily: "monospace",
         border: "0 solid color-mix(in srgb, currentColor 15%, transparent)",
@@ -285,7 +284,7 @@ export const leidenHighlightStyle = HighlightStyle.define([
     { tag: [leidenTags.editorialComment, leidenTags.app1RightSpec,
             leidenTags.app2RightSpec, leidenTags.app3RightSpec,
             leidenTags.app1RightSpec, leidenTags.app1LeftSpec,
-        leidenTags.editorialNote],
+            leidenTags.editorialNote],
         color: "#5c6b80" },
 
 
@@ -344,13 +343,13 @@ export const leidenHighlightStyle = HighlightStyle.define([
 
     { tag: leidenTags.superscript,
         color: "#0288D1" },
-     { tag: leidenTags.subscript,
+    { tag: leidenTags.subscript,
         color: "#03A9F4" },
-     { tag: leidenTags.supraline,
+    { tag: leidenTags.supraline,
         color: "#26C6DA" },
-     { tag: leidenTags.supralineUnderline,
+    { tag: leidenTags.supralineUnderline,
         color: "#4DD0E1" },
-     { tag: leidenTags.tall,
+    { tag: leidenTags.tall,
         color: "#6ebfcb" },
 
     { tag: leidenTags.quotation,
@@ -399,8 +398,6 @@ export const leidenHighlightStyle = HighlightStyle.define([
     { tag: leidenTags.unclear,
         opacity: 0.75 }
 ]);
-
-
 
 export const leidenHighlightStyleDark = HighlightStyle.define([
     ...oneDarkHighlightStyle.specs,

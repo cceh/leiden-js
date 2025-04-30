@@ -12,7 +12,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "vite": "^6.2.0"
+    "vite": "6.3.3"
   },
   "dependencies": {
     "@codemirror/autocomplete": "^6.18.6",
@@ -24,8 +24,9 @@
     "@codemirror/view": "^6.36.3",
     "@codemirror/commands": "^6.8.0",
     "@codemirror/search": "^6.5.10",
+    "@leiden-js/codemirror-leiden-plus": "workspace:*",
+    "@leiden-js/codemirror-leiden-trans": "workspace:*",
     "@leiden-js/codemirror-lang-leiden-plus": "workspace:*",
-    "@leiden-js/codemirror-lang-leiden-trans": "workspace:*",
     "@leiden-js/toolbar-leiden-plus": "workspace:*",
     "@leiden-js/toolbar-leiden-trans": "workspace:*",
     "@leiden-js/transformer-leiden-plus": "workspace:*",

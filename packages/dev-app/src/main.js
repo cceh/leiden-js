@@ -1,27 +1,9 @@
 /* global leidenEditorView */
 /* global xmlEditorView */
 
-import {
-    drawSelection,
-    EditorView,
-    highlightActiveLine,
-    highlightActiveLineGutter,
-    keymap,
-    lineNumbers,
-    showPanel
-} from "@codemirror/view";
+import { EditorView, showPanel } from "@codemirror/view";
 import { basicSetup } from "codemirror";
-import { leidenHighlightStyle, leidenHighlightStyleDark, leidenPlus } from "@leiden-js/codemirror-lang-leiden-plus";
-import {
-    bracketMatching,
-    foldGutter,
-    foldKeymap,
-    forceParsing,
-    indentOnInput,
-    syntaxTree,
-    syntaxTreeAvailable
-} from "@codemirror/language";
-import { leidenTranslation } from "@leiden-js/codemirror-lang-leiden-trans";
+import { forceParsing, syntaxTree, syntaxTreeAvailable } from "@codemirror/language";
 import { Annotation, Compartment, StateField } from "@codemirror/state";
 import {
     fromXml as xmlToLeidenPlus,
@@ -35,16 +17,13 @@ import {
 } from "@leiden-js/transformer-leiden-trans";
 
 import { xml } from "@codemirror/lang-xml";
-import { linter, lintGutter, lintKeymap, setDiagnosticsEffect } from "@codemirror/lint";
-import { defaultKeymap, history, historyKeymap } from "@codemirror/commands";
+import { linter, lintGutter, setDiagnosticsEffect } from "@codemirror/lint";
 import "./styles/cardo.css";
 import { oneDarkTheme } from "@codemirror/theme-one-dark";
-import { leidenPlusToolbar } from "@leiden-js/toolbar-leiden-plus";
-import { leidenTransToolbar } from "@leiden-js/toolbar-leiden-trans";
-import { closeBracketsKeymap, completionKeymap } from "@codemirror/autocomplete";
-import { searchKeymap } from "@codemirror/search";
+import { leidenPlus } from "@leiden-js/codemirror-leiden-plus";
 
 import { clearParseTree, highlightCurrentNodeInTree, initTreeView, updateDebugInfo, updateParseTree } from "./treeView";
+import { leidenTranslation } from "@leiden-js/codemirror-leiden-trans";
 
 
 /* LINTING / DIAGNOSTICS */
@@ -92,13 +71,15 @@ const language = new Compartment;
 
 function getLanguageExtensions(selectValue) {
     const [variant, topNode] = selectValue.split(".");
-    const config = {
-        highlightStyle: getHighlightStyle(),
-        topNode
-    };
+    // const config = {
+    //     // highlightStyle: getHighlightStyle(),
+    //     topNode
+    // };
+    const leidenHighlightStyle = themeCheckbox.checked ? "dark" : "light";
+    const config = { topNode, leidenHighlightStyle };
     return variant === "leiden-plus"
-        ? [leidenPlus(config), leidenPlusToolbar]
-        : [leidenTranslation(config), leidenTransToolbar];
+        ? [leidenPlus(config)]
+        : [leidenTranslation(config)];
 }
 
 function convertToXml(leiden) {
@@ -136,7 +117,7 @@ languageSelect.addEventListener("change", () => {
 
 
 
-/* THEME AND HIGHLIGHTING */
+/* THEME */
 
 function getTheme(isDark) {
     return isDark === "true" ? oneDarkTheme : [];
@@ -145,25 +126,6 @@ function getTheme(isDark) {
 // Re-configurable editor extension compartment for the theme extension
 const theme = new Compartment;
 
-const highlightStyles = { leidenHighlightStyle, leidenHighlightStyleDark };
-function getHighlightStyle() {
-    return highlightStyles[localStorage.getItem("highlight-style") || Object.keys(highlightStyles)[0]];
-}
-
-// Set up highlight style select button
-const highlightStyleSelect = document.querySelector("#highlight-style-select");
-highlightStyleSelect.append(...Object.keys(highlightStyles).map(style => Object.assign(document.createElement("option"), {
-    textContent: style,
-    value: style
-})));
-highlightStyleSelect.value = localStorage.getItem("highlight-style") || Object.keys(highlightStyles)[0];
-highlightStyleSelect.addEventListener("change", () => {
-    const value = highlightStyleSelect.value;
-    localStorage.setItem("highlight-style", value);
-    leidenEditorView.dispatch({
-        effects: language.reconfigure(getLanguageExtensions(localStorage.getItem("leiden-variant"), value))
-    });
-});
 
 // Set up dark theme checkbox
 const themeCheckbox = document.querySelector("#theme-checkbox");
@@ -172,7 +134,10 @@ themeCheckbox.addEventListener("change", () => {
     const isDark = themeCheckbox.checked ? "true" : "false";
     localStorage.setItem("dark", isDark);
     leidenEditorView.dispatch({
-        effects: theme.reconfigure(getTheme(isDark))
+        effects: [
+            theme.reconfigure(getTheme(isDark)),
+            language.reconfigure(getLanguageExtensions(languageSelect.value))
+        ]
     });
 });
 
@@ -203,33 +168,6 @@ const syncAnnotation = Annotation.define();
 window.leidenEditorView = new EditorView({
     doc,
     extensions: [
-        lineNumbers(),
-        highlightActiveLineGutter(),
-        // highlightSpecialChars(),
-        history(),
-        foldGutter(),
-        drawSelection(),
-        // dropCursor(),
-        // EditorState.allowMultipleSelections.of(true),
-        indentOnInput(),
-        // syntaxHighlighting(defaultHighlightStyle, {fallback: true}),
-        bracketMatching(),
-        // closeBrackets(),
-        // autocompletion(),
-        // rectangularSelection(),
-        // crosshairCursor(),
-        highlightActiveLine(),
-        // highlightSelectionMatches(),
-        keymap.of([
-            ...closeBracketsKeymap,
-            ...defaultKeymap,
-            ...searchKeymap,
-            ...historyKeymap,
-            ...foldKeymap,
-            ...completionKeymap,
-            ...lintKeymap
-        ]),
-
         // Set to the currently selected language
         language.of(getLanguageExtensions(languageSelect.value)),
 
@@ -256,9 +194,12 @@ window.leidenEditorView = new EditorView({
                 }
             }
         }),
+
+        // custom status bar panel that only shows one error max.
         diagnosticsStateField,
-        lintGutter(),
         showPanel.of(statusBarPanel),
+
+
         theme.of(getTheme(localStorage.getItem("dark") ?? "false")),
         EditorView.theme({
             ".cm-content": {

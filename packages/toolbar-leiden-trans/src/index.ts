@@ -17,10 +17,10 @@ import {
     snippets,
     TranslationSnippetKey
 } from "@leiden-js/codemirror-lang-leiden-trans";
-import { applySnippet } from "@leiden-js/lib/language";
+import { applySnippet } from "@leiden-js/common/language";
 
 
-export const leidenTransToolbar: Extension[] = [
+export const leidenTranslationToolbar: Extension[] = [
     toolbarConfig.of((state) => {
         const inlineAllowed = inlineContentAllowed(state);
 

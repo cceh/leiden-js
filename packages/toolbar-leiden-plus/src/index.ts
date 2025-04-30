@@ -16,8 +16,8 @@ import {
     removeCertLow,
     snippets
 } from "@leiden-js/codemirror-lang-leiden-plus";
-import { applySnippet } from "@leiden-js/lib/language";
-import { addCombiningMarks, removeCombiningMarks } from "@leiden-js/lib/util";
+import { applySnippet } from "@leiden-js/common/language";
+import { addCombiningMarks, removeCombiningMarks } from "@leiden-js/common/util";
 import { syntactialDiacritRanges } from "./syntacticalDiacritRanges.js";
 
 const ancientDiacrits = {

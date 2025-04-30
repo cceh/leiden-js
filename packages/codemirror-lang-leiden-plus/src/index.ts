@@ -2,75 +2,70 @@ import {
     bracketMatchingHandle,
     foldInside,
     foldNodeProp,
-    HighlightStyle,
     indentNodeProp,
     LanguageSupport,
     LRLanguage,
     syntaxHighlighting
 } from "@codemirror/language";
-import { Extension } from "@codemirror/state";
 import { parser } from "@leiden-js/parser-leiden-plus";
 import { leidenPlusHighlighting } from "./syntaxHighlight.js";
-import { leidenPlusLinterExtension } from "@leiden-js/linter-leiden-plus";
-import { blockIndent, highlightActiveNode, leidenHighlightStyle } from "@leiden-js/lib/language";
+import {
+    blockIndent,
+    highlightActiveNode,
+    LeidenConfig,
+    leidenDefaultConfig,
+    leidenHighlightStyle,
+    leidenHighlightStyleDark
+} from "@leiden-js/common/language";
 import { completeFromList, CompletionContext, snippetCompletion } from "@codemirror/autocomplete";
 import { snippets } from "./snippets.js";
+import { leidenPlusLinter } from "@leiden-js/linter-leiden-plus";
 
-export type TopNode = "Document" | "InlineContent" | "SingleDiv" | "SingleAb" | "BlockContent";
+export type LeidenPlusTopNode = "Document" | "InlineContent" | "SingleDiv" | "SingleAb" | "BlockContent";
+export type LeidenPlusConfig = LeidenConfig<LeidenPlusTopNode>;
 
-export const leidenPlusLanguage = (topNode: TopNode = "Document") => LRLanguage.define({
-    parser: parser.configure({
-        top: topNode,
-        props: [
-            leidenPlusHighlighting,
-            indentNodeProp.add({
-                "Document SingleTranslation SingleP": blockIndent(),
-                "Div": blockIndent(/^\s*=D>/),
-                "Ab": blockIndent(/^\s*=>/),
-                "topLevel": () => null
-            }),
-            foldNodeProp.add({
-                "Div Ab Foreign OrthoReg AlternateReading ScribalCorrection SpellingCorrection EditorialCorrection EditorialNote": foldInside
-            })
-        ]
-    }),
-    languageData: {
-        autocomplete: (context: CompletionContext) => {
-            return completeFromList(
-                Object.values(snippets).map(
-                    snippetDef =>
-                        snippetCompletion(snippetDef.template, snippetDef.completion)
-                )
-            )(context);
-        },
-        matchBrackets: bracketMatchingHandle,
+// A language provider for Leiden+ with highlighting, indentation and folding information.
+export const leidenPlusLanguage = (config?: LeidenPlusConfig) => {
+    const mergedConfig = { ...leidenDefaultConfig, ...config };
+    return new LanguageSupport(LRLanguage.define({
+        parser: parser.configure({
+            top: mergedConfig?.topNode ?? "Document",
+            props: [
+                leidenPlusHighlighting,
+                indentNodeProp.add({
+                    "Document DingleDiv SingleAb": blockIndent(),
+                    "Div": blockIndent(/^\s*=D>/),
+                    "Ab": blockIndent(/^\s*=>/),
+                    "topLevel": () => null
+                }),
+                foldNodeProp.add({
+                    "Div Ab Foreign OrthoReg AlternateReading ScribalCorrection SpellingCorrection EditorialCorrection EditorialNote": foldInside
+                })
+            ]
+        }),
         languageData: {
-            indentOnInput: /^\s*=[TD]?>|^.$/
+            autocomplete: (context: CompletionContext) => {
+                return completeFromList(
+                    Object.values(snippets).map(
+                        snippetDef =>
+                            snippetCompletion(snippetDef.template, snippetDef.completion)
+                    )
+                )(context);
+            },
+            matchBrackets: bracketMatchingHandle,
+            languageData: {
+                indentOnInput: /^\s*=[TD]?>|^.$/
+            }
         }
-    }
-});
-
-export interface LeidenPlusConfig {
-    topNode: TopNode,
-    highlightStyle: HighlightStyle,
-}
-
-const defaultConfig: LeidenPlusConfig = {
-    topNode: "Document",
-    highlightStyle: leidenHighlightStyle,
+    }), [
+        ...(mergedConfig?.lint ? [leidenPlusLinter] : []),
+        ...(mergedConfig?.highlightActiveNode ? [highlightActiveNode] : []),
+        ...(mergedConfig.leidenHighlightStyle !== "none" ? [
+            syntaxHighlighting(mergedConfig?.leidenHighlightStyle === "dark" ? leidenHighlightStyleDark : leidenHighlightStyle),
+        ] : [])
+    ]);
 };
 
-export function leidenPlus(options: Partial<LeidenPlusConfig> = {}): Extension[] {
-    const config = { ...defaultConfig, ...options };
-    return [
-        new LanguageSupport(leidenPlusLanguage(config.topNode)),
-        syntaxHighlighting(config.highlightStyle),
-        leidenPlusLinterExtension,
-        highlightActiveNode
-    ];
-}
-
 export { snippets } from "./snippets.js";
-export { leidenHighlightStyle, leidenHighlightStyleDark } from "@leiden-js/lib/language";
-export { inlineContentAllowed, atomicRules } from "./syntax.js";
+export { inlineContentAllowed, atomicRules, wrappingRules } from "./syntax.js";
 export { acceptsCertLow, hasCertLow, getCertLow, addCertLowAtCursorPosition, removeCertLow, findClosestCertLowAncestor, addCertLow } from "./certLow.js";

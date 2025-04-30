@@ -1,4 +1,4 @@
-import { TransformationError } from "@leiden-js/lib/transformer";
+import { TransformationError } from "@leiden-js/common/transformer";
 
 function transformElem(elem: Element, output: string[]) {
     for (let i = 0; i < elem.childNodes.length; i++) {

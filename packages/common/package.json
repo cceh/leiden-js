@@ -1,5 +1,5 @@
 {
-  "name": "@leiden-js/lib",
+  "name": "@leiden-js/common",
   "version": "0.0.0",
   "type": "module",
   "exports": {

@@ -1,5 +1,5 @@
 {
-  "name": "@leiden-js/codemirror-lang-leiden-trans",
+  "name": "@leiden-js/codemirror-leiden-plus",
   "version": "1.0.2",
   "description": "",
   "scripts": {
@@ -10,9 +10,9 @@
   "main": "dist/index.cjs",
   "module": "dist/index.js",
   "exports": {
+    "types": "./dist/index.d.ts",
     "import": "./dist/index.js",
-    "require": "./dist/index.cjs",
-    "types": "./dist/index.d.ts"
+    "require": "./dist/index.cjs"
   },
   "types": "dist/index.d.ts",
   "sideEffects": false,
@@ -25,14 +25,14 @@
     "typescript": "^5.7.3"
   },
   "dependencies": {
-    "@codemirror/language": "^6.10.8",
+    "@codemirror/language": "^6.11.0",
     "@codemirror/state": "^6.5.2",
-    "@codemirror/commands": "^6.8.0",
-    "@leiden-js/common": "workspace:*",
-    "@leiden-js/linter-leiden-trans": "workspace:*",
-    "@leiden-js/parser-leiden-trans": "workspace:*",
-    "@lezer/common": "^1.2.3",
-    "@lezer/highlight": "^1.2.1"
+    "@codemirror/view": "^6.36.5",
+    "@codemirror/lint": "^6.8.5",
+    "@codemirror/commands": "^6.8.1",
+    "@codemirror/search": "6.5.10",
+    "@leiden-js/codemirror-lang-leiden-plus": "workspace:*",
+    "@leiden-js/toolbar-leiden-plus": "workspace:*"
   },
   "publishConfig": {
     "registry": "https://gitlab.dh.uni-koeln.de/api/v4/projects/726/packages/npm/"
