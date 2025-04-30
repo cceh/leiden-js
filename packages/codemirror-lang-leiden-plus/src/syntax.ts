@@ -11,7 +11,7 @@ export const atomicRules = [
 
 export const wrappingRules: string[] = [
     "Abbrev", "AbbrevInnerEx", "AbbrevInnerSuppliedLost", "AbbrevInnerSuppliedLostEx", "AbbrevInnerSuppliedParallel", "AbbrevInvalid",
-    "AbbrevUnresolved", "AlternateReading", "EditorialCorrection", "EditorialNote", "Filler", "Foreign", "Gap", "GapOmitted", "Glyph",
+    "AbbrevUnresolved", "AlternateReading", "EditorialCorrection", "SpellingCorrection", "EditorialNote", "Filler", "Foreign", "Gap", "GapOmitted", "Glyph",
     "InsertionAbove", "InsertionBelow", "InsertionMargin", "InsertionMarginSling", "InsertionMarginUnderline", "NumberSpecial",
     "Orig", "OrthoReg", "Quotation", "ScribalCorrection", "SuppliedLost", "SuppliedOmitted", "SuppliedParallel", "SuppliedParallelLost",
     "Surplus", "SupralineSpan", "SupralineUnderline", "TextSubscript", "TextSuperscript", "TextTall", "Deletion", "Ab", "Div"

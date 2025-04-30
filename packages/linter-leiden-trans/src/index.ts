@@ -3,8 +3,11 @@ import { NodeProp, SyntaxNodeRef, TreeCursor } from "@lezer/common";
 import { Diagnostic } from "@codemirror/lint";
 import { wrappingRules } from "@leiden-js/codemirror-lang-leiden-trans";
 
-const nodeDescriptions: Record<number, string> = {
-
+const nodeDescriptions: Record<string, string> = {
+    P: "Paragraph",
+    Div: "Division",
+    Foreign: "Foreign Text",
+    App: "Apparatus Entry"
 };
 
 const nodeDescription = (node: SyntaxNodeRef): string => {
