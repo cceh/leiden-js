@@ -22,11 +22,11 @@
   "devDependencies": {
     "@rollup/plugin-typescript": "^12.1.2",
     "rollup": "^4.34.8",
-    "typescript": "^5.7.3"
+    "typescript": "^5.8.3"
   },
   "dependencies": {
     "@codemirror/state": "^6.5.2",
-    "@codemirror/view": "^6.36.3",
+    "@codemirror/view": "^6.36.5",
     "@floating-ui/dom": "^1.6.13",
     "@leiden-js/common": "workspace:*",
     "lit-html": "^3.2.1"

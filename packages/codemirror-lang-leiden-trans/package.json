@@ -22,12 +22,12 @@
   "devDependencies": {
     "@rollup/plugin-typescript": "^12.1.2",
     "rollup": "^4.34.8",
-    "typescript": "^5.7.3"
+    "typescript": "^5.8.3"
   },
   "dependencies": {
-    "@codemirror/language": "^6.10.8",
+    "@codemirror/language": "^6.11.0",
     "@codemirror/state": "^6.5.2",
-    "@codemirror/commands": "^6.8.0",
+    "@codemirror/commands": "^6.8.1",
     "@leiden-js/common": "workspace:*",
     "@leiden-js/parser-leiden-trans": "workspace:*",
     "@lezer/common": "^1.2.3",

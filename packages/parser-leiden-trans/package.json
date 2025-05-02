@@ -32,7 +32,7 @@
     "chokidar-cli": "^3.0.0",
     "rollup": "^4.34.8",
     "rollup-plugin-dts": "^6.1.1",
-    "typescript": "^5.7.3"
+    "typescript": "^5.8.3"
   },
   "publishConfig": {
     "registry": "https://gitlab.dh.uni-koeln.de/api/v4/projects/726/packages/npm/"

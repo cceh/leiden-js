@@ -23,10 +23,10 @@
     "@codemirror/state": "^6.5.2",
     "@rollup/plugin-typescript": "^12.1.2",
     "rollup": "^4.34.8",
-    "typescript": "^5.7.3"
+    "typescript": "^5.8.3"
   },
   "dependencies": {
-    "@codemirror/language": "^6.10.8",
+    "@codemirror/language": "^6.11.0",
     "@leiden-js/codemirror-lang-leiden-plus": "workspace:*",
     "@leiden-js/common": "workspace:*",
     "@leiden-js/ui-toolbar": "workspace:*"
