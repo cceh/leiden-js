@@ -1,4 +1,4 @@
-import {ExternalTokenizer} from "@lezer/lr";
+import { ExternalTokenizer } from "@lezer/lr";
 import {
     chars as lp_chars,
     latinChars,

@@ -1,11 +1,11 @@
 /* global leidenEditorView */
 
-import {html, nothing, render} from "lit-html";
-import {createRef, ref} from "lit-html/directives/ref.js";
-import {syntaxTree} from "@codemirror/language";
-import {NodeWeakMap} from "@lezer/common";
-import {Annotation} from "@codemirror/state";
-import {findClosestCertLowAncestor} from "@leiden-js/codemirror-lang-leiden-plus";
+import { html, nothing, render } from "lit-html";
+import { createRef, ref } from "lit-html/directives/ref.js";
+import { syntaxTree } from "@codemirror/language";
+import { NodeWeakMap } from "@lezer/common";
+import { Annotation } from "@codemirror/state";
+import { findClosestCertLowAncestor } from "@leiden-js/codemirror-lang-leiden-plus";
 
 const syntaxTreeNodeMap = new NodeWeakMap();
 export const selectTreeNodeAnnotation = Annotation.define();
