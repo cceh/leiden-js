@@ -32,7 +32,9 @@
     "@codemirror/commands": "^6.8.1",
     "@codemirror/search": "6.5.10",
     "@leiden-js/codemirror-lang-leiden-plus": "workspace:*",
-    "@leiden-js/toolbar-leiden-plus": "workspace:*"
+    "@leiden-js/toolbar-leiden-plus": "workspace:*",
+    "@leiden-js/linter-leiden-plus": "workspace:*",
+    "@leiden-js/common": "workspace:*"
   },
   "publishConfig": {
     "registry": "https://gitlab.dh.uni-koeln.de/api/v4/projects/726/packages/npm/"

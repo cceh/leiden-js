@@ -1,4 +1,4 @@
-import { LeidenPlusConfig, leidenPlusLanguage } from "@leiden-js/codemirror-lang-leiden-plus";
+import { leidenPlusLanguage, LeidenPlusLanguageConfig } from "@leiden-js/codemirror-lang-leiden-plus";
 import { Extension } from "@codemirror/state";
 import { leidenPlusToolbar } from "@leiden-js/toolbar-leiden-plus";
 import { drawSelection, highlightActiveLine, highlightActiveLineGutter, keymap, lineNumbers } from "@codemirror/view";
@@ -7,12 +7,21 @@ import { closeBracketsKeymap, completionKeymap } from "@codemirror/autocomplete"
 import { defaultKeymap, history, historyKeymap } from "@codemirror/commands";
 import { lintGutter, lintKeymap } from "@codemirror/lint";
 import { searchKeymap } from "@codemirror/search";
+import { highlightActiveNode } from "@leiden-js/common/language";
+import { LeidenConfig, leidenDefaultConfig } from "@leiden-js/common/codemirror-leiden";
+import { leidenPlusLinter } from "@leiden-js/linter-leiden-plus";
+
+export type LeidenPlusConfig = LeidenConfig<LeidenPlusLanguageConfig>;
 
 
 export const leidenPlus = (config?: LeidenPlusConfig): Extension => {
+    const mergedConfig = config ? { ...leidenDefaultConfig, ...config } : leidenDefaultConfig;
     return [
-        leidenPlusLanguage(config),
+        leidenPlusLanguage(config?.languageConfig),
         leidenPlusToolbar,
+
+        ...(mergedConfig?.lint ? [leidenPlusLinter] : []),
+        ...(mergedConfig?.highlightActiveNode ? [highlightActiveNode] : []),
 
         lineNumbers(),
         highlightActiveLineGutter(),

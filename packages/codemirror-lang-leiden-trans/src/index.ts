@@ -9,14 +9,11 @@ import {
 import { parser } from "@leiden-js/parser-leiden-trans";
 import {
     blockIndent,
-    highlightActiveNode,
-    LeidenConfig,
-    leidenDefaultConfig,
     leidenHighlightStyle,
-    leidenHighlightStyleDark
+    leidenHighlightStyleDark,
+    LeidenLanguageConfig
 } from "@leiden-js/common/language";
 import { leidenTranslationHighlighting } from "./syntaxHighlight.js";
-import { leidenTransLinter } from "@leiden-js/linter-leiden-trans";
 
 export type LeidenTransTopNode =
     "Document"
@@ -25,11 +22,11 @@ export type LeidenTransTopNode =
     | "SingleP"
     | "BlockContent"
     | "InlineContent";
-export type LeidenTransConfig = LeidenConfig<LeidenTransTopNode>;
 
-export const leidenTranslationLanguage = (config?: LeidenTransConfig) => {
-    const mergedConfig = { ...leidenDefaultConfig, ...config };
-    return new LanguageSupport(LRLanguage.define({
+export type LeidenTransLanguageConfig = LeidenLanguageConfig<LeidenTransTopNode>;
+
+export const leidenTranslationLanguage = (config?: LeidenTransLanguageConfig) =>
+    new LanguageSupport(LRLanguage.define({
         parser: parser.configure({
             top: config?.topNode ?? "Document",
             props: [
@@ -50,14 +47,11 @@ export const leidenTranslationLanguage = (config?: LeidenTransConfig) => {
             indentOnInput: /^\s*=[TD]?>|^.$/
         }
     }), [
-        ...(mergedConfig?.lint ? [leidenTransLinter] : []),
-        ...(mergedConfig?.highlightActiveNode ? [highlightActiveNode] : []),
-        ...(mergedConfig.leidenHighlightStyle !== "none" ? [
-            syntaxHighlighting(mergedConfig?.leidenHighlightStyle === "dark" ? leidenHighlightStyleDark : leidenHighlightStyle),
-        ] : [])
+        ...(!config || config.leidenHighlightStyle !== "none" ? [
+            syntaxHighlighting(config?.leidenHighlightStyle === "dark" ? leidenHighlightStyleDark : leidenHighlightStyle),
+        ] : []),
 
     ]);
-};
 
 export { snippets } from "./snippets.js";
 export {

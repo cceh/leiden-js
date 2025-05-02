@@ -1,3 +1,4 @@
+import { wrappingRules } from "@leiden-js/codemirror-lang-leiden-plus";
 import {
     findDescendant,
     leidenBaseLinter,
@@ -5,8 +6,7 @@ import {
     NodeLinter,
     unclosedExpressionCheck
 } from "@leiden-js/common/linter";
-import { NodeProp, SyntaxNodeRef, TreeCursor } from "@lezer/common";
-import { wrappingRules } from "@leiden-js/codemirror-lang-leiden-plus";
+import { TreeCursor } from "@lezer/common";
 
 const nodeDescriptions: Record<string, string> = {
     Abbrev: "Abbreviation",

@@ -71,12 +71,12 @@ const language = new Compartment;
 
 function getLanguageExtensions(selectValue) {
     const [variant, topNode] = selectValue.split(".");
-    // const config = {
-    //     // highlightStyle: getHighlightStyle(),
-    //     topNode
-    // };
-    const leidenHighlightStyle = themeCheckbox.checked ? "dark" : "light";
-    const config = { topNode, leidenHighlightStyle };
+    const config = {
+        languageConfig: {
+            topNode,
+            leidenHighlightStyle: themeCheckbox.checked ? "dark" : "light"
+        }
+    };
     return variant === "leiden-plus"
         ? [leidenPlus(config)]
         : [leidenTranslation(config)];

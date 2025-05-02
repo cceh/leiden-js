@@ -11,25 +11,20 @@ import { parser } from "@leiden-js/parser-leiden-plus";
 import { leidenPlusHighlighting } from "./syntaxHighlight.js";
 import {
     blockIndent,
-    highlightActiveNode,
-    LeidenConfig,
-    leidenDefaultConfig,
     leidenHighlightStyle,
-    leidenHighlightStyleDark
+    leidenHighlightStyleDark, LeidenLanguageConfig
 } from "@leiden-js/common/language";
 import { completeFromList, CompletionContext, snippetCompletion } from "@codemirror/autocomplete";
 import { snippets } from "./snippets.js";
-import { leidenPlusLinter } from "@leiden-js/linter-leiden-plus";
 
 export type LeidenPlusTopNode = "Document" | "InlineContent" | "SingleDiv" | "SingleAb" | "BlockContent";
-export type LeidenPlusConfig = LeidenConfig<LeidenPlusTopNode>;
+export type LeidenPlusLanguageConfig = LeidenLanguageConfig<LeidenPlusTopNode>;
 
 // A language provider for Leiden+ with highlighting, indentation and folding information.
-export const leidenPlusLanguage = (config?: LeidenPlusConfig) => {
-    const mergedConfig = { ...leidenDefaultConfig, ...config };
-    return new LanguageSupport(LRLanguage.define({
+export const leidenPlusLanguage = (config?: LeidenPlusLanguageConfig) =>
+    new LanguageSupport(LRLanguage.define({
         parser: parser.configure({
-            top: mergedConfig?.topNode ?? "Document",
+            top: config?.topNode ?? "Document",
             props: [
                 leidenPlusHighlighting,
                 indentNodeProp.add({
@@ -58,14 +53,19 @@ export const leidenPlusLanguage = (config?: LeidenPlusConfig) => {
             }
         }
     }), [
-        ...(mergedConfig?.lint ? [leidenPlusLinter] : []),
-        ...(mergedConfig?.highlightActiveNode ? [highlightActiveNode] : []),
-        ...(mergedConfig.leidenHighlightStyle !== "none" ? [
-            syntaxHighlighting(mergedConfig?.leidenHighlightStyle === "dark" ? leidenHighlightStyleDark : leidenHighlightStyle),
+        ...(!config || config?.leidenHighlightStyle !== "none" ? [
+            syntaxHighlighting(config?.leidenHighlightStyle === "dark" ? leidenHighlightStyleDark : leidenHighlightStyle),
         ] : [])
     ]);
-};
 
 export { snippets } from "./snippets.js";
 export { inlineContentAllowed, atomicRules, wrappingRules } from "./syntax.js";
-export { acceptsCertLow, hasCertLow, getCertLow, addCertLowAtCursorPosition, removeCertLow, findClosestCertLowAncestor, addCertLow } from "./certLow.js";
+export {
+    acceptsCertLow,
+    hasCertLow,
+    getCertLow,
+    addCertLowAtCursorPosition,
+    removeCertLow,
+    findClosestCertLowAncestor,
+    addCertLow
+} from "./certLow.js";

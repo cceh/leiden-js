@@ -22,6 +22,11 @@
       "types": "./dist/util/index.d.ts",
       "require": "./dist/util/index.cjs",
       "import": "./dist/util/index.js"
+    },
+    "./codemirror-leiden": {
+      "types": "./dist/codemirror-leiden/index.d.ts",
+      "require": "./dist/codemirror-leiden/index.cjs",
+      "import": "./dist/codemirror-leiden/index.js"
     }
   },
   "description": "",

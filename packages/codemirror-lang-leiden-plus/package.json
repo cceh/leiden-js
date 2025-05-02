@@ -29,7 +29,6 @@
     "@codemirror/language": "^6.10.8",
     "@codemirror/state": "^6.5.2",
     "@leiden-js/common": "workspace:*",
-    "@leiden-js/linter-leiden-plus": "workspace:*",
     "@leiden-js/parser-leiden-plus": "workspace:*",
     "@lezer/common": "^1.2.3",
     "@lezer/highlight": "^1.2.1"
