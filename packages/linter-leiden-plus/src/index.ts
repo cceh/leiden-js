@@ -7,6 +7,7 @@ import {
     unclosedExpressionCheck
 } from "@leiden-js/common/linter";
 import { TreeCursor } from "@lezer/common";
+import { Diagnostic } from "@codemirror/lint";
 
 const nodeDescriptions: Record<string, string> = {
     Abbrev: "Abbreviation",
@@ -137,5 +138,5 @@ Abbreviation needs at least one
 };
 
 export const leidenPlusLinter = leidenLinterExtension(leidenPlusNodeLinter);
-export const lintLeidenPlus = (doc: string, rootCursor: TreeCursor) =>
+export const lintLeidenPlus = (doc: string, rootCursor: TreeCursor): Diagnostic[] =>
     leidenBaseLinter(doc, rootCursor, leidenPlusNodeLinter);
