@@ -31,7 +31,9 @@
     "@leiden-js/common": "workspace:*",
     "lit-html": "^3.2.1"
   },
+  "files": ["dist"],
   "publishConfig": {
-    "registry": "https://gitlab.dh.uni-koeln.de/api/v4/projects/726/packages/npm/"
+    "registry": "https://gitlab.dh.uni-koeln.de/api/v4/projects/726/packages/npm/",
+    "access": "public"
   }
 }
