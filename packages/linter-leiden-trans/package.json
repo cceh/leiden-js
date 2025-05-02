@@ -25,9 +25,8 @@
     "typescript": "^5.7.3"
   },
   "dependencies": {
-    "@codemirror/lint": "^6.8.4",
+    "@codemirror/lint": "^6.8.5",
     "@leiden-js/common": "workspace:*",
-    "@leiden-js/parser-leiden-trans": "workspace:*",
     "@leiden-js/codemirror-lang-leiden-trans": "workspace:*",
     "@lezer/common": "^1.2.3"
   },

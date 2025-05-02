@@ -74,9 +74,6 @@ importers:
       '@leiden-js/common':
         specifier: workspace:*
         version: link:../common
-      '@leiden-js/linter-leiden-plus':
-        specifier: workspace:*
-        version: link:../linter-leiden-plus
       '@leiden-js/parser-leiden-plus':
         specifier: workspace:*
         version: link:../parser-leiden-plus
@@ -111,9 +108,6 @@ importers:
       '@leiden-js/common':
         specifier: workspace:*
         version: link:../common
-      '@leiden-js/linter-leiden-trans':
-        specifier: workspace:*
-        version: link:../linter-leiden-trans
       '@leiden-js/parser-leiden-trans':
         specifier: workspace:*
         version: link:../parser-leiden-trans
@@ -136,6 +130,9 @@ importers:
 
   packages/codemirror-leiden-plus:
     dependencies:
+      '@codemirror/autocomplete':
+        specifier: ^6.18.6
+        version: 6.18.6
       '@codemirror/commands':
         specifier: ^6.8.1
         version: 6.8.1
@@ -157,6 +154,12 @@ importers:
       '@leiden-js/codemirror-lang-leiden-plus':
         specifier: workspace:*
         version: link:../codemirror-lang-leiden-plus
+      '@leiden-js/common':
+        specifier: workspace:*
+        version: link:../common
+      '@leiden-js/linter-leiden-plus':
+        specifier: workspace:*
+        version: link:../linter-leiden-plus
       '@leiden-js/toolbar-leiden-plus':
         specifier: workspace:*
         version: link:../toolbar-leiden-plus
@@ -173,6 +176,9 @@ importers:
 
   packages/codemirror-leiden-trans:
     dependencies:
+      '@codemirror/autocomplete':
+        specifier: ^6.18.6
+        version: 6.18.6
       '@codemirror/commands':
         specifier: ^6.8.1
         version: 6.8.1
@@ -194,6 +200,12 @@ importers:
       '@leiden-js/codemirror-lang-leiden-trans':
         specifier: workspace:*
         version: link:../codemirror-lang-leiden-trans
+      '@leiden-js/common':
+        specifier: workspace:*
+        version: link:../common
+      '@leiden-js/linter-leiden-trans':
+        specifier: workspace:*
+        version: link:../linter-leiden-trans
       '@leiden-js/toolbar-leiden-trans':
         specifier: workspace:*
         version: link:../toolbar-leiden-trans
@@ -241,12 +253,6 @@ importers:
 
   packages/dev-app:
     dependencies:
-      '@codemirror/autocomplete':
-        specifier: ^6.18.6
-        version: 6.18.6
-      '@codemirror/commands':
-        specifier: ^6.8.0
-        version: 6.8.0
       '@codemirror/lang-xml':
         specifier: ^6.1.0
         version: 6.1.0
@@ -256,9 +262,6 @@ importers:
       '@codemirror/lint':
         specifier: ^6.8.4
         version: 6.8.4
-      '@codemirror/search':
-        specifier: ^6.5.10
-        version: 6.5.10
       '@codemirror/state':
         specifier: ^6.5.2
         version: 6.5.2
@@ -277,12 +280,6 @@ importers:
       '@leiden-js/codemirror-leiden-trans':
         specifier: workspace:*
         version: link:../codemirror-leiden-trans
-      '@leiden-js/toolbar-leiden-plus':
-        specifier: workspace:*
-        version: link:../toolbar-leiden-plus
-      '@leiden-js/toolbar-leiden-trans':
-        specifier: workspace:*
-        version: link:../toolbar-leiden-trans
       '@leiden-js/transformer-leiden-plus':
         specifier: workspace:*
         version: link:../transformer-leiden-plus
@@ -306,17 +303,14 @@ importers:
   packages/linter-leiden-plus:
     dependencies:
       '@codemirror/lint':
-        specifier: ^6.8.4
-        version: 6.8.4
+        specifier: ^6.8.5
+        version: 6.8.5
       '@leiden-js/codemirror-lang-leiden-plus':
         specifier: workspace:*
         version: link:../codemirror-lang-leiden-plus
       '@leiden-js/common':
         specifier: workspace:*
         version: link:../common
-      '@leiden-js/parser-leiden-plus':
-        specifier: workspace:*
-        version: link:../parser-leiden-plus
       '@lezer/common':
         specifier: ^1.2.3
         version: 1.2.3
@@ -334,17 +328,14 @@ importers:
   packages/linter-leiden-trans:
     dependencies:
       '@codemirror/lint':
-        specifier: ^6.8.4
-        version: 6.8.4
+        specifier: ^6.8.5
+        version: 6.8.5
       '@leiden-js/codemirror-lang-leiden-trans':
         specifier: workspace:*
         version: link:../codemirror-lang-leiden-trans
       '@leiden-js/common':
         specifier: workspace:*
         version: link:../common
-      '@leiden-js/parser-leiden-trans':
-        specifier: workspace:*
-        version: link:../parser-leiden-trans
       '@lezer/common':
         specifier: ^1.2.3
         version: 1.2.3
@@ -499,12 +490,6 @@ importers:
 
   packages/ui-toolbar:
     dependencies:
-      '@codemirror/autocomplete':
-        specifier: ^6.18.6
-        version: 6.18.6
-      '@codemirror/language':
-        specifier: ^6.10.8
-        version: 6.11.0
       '@codemirror/state':
         specifier: ^6.5.2
         version: 6.5.2
@@ -514,9 +499,6 @@ importers:
       '@floating-ui/dom':
         specifier: ^1.6.13
         version: 1.6.13
-      '@leiden-js/codemirror-lang-leiden-plus':
-        specifier: workspace:*
-        version: link:../codemirror-lang-leiden-plus
       '@leiden-js/common':
         specifier: workspace:*
         version: link:../common
@@ -527,24 +509,12 @@ importers:
       '@rollup/plugin-typescript':
         specifier: ^12.1.2
         version: 12.1.2(rollup@4.34.8)(tslib@2.8.1)(typescript@5.7.3)
-      eslint:
-        specifier: ^9.21.0
-        version: 9.23.0
-      eslint-plugin-lit:
-        specifier: ^1.15.0
-        version: 1.15.0(eslint@9.23.0)
       rollup:
         specifier: ^4.34.8
         version: 4.34.8
-      rollup-plugin-dts:
-        specifier: ^6.1.1
-        version: 6.1.1(rollup@4.34.8)(typescript@5.7.3)
       typescript:
         specifier: ^5.7.3
         version: 5.7.3
-      web-types-lit:
-        specifier: ^0.1.0
-        version: 0.1.0
 
 packages:
 
@@ -881,12 +851,6 @@ packages:
 
   '@lezer/xml@1.0.6':
     resolution: {integrity: sha512-CdDwirL0OEaStFue/66ZmFSeppuL6Dwjlk8qk153mSQwiSH/Dlri4GNymrNWnUmPl2Um7QfV1FO9KFUyX3Twww==}
-
-  '@lit-labs/ssr-dom-shim@1.3.0':
-    resolution: {integrity: sha512-nQIWonJ6eFAvUUrSlwyHDm/aE8PBDu5kRpL0vHMg6K8fK3Diq1xdPjTnsJSwxABhaZ+5eBi1btQB5ShUTKo4nQ==}
-
-  '@lit/reactive-element@1.6.3':
-    resolution: {integrity: sha512-QuTgnG52Poic7uM1AN5yJ09QMe0O28e10XzSvWDz02TJiiKee4stsiownEIadWm8nYzyDAyT+gKzUoZmiWQtsQ==}
 
   '@marijn/find-cluster-break@1.0.2':
     resolution: {integrity: sha512-l0h88YhZFyKdXIFNfSWpyjStDjGHwZ/U7iobcK1cQQD8sejsONdQtTVU+1wVN1PBw40PiiHB1vA5S7VTfQiP9g==}
@@ -1519,12 +1483,6 @@ packages:
     resolution: {integrity: sha512-TtpcNJ3XAzx3Gq8sWRzJaVajRs0uVxA2YAkdb1jm2YkPz4G6egUFAyA3n5vtEIZefPk5Wa4UXbKuS5fKkJWdgA==}
     engines: {node: '>=10'}
 
-  eslint-plugin-lit@1.15.0:
-    resolution: {integrity: sha512-Yhr2MYNz6Ln8megKcX503aVZQln8wsywCG49g0heiJ/Qr5UjkE4pGr4Usez2anNcc7NvlvHbQWMYwWcgH3XRKA==}
-    engines: {node: '>= 12'}
-    peerDependencies:
-      eslint: '>= 5'
-
   eslint-scope@8.3.0:
     resolution: {integrity: sha512-pUNxi75F8MJ/GdeKtVLSbYg4ZI34J6C0C7sbL4YOp2exGwen7ZsuBqKzUhXd0qMQ362yET3z+uPwKeg/0C2XCQ==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
@@ -1846,17 +1804,8 @@ packages:
   lines-and-columns@1.2.4:
     resolution: {integrity: sha512-7ylylesZQ/PV29jhEDl3Ufjo6ZX7gCqJr5F7PKrqc93v7fzSymt1BpwEU8nAUXs8qzzvqhbjhK5QZg6Mt/HkBg==}
 
-  lit-element@3.3.3:
-    resolution: {integrity: sha512-XbeRxmTHubXENkV4h8RIPyr8lXc+Ff28rkcQzw3G6up2xg5E8Zu1IgOWIwBLEQsu3cOVFqdYwiVi0hv0SlpqUA==}
-
-  lit-html@2.8.0:
-    resolution: {integrity: sha512-o9t+MQM3P4y7M7yNzqAyjp7z+mQGa4NS4CxiyLqFPyFWyc4O+nodLrkrxSaCTrla6M5YOLaT3RpbbqjszB5g3Q==}
-
   lit-html@3.2.1:
     resolution: {integrity: sha512-qI/3lziaPMSKsrwlxH/xMgikhQ0EGOX2ICU73Bi/YHFvz2j/yMCIrw4+puF2IpQ4+upd3EWbvnHM9+PnJn48YA==}
-
-  lit@2.8.0:
-    resolution: {integrity: sha512-4Sc3OFX9QHOJaHbmTMk28SYgVxLN3ePDjg7hofEft2zWlehFL3LiAuapWc4U/kYwMYJSh2hTCPZ6/LIC7ii0MA==}
 
   load-tsconfig@0.2.5:
     resolution: {integrity: sha512-IXO6OCs9yg8tMKzfPZ1YmheJbZCiEsnBdcB03l0OcfK9prKnJb96siuHCr5Fl37/yo9DnKU+TLpxzTUspw9shg==}
@@ -2009,12 +1958,6 @@ packages:
     resolution: {integrity: sha512-GQ2EWRpQV8/o+Aw8YqtfZZPfNRWZYkbidE9k5rpl/hC3vtHHBfGm2Ifi6qWV+coDGkrUKZAxE3Lot5kcsRlh+g==}
     engines: {node: '>=6'}
 
-  parse5-htmlparser2-tree-adapter@6.0.1:
-    resolution: {integrity: sha512-qPuWvbLgvDGilKc5BoicRovlT4MtYT6JfJyBOMDsKoiT+GiuP5qyrPCnR9HcPECIJJmZh5jRndyNThnhhb/vlA==}
-
-  parse5@6.0.1:
-    resolution: {integrity: sha512-Ofn/CTFzRGTTxwpNEs9PP93gXShHcTq255nzRYSKe8AkVpZY7e1fpmTfOyoIvjP5HG7Z2ZM7VS9PPhQGW2pOpw==}
-
   parse5@7.2.1:
     resolution: {integrity: sha512-BuBYQYlv1ckiPdQi/ohiivi9Sagc9JG+Ozs0r7b/0iK3sKmrb0b9FdWdBbOdx6hBCM/F9Ir82ofnBhtZOjCRPQ==}
 
@@ -2110,10 +2053,6 @@ packages:
 
   require-main-filename@2.0.0:
     resolution: {integrity: sha512-NKN5kMDylKuldxYLSUfrbo5Tuzh4hd+2E8NPPX02mZtn1VuREQToYe/ZdlJy+J3uCpfaiGF05e7B8W0iXbQHmg==}
-
-  requireindex@1.2.0:
-    resolution: {integrity: sha512-L9jEkOi3ASd9PYit2cwRfyppc9NoABujTP8/5gFcbERmo5jUoAKovIC3fsF17pkTnGsrByysqX+Kxd2OTNI1ww==}
-    engines: {node: '>=0.10.5'}
 
   resolve-from@4.0.0:
     resolution: {integrity: sha512-pb/MYmXstAkysRFx8piNI1tGFNQIFA3vkE3Gq4EuA1dF6gHp/+vgZqsCGJapvy8N3Q+4o7FwvquPJcnZ7RYy4g==}
@@ -2443,9 +2382,6 @@ packages:
   w3c-xmlserializer@5.0.0:
     resolution: {integrity: sha512-o8qghlI8NZHU1lLPrpi2+Uq7abh4GGPpYANlalzWxyWteJOCsr/P+oPBA49TOLu5FTZO4d3F9MnWJfiMo4BkmA==}
     engines: {node: '>=18'}
-
-  web-types-lit@0.1.0:
-    resolution: {integrity: sha512-/qXAUTapH8wuqz+1j4aFZ2FUXD7w5P1CTlWWfCZYybqjBhCiedypNw01hdh8qJXMZOmodsGuDjxKSWs7jhJdsQ==}
 
   webidl-conversions@4.0.2:
     resolution: {integrity: sha512-YQ+BmxuTgd6UXZW3+ICGfyqRyHXVlD5GtQr5+qjiNW7bF0cqrzX500HVXPBOvgXb5YnzDd+h0zqyv61KUD7+Sg==}
@@ -2868,12 +2804,6 @@ snapshots:
       '@lezer/common': 1.2.3
       '@lezer/highlight': 1.2.1
       '@lezer/lr': 1.4.2
-
-  '@lit-labs/ssr-dom-shim@1.3.0': {}
-
-  '@lit/reactive-element@1.6.3':
-    dependencies:
-      '@lit-labs/ssr-dom-shim': 1.3.0
 
   '@marijn/find-cluster-break@1.0.2': {}
 
@@ -3460,13 +3390,6 @@ snapshots:
 
   escape-string-regexp@4.0.0: {}
 
-  eslint-plugin-lit@1.15.0(eslint@9.23.0):
-    dependencies:
-      eslint: 9.23.0
-      parse5: 6.0.1
-      parse5-htmlparser2-tree-adapter: 6.0.1
-      requireindex: 1.2.0
-
   eslint-scope@8.3.0:
     dependencies:
       esrecurse: 4.3.0
@@ -3816,25 +3739,9 @@ snapshots:
 
   lines-and-columns@1.2.4: {}
 
-  lit-element@3.3.3:
-    dependencies:
-      '@lit-labs/ssr-dom-shim': 1.3.0
-      '@lit/reactive-element': 1.6.3
-      lit-html: 2.8.0
-
-  lit-html@2.8.0:
-    dependencies:
-      '@types/trusted-types': 2.0.7
-
   lit-html@3.2.1:
     dependencies:
       '@types/trusted-types': 2.0.7
-
-  lit@2.8.0:
-    dependencies:
-      '@lit/reactive-element': 1.6.3
-      lit-element: 3.3.3
-      lit-html: 2.8.0
 
   load-tsconfig@0.2.5: {}
 
@@ -3987,12 +3894,6 @@ snapshots:
     dependencies:
       callsites: 3.1.0
 
-  parse5-htmlparser2-tree-adapter@6.0.1:
-    dependencies:
-      parse5: 6.0.1
-
-  parse5@6.0.1: {}
-
   parse5@7.2.1:
     dependencies:
       entities: 4.5.0
@@ -4056,8 +3957,6 @@ snapshots:
   require-directory@2.1.1: {}
 
   require-main-filename@2.0.0: {}
-
-  requireindex@1.2.0: {}
 
   resolve-from@4.0.0: {}
 
@@ -4396,10 +4295,6 @@ snapshots:
   w3c-xmlserializer@5.0.0:
     dependencies:
       xml-name-validator: 5.0.0
-
-  web-types-lit@0.1.0:
-    dependencies:
-      lit: 2.8.0
 
   webidl-conversions@4.0.2: {}
 
