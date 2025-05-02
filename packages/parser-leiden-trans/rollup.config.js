@@ -8,8 +8,8 @@ export default [{
         return !/^[./]/.test(id);
     },
     output: [
-        { file: "dist/index.cjs", format: "cjs" },
-        { file: "dist/index.js", format: "es", }
+        { file: "dist/index.cjs", format: "cjs", sourcemap: true },
+        { file: "dist/index.js", format: "es", sourcemap: true }
     ],
     plugins: [
         typescript({ include: ["src/**/*.js"], useTsconfigDeclarationDir: true })

@@ -31,8 +31,8 @@
   },
   "description": "",
   "scripts": {
-    "build": "tsup 'src/**/index.ts' --format cjs,esm --dts",
-    "watch": "tsup 'src/**/index.ts' --format cjs,esm --dts --watch"
+    "build": "tsup 'src/**/index.ts' --format cjs,esm --dts --sourcemap",
+    "watch": "tsup 'src/**/index.ts' --format cjs,esm --dts --watch --sourcemap"
   },
   "keywords": [],
   "author": "",
