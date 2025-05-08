@@ -1,37 +1,50 @@
-import { TransformationError } from "@leiden-js/common/transformer";
+import {
+    DocumentFragment,
+    DOMParserType,
+    Element,
+    getChildElements,
+    getDOMParser,
+    getXMLSerializer,
+    getOuterHtml,
+    Node,
+    ParserError,
+    TransformationError,
+    XMLSerializerType
+} from "@leiden-js/common/transformer";
 
-function transformElem(elem: Element, output: string[]) {
+function transformElem(elem: Element, output: string[], serializer?: XMLSerializerType) {
     for (let i = 0; i < elem.childNodes.length; i++) {
-        transform(elem.childNodes[i], output);
+        transform(elem.childNodes[i], output, serializer);
     }
 }
 
-function transform(node: Node|null, output: string[]) {
+function transform(node: Node | null, output: string[], serializer?: XMLSerializerType) {
     if (!node) {
         return;
     }
 
     switch (node.nodeType) {
-        case Node.DOCUMENT_NODE:
-        case Node.DOCUMENT_FRAGMENT_NODE:
-            transform((<DocumentFragment>node).firstElementChild, output);
+        case node.DOCUMENT_NODE:
+        case node.DOCUMENT_FRAGMENT_NODE: {
+            const firstChild = getChildElements(<DocumentFragment>node)[0];
+            transform(firstChild, output, serializer);
             break;
-        case Node.ELEMENT_NODE: {
+        }
+        case node.ELEMENT_NODE: {
             const elem = <Element>node;
             let n;
             switch (elem.localName) {
                 case "ab":
                     output.push("<=");
-                    transformElem(elem, output);
+                    transformElem(elem, output, serializer);
                     output.push("=>");
                     break;
                 case "abbr":
                     output.push("(|");
-                    transformElem(elem, output);
+                    transformElem(elem, output, serializer);
                     // Check for certainty
-                    for (const child of elem.children) {
-                        if (child.tagName === "certainty" &&
-                            child.getAttribute("match") === ".." &&
+                    for (const child of getChildElements(elem, "certainty")) {
+                        if (child.getAttribute("match") === ".." &&
                             child.getAttribute("locus") === "name") {
                             output.push("(?)");
                         }
@@ -40,7 +53,7 @@ function transform(node: Node|null, output: string[]) {
                     break;
                 case "del":
                     output.push("〚");
-                    switch(elem.getAttribute("rend")) {
+                    switch (elem.getAttribute("rend")) {
                         case "cross-strokes":
                             output.push("X");
                             break;
@@ -50,12 +63,11 @@ function transform(node: Node|null, output: string[]) {
                         case "erasure":
                             break;
                         default:
-                            throw new TransformationError(`Unsupported del rend '${elem.getAttribute("rend")}'`, elem);
+                            throw new TransformationError(`Unsupported del rend '${elem.getAttribute("rend")}'`, elem, serializer);
                     }
-                    transformElem(elem, output);
-                    for (const child of elem.children) {
-                        if (child.tagName === "certainty" &&
-                            child.getAttribute("match") === ".." &&
+                    transformElem(elem, output, serializer);
+                    for (const child of getChildElements(elem, "certainty")) {
+                        if (child.getAttribute("match") === ".." &&
                             child.getAttribute("locus") === "value") {
                             output.push("(?)");
                         }
@@ -68,7 +80,7 @@ function transform(node: Node|null, output: string[]) {
                         case "textpart": {
                             n = elem.getAttribute("n");
                             if (!n) {
-                                throw new TransformationError("div needs an n attribute", elem);
+                                throw new TransformationError("div needs an n attribute", elem, serializer);
                             }
 
                             const subtype = elem.getAttribute("subtype");
@@ -82,21 +94,21 @@ function transform(node: Node|null, output: string[]) {
                                 output.push(`.${corresp}`);
                             }
 
-                            transformElem(elem, output);
+                            transformElem(elem, output, serializer);
                             output.push("=D>");
                             break;
                         }
                         case "edition": {
                             const lang = elem.getAttribute("xml:lang");
                             if (!lang) {
-                                throw new TransformationError("div needs a xml:lang attribute", elem);
+                                throw new TransformationError("div needs a xml:lang attribute", elem, serializer);
                             }
                             output.push(`<S=.${lang}`);
-                            transformElem(elem, output);
+                            transformElem(elem, output, serializer);
                             break;
                         }
                         default:
-                            throw new TransformationError(`Unsupported div type '${type}'`, elem);
+                            throw new TransformationError(`Unsupported div type '${type}'`, elem, serializer);
                     }
                     break;
                 }
@@ -104,7 +116,7 @@ function transform(node: Node|null, output: string[]) {
                 case "ex": {
                     const cert = elem.getAttribute("cert");
                     output.push("(");
-                    transformElem(elem, output);
+                    transformElem(elem, output, serializer);
                     if (cert === "low") {
                         output.push("?");
                     }
@@ -112,24 +124,25 @@ function transform(node: Node|null, output: string[]) {
                     break;
                 }
                 case "gap":
-                    transformGap(elem, output);
+                    transformGap(elem, output, serializer);
                     break;
                 case "space":
-                    transformSpace(elem, output);
+                    transformSpace(elem, output, serializer);
                     break;
                 case "lb":
-                    transformLb(elem, output);
+                    transformLb(elem, output, serializer);
                     break;
                 case "supplied":
-                    transformSupplied(elem, output);
+                    transformSupplied(elem, output, serializer);
                     break;
                 case "unclear": {
-                    if (elem.childElementCount > 0) {
-                        if (elem.childElementCount === 1 && elem.firstElementChild?.localName === "g") {
-                            transformGlyph(elem.firstElementChild, output);
+                    const children = getChildElements(elem);
+                    if (children.length > 0) {
+                        if (children.length === 1 && children[0]?.localName === "g") {
+                            transformGlyph(children[0], output);
                             break;
                         }
-                        throw new TransformationError("unclear cannot contain non-character content", elem);
+                        throw new TransformationError("unclear cannot contain non-character content", elem, serializer);
                     }
                     const text = elem.textContent || "";
                     addCombining(text, output, ["\u0323"]);
@@ -137,37 +150,37 @@ function transform(node: Node|null, output: string[]) {
                 }
                 case "foreign":
                     output.push("~|");
-                    transformElem(elem, output);
+                    transformElem(elem, output, serializer);
                     output.push(`|~${elem.getAttribute("xml:lang")} `);
                     break;
                 case "milestone":
                     transformMilestone(elem, output);
                     break;
                 case "add":
-                    transformAdd(elem, output);
+                    transformAdd(elem, output, serializer);
                     break;
                 case "hi":
-                    transformHi(elem, output);
+                    transformHi(elem, output, serializer);
                     break;
                 case "choice":
-                    transformChoice(elem, output);
+                    transformChoice(elem, output, serializer);
                     break;
                 case "app":
-                    transformApp(elem, output);
+                    transformApp(elem, output, serializer);
                     break;
                 case "subst":
-                    transformSubst(elem, output);
+                    transformSubst(elem, output, serializer);
                     break;
                 case "orig":
                     output.push("!");
-                    transformElem(elem, output);
+                    transformElem(elem, output, serializer);
                     output.push("!");
                     break;
                 case "handShift": {
                     output.push("$");
                     const newHand = elem.getAttribute("new");
                     if (!newHand) {
-                        throw new TransformationError('handshift needs a "new" attribute', elem);
+                        throw new TransformationError('handshift needs a "new" attribute', elem, serializer);
                     }
                     output.push(newHand);
 
@@ -179,12 +192,13 @@ function transform(node: Node|null, output: string[]) {
                     break;
                 }
                 case "figure": {
-                    if (elem.childNodes.length !==1 || elem.firstElementChild?.localName !== "figDesc") {
-                        throw new TransformationError("figure needs exactly one figDesc child", elem);
+                    const children = getChildElements(elem);
+                    if (elem.childNodes.length !== 1 || children[0]?.localName !== "figDesc") {
+                        throw new TransformationError("figure needs exactly one figDesc child", elem, serializer);
                     }
-                    const figDesc = elem.firstElementChild;
-                    if (figDesc.childNodes.length !== 1 || figDesc.childElementCount > 0) {
-                        throw new TransformationError("figDesc must only contain text and cannot be empty", elem);
+                    const figDesc = children[0];
+                    if (figDesc.childNodes.length !== 1 || getChildElements(figDesc).length > 0) {
+                        throw new TransformationError("figDesc must only contain text and cannot be empty", elem, serializer);
                     }
 
                     output.push(`#${figDesc.textContent} `);
@@ -194,19 +208,18 @@ function transform(node: Node|null, output: string[]) {
                     transformGlyph(elem, output);
                     break;
                 case "num":
-                    transformNum(elem, output);
+                    transformNum(elem, output, serializer);
                     break;
                 case "note":
-                    transformNote(elem, output);
+                    transformNote(elem, output, serializer);
                     break;
                 case "surplus":
                     output.push("{");
-                    transformElem(elem, output);
+                    transformElem(elem, output, serializer);
 
                     // Check for certainty
-                    for (const child of elem.children) {
-                        if (child.tagName === "certainty" &&
-                            child.getAttribute("match") === ".." &&
+                    for (const child of getChildElements(elem, "certainty")) {
+                        if (child.getAttribute("match") === ".." &&
                             child.getAttribute("locus") === "value") {
                             output.push("(?)");
                         }
@@ -215,7 +228,7 @@ function transform(node: Node|null, output: string[]) {
                     break;
                 case "q":
                     output.push('"');
-                    transformElem(elem, output);
+                    transformElem(elem, output, serializer);
                     output.push('"');
                     break;
 
@@ -223,24 +236,14 @@ function transform(node: Node|null, output: string[]) {
                 case "ref":
                     break;
                 default:
-                    throw new TransformationError(`Cannot transform element ${elem.localName} to Leiden`, elem);
+                    throw new TransformationError(`Cannot transform element ${elem.localName} to Leiden`, elem, serializer);
             }
             break;
         }
-        case Node.TEXT_NODE:
+        case node.TEXT_NODE:
             output.push(node.nodeValue || "");
             break;
     }
-}
-
-function getElementChildren(element: Element, name: string) {
-    const matches: Element[] = [];
-    for (const child of element.children) {
-        if (child.localName === name) {
-            matches.push(child);
-        }
-    }
-    return matches;
 }
 
 function getLength(input: string | null): number {
@@ -290,31 +293,32 @@ function addCombining(textContent: string, output: string[], combiningCharacters
     }
 }
 
-function transformNote(elem: Element, output: string[]) {
+function transformNote(elem: Element, output: string[], serializer?: XMLSerializerType) {
     output.push("/*");
 
     let ref: Element | null = null;
-    for (const child of elem.children) {
+    const children = getChildElements(elem);
+    for (const child of children) {
         if (child.localName === "ref") {
             if (!ref) {
-                if (elem.lastElementChild !== child) {
-                    throw new TransformationError("ref needs to be the last child of note", elem);
+                if (children[children.length - 1] !== child) {
+                    throw new TransformationError("ref needs to be the last child of note", elem, serializer);
                 }
-                ref = child;
+                ref = <Element>child;
             } else {
-                throw new TransformationError("note can only contain one ref", elem);
+                throw new TransformationError("note can only contain one ref", elem, serializer);
             }
         }
     }
 
-    transformElem(elem, output);
+    transformElem(elem, output, serializer);
     if (ref) {
         const n = ref.getAttribute("n");
         if (!n) {
-            throw new TransformationError('ref must contain an "n" attribute', elem);
+            throw new TransformationError('ref must contain an "n" attribute', elem, serializer);
         }
         if (!ref.textContent) {
-            throw new TransformationError("ref cannot be empty", elem);
+            throw new TransformationError("ref cannot be empty", elem, serializer);
         }
 
         output.push(`(ref=${n}=${ref.textContent})`);
@@ -322,7 +326,7 @@ function transformNote(elem: Element, output: string[]) {
     output.push("*/");
 }
 
-function transformNum(elem: Element, output: string[]) {
+function transformNum(elem: Element, output: string[], serializer?: XMLSerializerType) {
     const value = elem.getAttribute("value");
     const type = elem.getAttribute("type");
     const rend = elem.getAttribute("rend");
@@ -330,13 +334,12 @@ function transformNum(elem: Element, output: string[]) {
     const atMost = elem.getAttribute("atMost");
 
     output.push("<#");
-    transformElem(elem, output);
+    transformElem(elem, output, serializer);
 
     // Check for certainty
     let hasCertainty = false;
-    for (const child of elem.children) {
-        if (child.tagName === "certainty" &&
-            child.getAttribute("match") === "../@value" &&
+    for (const child of getChildElements(elem, "certainty")) {
+        if (child.getAttribute("match") === "../@value" &&
             child.getAttribute("locus") === "value") {
             hasCertainty = true;
         }
@@ -350,7 +353,7 @@ function transformNum(elem: Element, output: string[]) {
             output.push("=");
             break;
         default:
-            throw new TransformationError(`Incorrect rend attribute on num: ${rend}`, elem);
+            throw new TransformationError(`Incorrect rend attribute on num: ${rend}`, elem, serializer);
     }
 
     if (type === "fraction") {
@@ -403,19 +406,18 @@ function transformGlyph(elem: Element, output: string[]) {
     output.push("*");
 }
 
-function transformSubst(elem: Element, output: string[]) {
+function transformSubst(elem: Element, output: string[], serializer?: XMLSerializerType) {
     output.push("<:");
 
-    const add = getElementChildren(elem, "add")?.[0];
-    const del = getElementChildren(elem, "del")?.[0];
+    const add = getChildElements(elem, "add")?.[0];
+    const del = getChildElements(elem, "del")?.[0];
 
     if (add) {
-        transformElem(add, output);
+        transformElem(add, output, serializer);
 
         // Check for certainty in add
-        for (const child of add.children) {
-            if (child.tagName === "certainty" &&
-                child.getAttribute("match") === ".." &&
+        for (const child of getChildElements(add, "certainty")) {
+            if (child.getAttribute("match") === ".." &&
                 child.getAttribute("locus") === "value") {
                 output.push("(?)");
             }
@@ -425,12 +427,11 @@ function transformSubst(elem: Element, output: string[]) {
     output.push("|subst|");
 
     if (del) {
-        transformElem(del, output);
+        transformElem(del, output, serializer);
 
         // Check for certainty in del
-        for (const child of del.children) {
-            if (child.tagName === "certainty" &&
-                child.getAttribute("match") === ".." &&
+        for (const child of getChildElements(del, "certainty")) {
+            if (child.getAttribute("match") === ".." &&
                 child.getAttribute("locus") === "value") {
                 output.push("(?)");
             }
@@ -440,24 +441,23 @@ function transformSubst(elem: Element, output: string[]) {
     output.push(":>");
 }
 
-function transformChoice(elem: Element, output: string[]) {
+function transformChoice(elem: Element, output: string[], serializer?: XMLSerializerType) {
     output.push("<:");
 
-    const children = Array.from(elem.children);
+    const children = Array.from(elem.childNodes).filter(node => node.nodeType === node.ELEMENT_NODE) as Element[];
     const firstChild = children[0];
 
     if (firstChild.tagName === "corr") {
         // Handle correction
-        transformElem(firstChild, output);
+        transformElem(firstChild, output, serializer);
         if (firstChild.getAttribute("cert") === "low") output.push("(?)");
         output.push("|corr|");
 
         const sic = children[1];
-        transformElem(sic, output);
+        transformElem(sic, output, serializer);
         // Check for certainty in sic
-        for (const child of sic.children) {
-            if (child.tagName === "certainty" &&
-                child.getAttribute("match") === ".." &&
+        for (const child of getChildElements(sic, "certainty")) {
+            if (child.getAttribute("match") === ".." &&
                 child.getAttribute("locus") === "value") {
                 output.push("(?)");
             }
@@ -469,7 +469,7 @@ function transformChoice(elem: Element, output: string[]) {
             // Handle multiple reg tags
             for (let i = 0; i < children.length - 1; i++) {
                 const reg = children[i];
-                transformElem(reg, output);
+                transformElem(reg, output, serializer);
                 if (reg.getAttribute("cert") === "low") output.push("(?)");
 
                 const lang = reg.getAttribute("xml:lang");
@@ -479,18 +479,17 @@ function transformChoice(elem: Element, output: string[]) {
             }
             output.push("|reg||");
             const orig = children[children.length - 1];
-            transformElem(orig, output);
+            transformElem(orig, output, serializer);
             // Check for certainty in orig
-            for (const child of orig.children) {
-                if (child.tagName === "certainty" &&
-                    child.getAttribute("match") === ".." &&
+            for (const child of getChildElements(orig, "certainty")) {
+                if (child.getAttribute("match") === ".." &&
                     child.getAttribute("locus") === "value") {
                     output.push("(?)");
                 }
             }
         } else {
             // Single reg
-            transformElem(firstChild, output);
+            transformElem(firstChild, output, serializer);
             if (firstChild.getAttribute("cert") === "low") output.push("(?)");
 
             const lang = firstChild.getAttribute("xml:lang");
@@ -499,11 +498,10 @@ function transformChoice(elem: Element, output: string[]) {
             output.push("|reg|");
 
             const orig = children[1];
-            transformElem(orig, output);
+            transformElem(orig, output, serializer);
             // Check for certainty in orig
-            for (const child of orig.children) {
-                if (child.tagName === "certainty" &&
-                    child.getAttribute("match") === ".." &&
+            for (const child of getChildElements(orig, "certainty")) {
+                if (child.getAttribute("match") === ".." &&
                     child.getAttribute("locus") === "value") {
                     output.push("(?)");
                 }
@@ -514,21 +512,20 @@ function transformChoice(elem: Element, output: string[]) {
     output.push(":>");
 }
 
-function transformApp(elem: Element, output: string[]) {
+function transformApp(elem: Element, output: string[], serializer?: XMLSerializerType) {
     output.push("<:");
 
     const type = elem.getAttribute("type");
-    const lem = getElementChildren(elem, "lem")?.[0];
-    const readings = getElementChildren(elem, "rdg");
+    const lem = getChildElements(elem, "lem")?.[0];
+    const readings = getChildElements(elem, "rdg");
 
     // Handle lem
     if (lem) {
-        transformElem(lem, output);
+        transformElem(lem, output, serializer);
 
         // Handle certainty in lem
-        for (const child of lem.children) {
-            if (child.tagName === "certainty" &&
-                child.getAttribute("match") === ".." &&
+        for (const child of getChildElements(lem, "certainty")) {
+            if (child.getAttribute("match") === ".." &&
                 child.getAttribute("locus") === "value") {
                 output.push("(?)");
             }
@@ -548,12 +545,11 @@ function transformApp(elem: Element, output: string[]) {
 
     // Handle readings
     Array.from(readings).forEach((rdg, idx) => {
-        transformElem(rdg, output);
+        transformElem(rdg, output, serializer);
 
         // Handle certainty in rdg
-        for (const child of rdg.children) {
-            if (child.tagName === "certainty" &&
-                child.getAttribute("match") === ".." &&
+        for (const child of getChildElements(rdg, "certainty")) {
+            if (child.getAttribute("match") === ".." &&
                 child.getAttribute("locus") === "value") {
                 output.push("(?)");
             }
@@ -570,12 +566,12 @@ function transformApp(elem: Element, output: string[]) {
     output.push(":>");
 }
 
-function transformHi(elem: Element, output: string[]) {
+function transformHi(elem: Element, output: string[], serializer?: XMLSerializerType) {
     const rend = elem.getAttribute("rend");
     let certLow = false;
 
     // Check for certainty
-    for (const e of elem.children) {
+    for (const e of getChildElements(elem)) {
         if (e.tagName === "certainty" &&
             e.getAttribute("match") === ".." &&
             e.getAttribute("locus") === "value") {
@@ -594,31 +590,33 @@ function transformHi(elem: Element, output: string[]) {
     };
 
     if (rend && diacriticalMap[rend]) {
+        const children = getChildElements(elem);
+
         const parentHi = elem.parentElement?.localName === "hi" ? elem.parentElement : null;
         const parentRend = parentHi?.getAttribute("rend");
         const parentDiacritical = parentRend && diacriticalMap[parentRend] ? parentHi : null;
         if (parentDiacritical) {
             const parentParentRend = parentDiacritical.parentElement?.getAttribute("rend");
             if (parentDiacritical.parentElement?.localName === "hi" && diacriticalMap[parentParentRend ?? ""]) {
-                throw new TransformationError(`Cannot handle diacritical mark in ${elem.outerHTML}`, elem);
+                throw new TransformationError(`Cannot handle diacritical mark in ${getOuterHtml(elem, serializer)}`, elem, serializer);
             }
 
-            if (elem.childElementCount > 0 || getLength(elem.textContent) !== 1) {
-                throw new TransformationError(`Cannot handle diacritical mark in ${elem.outerHTML}`, elem);
+            if (children.length > 0 || getLength(elem.textContent) !== 1) {
+                throw new TransformationError(`Cannot handle diacritical mark in ${getOuterHtml(elem, serializer)}`, elem, serializer);
             }
         } else {
-            if (elem.childElementCount === 0) {
+            if (children.length === 0) {
                 if (getLength(elem.textContent) !== 1) {
-                    throw new TransformationError(`Cannot handle diacritical mark in ${elem.outerHTML}`, elem);
+                    throw new TransformationError(`Cannot handle diacritical mark in ${getOuterHtml(elem, serializer)}`, elem, serializer);
                 }
-            } else if (elem.childElementCount > 0) {
-                const child = elem.children[0];
-                if (elem.childElementCount > 2 || !["unclear", "gap", "hi", "certainty"].includes(child.localName)) {
+            } else if (children.length > 0) {
+                const child = children[0];
+                if (child && children.length > 2 || !["unclear", "gap", "hi", "certainty"].includes(child.nodeName)) {
                     // TODO guard attributes
-                    throw new TransformationError(`Cannot handle diacritical mark in ${elem.outerHTML}`, elem);
-                } else if (elem.firstElementChild?.localName === "unclear") {
-                    if (getLength(elem.firstElementChild?.textContent) !== 1) {
-                        throw new TransformationError(`Cannot handle diacritical mark in ${elem.outerHTML}`, elem);
+                    throw new TransformationError(`Cannot handle diacritical mark in ${getOuterHtml(elem, serializer)}`, elem, serializer);
+                } else if (child?.localName === "unclear") {
+                    if (getLength(child.textContent) !== 1) {
+                        throw new TransformationError(`Cannot handle diacritical mark in ${getOuterHtml(elem, serializer)}`, elem, serializer);
                     }
                 }
             }
@@ -627,11 +625,11 @@ function transformHi(elem: Element, output: string[]) {
         if (parentDiacritical) {
             output.push(` ${elem.textContent}(${(parentRend && diacriticalMap[parentRend]) ?? ""}${diacriticalMap[rend]})`);
         } else {
-            const isParentHi = elem.firstElementChild?.localName !== "hi";
+            const isParentHi = children[0]?.localName !== "hi";
             if (isParentHi) {
                 output.push(" ");
             }
-            transformElem(elem, output);
+            transformElem(elem, output, serializer);
             if (isParentHi) {
                 output.push(`(${diacriticalMap[rend]})`);
             }
@@ -644,26 +642,26 @@ function transformHi(elem: Element, output: string[]) {
     switch (rend) {
         case "subscript":
             output.push("\\|");
-            transformElem(elem, output);
+            transformElem(elem, output, serializer);
             if (certLow) output.push("(?)");
             output.push("|/");
             break;
 
         case "tall":
             output.push("~||");
-            transformElem(elem, output);
+            transformElem(elem, output, serializer);
             output.push("||~tall");
             break;
 
         case "superscript":
             output.push("|^");
-            transformElem(elem, output);
+            transformElem(elem, output, serializer);
             output.push("^|");
             break;
 
         case "supraline-underline":
             output.push("¯_");
-            transformElem(elem, output);
+            transformElem(elem, output, serializer);
             output.push("_¯");
             break;
 
@@ -671,7 +669,7 @@ function transformHi(elem: Element, output: string[]) {
             // Check if using combining macron or non-combining
             let hasNonUnclearElementChildren = false;
 
-            for (const child of elem.children) {
+            for (const child of getChildElements(elem)) {
                 if (child.localName !== "unclear") {
                     hasNonUnclearElementChildren = true;
                     break;
@@ -680,11 +678,11 @@ function transformHi(elem: Element, output: string[]) {
 
             if (hasNonUnclearElementChildren) {
                 output.push("¯");
-                transformElem(elem, output);
+                transformElem(elem, output, serializer);
                 output.push("¯");
             } else { // only unclear children or no element children
                 for (const child of elem.childNodes) {
-                    if (child.nodeType === Node.TEXT_NODE) {
+                    if (child.nodeType === child.TEXT_NODE) {
                         addCombining(child.textContent ?? "", output, ["\u0304"]);
                     } else if (child.nodeName === "unclear") {
                         addCombining(child.textContent ?? "", output, ["\u0304", "\u0323"]);
@@ -695,12 +693,15 @@ function transformHi(elem: Element, output: string[]) {
     }
 }
 
-function transformAdd(elem: Element, output: string[]) {
+function transformAdd(elem: Element, output: string[], serializer?: XMLSerializerType) {
     const place = elem.getAttribute("place");
     const rend = elem.getAttribute("rend");
     let certLow = false;
 
-    const certElem = elem.lastChild?.nodeName === "certainty" ? elem.lastElementChild : null;
+    const children = getChildElements(elem);
+    const lastChild = children[children.length - 1];
+    const certElem = lastChild?.nodeName === "certainty" ? lastChild : null;
+
     if (certElem?.tagName === "certainty" &&
         certElem.getAttribute("match") === ".." &&
         certElem.getAttribute("locus") === "name") {
@@ -710,7 +711,7 @@ function transformAdd(elem: Element, output: string[]) {
     // Handle special renderings first
     if (rend === "sling" && place === "margin") {
         output.push("<|");
-        transformElem(elem, output);
+        transformElem(elem, output, serializer);
         if (certLow) output.push("(?)");
         output.push("|>");
         return;
@@ -718,7 +719,7 @@ function transformAdd(elem: Element, output: string[]) {
 
     if (rend === "underline" && place === "margin") {
         output.push("<_");
-        transformElem(elem, output);
+        transformElem(elem, output, serializer);
         if (certLow) output.push("(?)");
         output.push("_>");
         return;
@@ -728,14 +729,14 @@ function transformAdd(elem: Element, output: string[]) {
     switch (place) {
         case "above":
             output.push("\\");
-            transformElem(elem, output);
+            transformElem(elem, output, serializer);
             if (certLow) output.push("(?)");
             output.push("/");
             break;
 
         case "below":
             output.push("//");
-            transformElem(elem, output);
+            transformElem(elem, output, serializer);
             if (certLow) output.push("(?)");
             output.push("\\\\");
             break;
@@ -747,7 +748,7 @@ function transformAdd(elem: Element, output: string[]) {
         case "margin":
         case "interlinear":
             output.push(`||${place === "interlinear" ? "interlin" : place}:`);
-            transformElem(elem, output);
+            transformElem(elem, output, serializer);
             if (certLow) output.push("(?)");
             output.push("||");
             break;
@@ -777,12 +778,12 @@ function transformMilestone(elem: Element, output: string[]) {
     }
 }
 
-function transformLb(elem: Element, output: string[]) {
+function transformLb(elem: Element, output: string[], serializer?: XMLSerializerType) {
     const n = elem.getAttribute("n");
     const breakAttr = elem.getAttribute("break");
     const rend = elem.getAttribute("rend");
     if (!n) {
-        throw new TransformationError(`Missing n attribute in lb element: ${elem.outerHTML}`, elem);
+        throw new TransformationError(`Missing n attribute in lb element: ${getOuterHtml(elem, serializer)}`, elem, serializer);
     }
 
 
@@ -815,7 +816,7 @@ function transformLb(elem: Element, output: string[]) {
     }
 }
 
-function transformGap(elem: Element, output: string[]) {
+function transformGap(elem: Element, output: string[], serializer?: XMLSerializerType) {
     const unit = elem.getAttribute("unit");
     const quantity = elem.getAttribute("quantity");
     const reason = elem.getAttribute("reason");
@@ -824,13 +825,10 @@ function transformGap(elem: Element, output: string[]) {
     let vestiges = false;
     const extent = elem.getAttribute("extent");
 
+    const children = getChildElements(elem);
 
-    let certElem = null;
-    for (const e of elem.children) {
-        if (e.tagName === "certainty") {
-            certElem = e;
-        }
-    }
+    const certElem = children.find(e => e.localName === "certainty");
+
     if (certElem && certElem.getAttribute("match") === ".." && certElem.getAttribute("locus") === "name") {
         certLow = true;
     }
@@ -846,16 +844,22 @@ function transformGap(elem: Element, output: string[]) {
             output.push("<");
         }
     } else if (reason === "ellipsis" || reason === "illegible") {
-        if (elem.children.length === 1 || elem.children.length === 2) {
-            const descEl = elem.children[0];
+        if (children.length === 1 || children.length === 2) {
+            const descEl = children[0];
             if (descEl.tagName === "desc") {
                 if (reason === "ellipsis") {
                     if (descEl.textContent === "non transcribed") {
                         let unitOutput = "";
                         switch (unit) {
-                            case "character": unitOutput = "Chars"; break;
-                            case "line": unitOutput = "Lines"; break;
-                            case "column": unitOutput = "Column"; break;
+                            case "character":
+                                unitOutput = "Chars";
+                                break;
+                            case "line":
+                                unitOutput = "Lines";
+                                break;
+                            case "column":
+                                unitOutput = "Column";
+                                break;
                         }
                         output.push(`(${unitOutput}: `);
                     } else {
@@ -904,7 +908,7 @@ function transformGap(elem: Element, output: string[]) {
             if (atLeast !== null && atMost !== null) {
                 quantityOutput = `${atLeast}-${atMost}`;
             } else {
-                throw new TransformationError(`Invalid gap element: ${elem.outerHTML}`, elem);
+                throw new TransformationError(`Invalid gap element: ${getOuterHtml(elem, serializer)}`, elem, serializer);
             }
         }
     }
@@ -950,18 +954,20 @@ function transformGap(elem: Element, output: string[]) {
     }
 }
 
-function transformSpace(elem: Element, output: string[]) {
+function transformSpace(elem: Element, output: string[], serializer?: XMLSerializerType) {
     const unit = elem.getAttribute("unit");
     const quantity = elem.getAttribute("quantity");
     let certLow = false;
 
-    // Check for certainty element
-    let certElem = null;
-    for (const e of elem.children) {
-        if (e.tagName === "certainty") {
-            certElem = e;
+    const children: Element[] = [];
+    for (const e of elem.childNodes) {
+        if (e.nodeType === e.ELEMENT_NODE) {
+            children.push(e as Element);
         }
     }
+
+    const certElem = children.find(e => e.nodeName === "certainty");
+
     if (certElem && certElem.getAttribute("match") === ".." && certElem.getAttribute("locus") === "name") {
         certLow = true;
     }
@@ -991,7 +997,7 @@ function transformSpace(elem: Element, output: string[]) {
             if (atLeast !== null && atMost !== null) {
                 quantityOutput = `${atLeast}-${atMost}`;
             } else {
-                throw new TransformationError(`Invalid space element: ${elem.outerHTML}`, elem);
+                throw new TransformationError(`Invalid space element: ${getOuterHtml(elem, serializer)}`, elem, serializer);
             }
         }
     }
@@ -1009,7 +1015,7 @@ function transformSpace(elem: Element, output: string[]) {
 }
 
 
-function transformSupplied(elem: Element, output: string[]) {
+function transformSupplied(elem: Element, output: string[], serializer?: XMLSerializerType) {
     const reason = elem.getAttribute("reason");
     const evidence = elem.getAttribute("evidence");
     if (reason) {
@@ -1017,7 +1023,7 @@ function transformSupplied(elem: Element, output: string[]) {
         switch (reason) {
             case "omitted":
                 output.push("<");
-                transformElem(elem, output);
+                transformElem(elem, output, serializer);
                 if (cert && cert === "low") {
                     output.push("(?)");
                 }
@@ -1026,7 +1032,7 @@ function transformSupplied(elem: Element, output: string[]) {
             case "undefined":
                 if (evidence === "parallel") {
                     output.push("|_");
-                    transformElem(elem, output);
+                    transformElem(elem, output, serializer);
                     if (cert && cert === "low") {
                         output.push("(?)");
                     }
@@ -1037,7 +1043,7 @@ function transformSupplied(elem: Element, output: string[]) {
             default:
                 if (evidence === "parallel") {
                     output.push("_[");
-                    transformElem(elem, output);
+                    transformElem(elem, output, serializer);
                     if (cert && cert === "low") {
                         output.push("(?)");
                     }
@@ -1045,7 +1051,7 @@ function transformSupplied(elem: Element, output: string[]) {
                     break;
                 } else {
                     output.push("[");
-                    transformElem(elem, output);
+                    transformElem(elem, output, serializer);
                     if (cert && cert === "low") {
                         output.push("(?)");
                     }
@@ -1056,40 +1062,81 @@ function transformSupplied(elem: Element, output: string[]) {
     }
 }
 
-export function fromXml(root: Node): string {
-    if (!(root instanceof Element)) {
-        return "";
-    }
-    const output:string[] = [];
-    let columnBreaks = root.querySelectorAll("cb");
-    if (columnBreaks.length > 0) {
-        root = root.cloneNode(true);
-        columnBreaks = (<Element>root).querySelectorAll("cb");
-        for (let i = 0; i <= columnBreaks.length; i++) {
-            const range = document.createRange();
-            if (i === 0) {
-                range.setStart(root, 0);
-            } else {
-                range.setStartAfter(columnBreaks[i - 1]);
-            }
-            if (i === columnBreaks.length) {
-                if (root.lastChild) {
-                    range.setEndAfter(root.lastChild);
+export function fromXml(xml: Node | string, domParser?: DOMParserType, xmlSerializer?: XMLSerializerType): string {
+    let root: Node | null = null;
+    if (typeof xml === "string") {
+        domParser = domParser ?? getDOMParser();
+
+        if (domParser) {
+            const document = new domParser().parseFromString(`<WRAP>${xml}</WRAP>`, "text/xml");
+            const parserError = document.getElementsByTagName("parsererror")[0];
+            if (parserError) {
+                const errorText = parserError.textContent ?? "";
+                const line = errorText.match(/line (\d+)/)?.[1];
+                let column = errorText.match(/(?:column|character) (\d+)/)?.[1];
+
+                // If error is on line 1, adjust column for the <WRAP> tag
+                if (line && line === "1" && column) {
+                    const colNum = parseInt(column) - 6; // Subtract length of "<WRAP>"
+                    column = colNum > 0 ? colNum.toString() : "1";
                 }
-            } else {
-                range.setEndBefore(columnBreaks[i]);
+
+                throw new ParserError(
+                    errorText.replace(/<\/?WRAP>/g, ""),
+                    line ? parseInt(line) : undefined,
+                    column ? parseInt(column) : undefined
+                );
             }
-            const columnDiv = document.createElement("div");
-            columnDiv.setAttribute("type", "textpart");
-            columnDiv.setAttribute("subtype", "column");
-            columnDiv.setAttribute("n", (i + 1).toString());
-            const ab = document.createElement("ab");
-            columnDiv.appendChild(ab);
-            ab.appendChild(range.extractContents());
-            transform(columnDiv, output);
+
+            root = document.documentElement!.firstChild!;
+        } else {
+            throw new Error("A DOMParser must be provided when root is a string and no global DOMParser is available (such as in a browser environment).");
         }
     } else {
-        transform(root, output);
+        root = xml;
+    }
+
+    xmlSerializer = xmlSerializer ?? getXMLSerializer();
+    if (!xmlSerializer) {
+        console.warn("No XMLSerializer provided. Parse errors will not include source strings.");
+    }
+
+
+    const output: string[] = [];
+    // let columnBreaks = Array.from((root as Element).getElementsByTagName?.("cb"));
+    // if (columnBreaks.length > 0) {
+    //     root = root.cloneNode(true) as Element;
+    //     columnBreaks = Array.from((root as Element).getElementsByTagName?.("cb"));
+    //     for (let i = 0; i <= columnBreaks.length; i++) {
+    //         const range = root.ownerDocument!.createRange();
+    //         if (i === 0) {
+    //             range.setStart(root, 0);
+    //         } else {
+    //             range.setStartAfter(columnBreaks[i - 1]);
+    //         }
+    //         if (i === columnBreaks.length) {
+    //             if (root.lastChild) {
+    //                 range.setEndAfter(root.lastChild);
+    //             }
+    //         } else {
+    //             range.setEndBefore(columnBreaks[i]);
+    //         }
+    //         const columnDiv = root.ownerDocument!.createElement("div");
+    //         columnDiv.setAttribute("type", "textpart");
+    //         columnDiv.setAttribute("subtype", "column");
+    //         columnDiv.setAttribute("n", (i + 1).toString());
+    //         const ab = root.ownerDocument!.createElement("ab");
+    //         columnDiv.appendChild(ab);
+    //         ab.appendChild(range.extractContents());
+    //         transform(columnDiv, output, serializer);
+    //     }
+    // } else {
+    //     transform(root, output, serializer);
+    // }
+
+    while (root) {
+        transform(root, output, xmlSerializer);
+        root = root.nextSibling;
     }
     return output.join("");
 }

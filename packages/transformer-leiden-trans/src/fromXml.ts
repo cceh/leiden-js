@@ -1,27 +1,36 @@
-import { TransformationError } from "@leiden-js/common/transformer";
+import {
+    TransformationError,
+    Node,
+    Element,
+    DocumentFragment,
+    DOMParserType, XMLSerializerType, getDOMParser, ParserError, getXMLSerializer
+} from "@leiden-js/common/transformer";
 
-function transformElem(elem: Element, output: string[]) {
+function transformElem(elem: Element, output: string[], serializer?: XMLSerializerType) {
     for (let i = 0; i < elem.childNodes.length; i++) {
-        transform(elem.childNodes[i], output);
+        transform(elem.childNodes[i], output, serializer);
     }
 }
 
-function transform(node: Node|null, output: string[]) {
+function transform(node: Node | null, output: string[], serializer?: XMLSerializerType) {
     if (!node) {
         return;
     }
 
     switch (node.nodeType) {
-        case Node.DOCUMENT_NODE:
-        case Node.DOCUMENT_FRAGMENT_NODE:
-            transform((<DocumentFragment>node).firstElementChild, output);
+        case node.DOCUMENT_NODE:
+        case node.DOCUMENT_FRAGMENT_NODE: {
+            // The DocumentFragment interface needs to be updated to have firstElementChild
+            const firstChild = (<DocumentFragment>node).childNodes[0];
+            transform(firstChild, output, serializer);
             break;
-        case Node.ELEMENT_NODE: {
+        }
+        case node.ELEMENT_NODE: {
 
             const elem = <Element>node;
             switch (elem.localName) {
                 case "body":
-                    transformElem(elem, output);
+                    transformElem(elem, output, serializer);
                     break;
 
                 case "div":{
@@ -37,7 +46,7 @@ function transform(node: Node|null, output: string[]) {
                             if (subtype) output.push(`.${subtype}`);
                             output.push(" ");
 
-                            transformElem(elem, output);
+                            transformElem(elem, output, serializer);
                             output.push("=D>");
                             break;
                         }
@@ -47,7 +56,7 @@ function transform(node: Node|null, output: string[]) {
                                 throw new TransformationError("div needs a xml:lang attribute", elem);
                             }
                             output.push(`<T=.${lang}`);
-                            transformElem(elem, output);
+                            transformElem(elem, output, serializer);
                             output.push("=T>");
                             break;
                         }
@@ -59,7 +68,7 @@ function transform(node: Node|null, output: string[]) {
                         output.push("<==>");
                     } else {
                         output.push("<=");
-                        transformElem(elem, output);
+                        transformElem(elem, output, serializer);
                         output.push("=>");
                     }
                     break;
@@ -77,7 +86,7 @@ function transform(node: Node|null, output: string[]) {
                 }
                 case "del":
                     output.push("〚");
-                    transformElem(elem, output);
+                    transformElem(elem, output, serializer);
                     output.push("〛");
                     break;
 
@@ -94,13 +103,13 @@ function transform(node: Node|null, output: string[]) {
                 }
                 case "note":
                     output.push("/*");
-                    transformElem(elem, output);
+                    transformElem(elem, output, serializer);
                     output.push("*/");
                     break;
 
                 case "term": {
                     output.push("<");
-                    transformElem(elem, output);
+                    transformElem(elem, output, serializer);
 
                     const lang = elem.getAttribute("xml:lang");
                     if (lang) {
@@ -116,7 +125,7 @@ function transform(node: Node|null, output: string[]) {
                 }
                 case "foreign": {
                     output.push("~|");
-                    transformElem(elem, output);
+                    transformElem(elem, output, serializer);
                     const foreignLang = elem.getAttribute("xml:lang");
                     if (!foreignLang) {
                         throw new TransformationError("foreign needs a xml:lang attribute", elem);
@@ -127,7 +136,7 @@ function transform(node: Node|null, output: string[]) {
                 }
                 case "app": {
                     output.push("<:");
-                    transformElem(elem, output);
+                    transformElem(elem, output, serializer);
 
                     // Handle editor note (type and resp)
                     output.push("|");
@@ -138,8 +147,9 @@ function transform(node: Node|null, output: string[]) {
                     output.push(":");
 
                     // Get resp from lem element
-                    const lem = elem.querySelector("lem");
-                    if (lem) {
+                    const lems = elem.getElementsByTagName("lem");
+                    if (lems.length > 0) {
+                        const lem = lems[0];
                         const resp = lem.getAttribute("resp");
                         if (resp) {
                             output.push(resp);
@@ -150,7 +160,7 @@ function transform(node: Node|null, output: string[]) {
                 }
                 case "lem":
                     // Content is handled by app element
-                    transformElem(elem, output);
+                    transformElem(elem, output, serializer);
                     break;
 
                 default:
@@ -158,14 +168,56 @@ function transform(node: Node|null, output: string[]) {
             }
             break;
         }
-        case Node.TEXT_NODE:
+        case node.TEXT_NODE:
             output.push(node.nodeValue || "");
             break;
     }
 }
 
-export function fromXml(root: Node): string {
+export function fromXml(xml: Node | string, domParser?: DOMParserType, xmlSerializer?: XMLSerializerType): string {
+    let root: Node | null = null;
+    if (typeof xml === "string") {
+        domParser = domParser ?? getDOMParser();
+
+        if (domParser) {
+            const document = new domParser().parseFromString(`<WRAP>${xml}</WRAP>`, "text/xml");
+            const parserError = document.getElementsByTagName("parsererror")[0];
+            if (parserError) {
+                const errorText = parserError.textContent ?? "";
+                const line = errorText.match(/line (\d+)/)?.[1];
+                let column = errorText.match(/(?:column|character) (\d+)/)?.[1];
+
+                // If error is on line 1, adjust column for the <WRAP> tag
+                if (line && line === "1" && column) {
+                    const colNum = parseInt(column) - 6; // Subtract length of "<WRAP>"
+                    column = colNum > 0 ? colNum.toString() : "1";
+                }
+
+                throw new ParserError(
+                    errorText.replace(/<\/?WRAP>/g, ""),
+                    line ? parseInt(line) : undefined,
+                    column ? parseInt(column) : undefined
+                );
+            }
+
+            root = document.documentElement!.firstChild!;
+        } else {
+            throw new Error("A DOMParser must be provided when root is a string and no global DOMParser is available (such as in a browser environment).");
+        }
+    } else {
+        root = xml;
+    }
+
+    xmlSerializer = xmlSerializer ?? getXMLSerializer();
+    if (!xmlSerializer) {
+        console.warn("No XMLSerializer provided. Parse errors will not include source strings.");
+    }
+
+
     const output: string[] = [];
-    transform(root, output);
+    while (root) {
+        transform(root, output, xmlSerializer);
+        root = root.nextSibling;
+    }
     return output.join("");
 }

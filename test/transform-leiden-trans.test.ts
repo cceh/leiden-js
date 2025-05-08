@@ -1,19 +1,10 @@
 import * as chai from "chai";
 import chaiXml from "chai-xml";
-import { JSDOM } from "jsdom";
+import { DOMParser, XMLSerializer } from "slimdom";
 import { toXml } from "../packages/transformer-leiden-trans/src/toXml.js";
 import { fromXml } from "../packages/transformer-leiden-trans/src/fromXml.js";
 
 chai.use(chaiXml);
-
-const dom = new JSDOM("<root xml:space=\"preserve\"/>", {
-    contentType: "text/xml",
-    url: "http://localhost"
-});
-
-global.Element = dom.window.Element;
-global.Node = dom.window.Node;
-
 
 function testTransform(name, leiden, xml, topNode = "InlineContent") {
     it("Leiden → XML: " + (name ?? leiden), () => {
@@ -24,8 +15,7 @@ function testTransform(name, leiden, xml, topNode = "InlineContent") {
     });
 
     it("XML → Leiden: " + (name ?? xml), () => {
-        dom.window.document.documentElement.innerHTML = xml;
-        const resultLeiden = [...dom.window.document.documentElement.childNodes].map(child => fromXml(child)).join("");
+        const resultLeiden = fromXml(xml, DOMParser, XMLSerializer);
         chai.expect(resultLeiden.normalize()).to.equal(leiden);
     });
 }

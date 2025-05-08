@@ -35,6 +35,8 @@
     "eslint": "^9.25.1",
     "globals": "^16.0.0",
     "jsdom": "^25.0.1",
+    "@xmldom/xmldom": "^0.9.8",
+    "slimdom": "^4.3.5",
     "mocha": "^11.2.2",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",

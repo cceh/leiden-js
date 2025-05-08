@@ -8,12 +8,14 @@ import { Annotation, Compartment, StateField } from "@codemirror/state";
 import {
     fromXml as xmlToLeidenPlus,
     toXml as leidenPlusToXml,
-    TransformationError as LeidenPlusTransformationError
+    TransformationError as LeidenPlusTransformationError,
+    ParserError as LeidenPlusParserError
 } from "@leiden-js/transformer-leiden-plus";
 import {
     fromXml as xmlToLeidenTrans,
     toXml as leidenTransToXml,
-    TransformationError as LeidenTransTransformationError
+    TransformationError as LeidenTransTransformationError,
+    ParserError as LeidenTransParserError
 } from "@leiden-js/transformer-leiden-trans";
 
 import { xml } from "@codemirror/lang-xml";
@@ -48,6 +50,7 @@ const diagnosticsStateField = StateField.define({
 // Create a status bar panel that shows only one diagnostic
 function statusBarPanel(view) {
     let dom = document.createElement("div");
+    dom.className = "cm-leiden-status-bar-panel";
     return {
         dom,
         update(update) {
@@ -186,7 +189,8 @@ window.leidenEditorView = new EditorView({
                 }
 
                 if (localStorage.getItem("debug-open") === "true") {
-                    requestIdleCallback(async () => {
+                    const func = window.requestIdleCallback || requestAnimationFrame;
+                    func(async () => {
                         forceParsing(leidenEditorView, leidenEditorView.state.selection.main.head);
                         await updateParseTree(update.view);
                         highlightCurrentNodeInTree(update.state);
@@ -248,7 +252,7 @@ const xmlStateField = StateField.define({
 
 
         if (tr.docChanged || tr.reconfigured) {
-            const doc = new DOMParser().parseFromString(tr.state.doc.toString(), "text/xml").documentElement;
+            const doc = tr.state.doc.toString();
             try {
                 leidenEditorView.dispatch({
                     changes: {
@@ -259,17 +263,8 @@ const xmlStateField = StateField.define({
                     annotations: syncAnnotation.of(true)
                 });
             } catch (e) {
-                console.log(e);
+                console.error(e);
                 if (e instanceof LeidenPlusTransformationError || e instanceof LeidenTransTransformationError) {
-                    if (e.path.length > 0 && e.path[e.path.length - 1][0] === "parsererror") {
-                        return [{
-                            from: 0,
-                            to: tr.state.doc.length,
-                            severity: "error",
-                            message: "Invalid XML"
-                        }];
-                    }
-
                     const node = findNodeByPath(tr.state, e.path);
                     if (!node) {
                         return [];
@@ -280,6 +275,20 @@ const xmlStateField = StateField.define({
                         severity: "error",
                         message: e.message
                     }];
+                } else if (e instanceof LeidenPlusParserError || e instanceof LeidenTransParserError) {
+                    const diag = {
+                        severity: "error",
+                        message: e.message,
+                        from: 0,
+                        to: 0
+                    };
+                    if (e.line && e.column) {
+                        const lineStart = tr.state.doc.lineAt(e.line).from;
+                        const pos = lineStart + e.column;
+                        diag.from = pos;
+                        diag.to = pos;
+                    }
+                    return [diag];
                 } else {
                     throw e;
                 }
@@ -315,6 +324,7 @@ window.xmlEditorView = new EditorView({
         language.of(xml()),
         diagnosticsStateField,
         xmlStateField,
+        linter(view => view.state.field(xmlStateField)),
         linter(view => {
             const diagnostics = [];
             syntaxTree(view.state).cursor().iterate(node => {
@@ -329,7 +339,6 @@ window.xmlEditorView = new EditorView({
             });
             return diagnostics;
         }),
-        linter(view => view.state.field(xmlStateField)),
         lintGutter(),
         showPanel.of(statusBarPanel),
     ],

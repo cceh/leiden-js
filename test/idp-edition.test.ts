@@ -1,6 +1,5 @@
 import { BeforeProcessHook, BeforeXmlCompareHook, processDir } from "./utils/idp";
 import { fromXml, toXml } from "../packages/transformer-leiden-plus/src";
-import { JSDOM } from "jsdom";
 
 const sourceDir = "test/leiden-js-idp-test-data/roundtrips/DDB_EpiDoc_XML";
 const ignoreReasons = {
@@ -106,17 +105,16 @@ const beforeCompare: BeforeXmlCompareHook = function(textFilePath, _myXml, origX
     } else if (/>\p{Mark}+/u.test(origXml)) {
         console.log(`Ignoring ${textFilePath} (xml->leiden), reason: contains combing mark on non-word character (XSugar problem with diacritics)`);
         this.skip();
+    } else if (/\u2028/.test(origXml)) {
+        console.log(`Ignoring ${textFilePath} (xml->leiden), reason: contains line separator character (XSugar problem with line separator)`);
+        this.skip();
     }
 
 };
 
-const dom = new JSDOM("<root/>", {
-    contentType: "text/xml",
-    url: "http://localhost"
-});
 
 const process = (title: string) =>
-    processDir(sourceDir, title, toXml, fromXml, ignoreReasons, beforeProcess, beforeCompare, dom);
+    processDir(sourceDir, title, toXml, fromXml, ignoreReasons, beforeProcess, beforeCompare);
 
 
 describe("aegyptus", function() { process(this.title); });

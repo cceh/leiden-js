@@ -1,7 +1,9 @@
 import * as chai from "chai";
 import { readdirSync, readFileSync } from "fs";
 import { join } from "path";
-import { JSDOM } from "jsdom";
+// import { DOMParser, Node, XMLSerializer } from "@xmldom/xmldom";
+import { DOMParser, Node, XMLSerializer } from "slimdom";
+import { DOMParserType, XMLSerializerType } from "../../packages/common/src/transformer";
 
 interface IgnoreReasons {
     [key: string]: string;
@@ -43,11 +45,10 @@ export function processDir(
     sourceDir: string,
     dir: string,
     toXml: (text: string) => string,
-    fromXml: (xml: Element) => string,
+    fromXml: (xml: Node | string, domParser: DOMParserType, xmlSerializer: XMLSerializerType) => string,
     ignoreReasons: IgnoreReasons,
     beforeProcess: BeforeProcessHook,
-    beforeXmlCompare: BeforeXmlCompareHook,
-    dom: JSDOM
+    beforeXmlCompare: BeforeXmlCompareHook
 ): void {
     const ignore = Object.keys(ignoreReasons);
     const path = join(sourceDir, dir);
@@ -91,13 +92,7 @@ export function processDir(
             beforeXmlCompare.call(this, textFile, myXml, origXml);
 
             chai.expect(myXmlNorm).to.equal(origXmlNorm, `\n${textContent}\n`);
-
-            dom.window.document.documentElement.innerHTML = origXmlNorm;
-
-            global.Element = dom.window.Element;
-            global.Node = dom.window.Node;
-
-            const myLeiden = fromXml(dom.window.document.documentElement.firstElementChild);
+            const myLeiden = fromXml(myXml, DOMParser, XMLSerializer);
 
             chai.expect(myLeiden.normalize()).to.equal(textContent.normalize());
         });
