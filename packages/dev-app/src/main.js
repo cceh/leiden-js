@@ -6,14 +6,14 @@ import { basicSetup } from "codemirror";
 import { forceParsing, syntaxTree, syntaxTreeAvailable } from "@codemirror/language";
 import { Annotation, Compartment, StateField } from "@codemirror/state";
 import {
-    fromXml as xmlToLeidenPlus,
-    toXml as leidenPlusToXml,
+    xmlToLeidenPlus,
+    leidenPlusToXml,
     TransformationError as LeidenPlusTransformationError,
     ParserError as LeidenPlusParserError
 } from "@leiden-js/transformer-leiden-plus";
 import {
-    fromXml as xmlToLeidenTrans,
-    toXml as leidenTransToXml,
+    xmlToLeidenTrans,
+    leidenTransToXml,
     TransformationError as LeidenTransTransformationError,
     ParserError as LeidenTransParserError
 } from "@leiden-js/transformer-leiden-trans";

@@ -174,7 +174,7 @@ function transform(node: Node | null, output: string[], serializer?: XMLSerializ
     }
 }
 
-export function fromXml(xml: Node | string, domParser?: DOMParserType, xmlSerializer?: XMLSerializerType): string {
+export function xmlToLeidenTrans(xml: Node | string, domParser?: DOMParserType, xmlSerializer?: XMLSerializerType): string {
     let root: Node | null = null;
     if (typeof xml === "string") {
         domParser = domParser ?? getDOMParser();

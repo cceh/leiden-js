@@ -5,7 +5,7 @@ function text(input: string, node: TreeCursor) {
     return input.substring(node.from, node.to);
 }
 
-export function toXml(input: string, topNode = "Document", root = parser.configure({ top: topNode }).parse(input)) {
+export function leidenTransToXml(input: string, topNode = "Document", root = parser.configure({ top: topNode }).parse(input)) {
     const xml: string[] = [];
     const selfClosingNodeSet = new WeakSet<SyntaxNode>();
 

@@ -1,5 +1,5 @@
 import { BeforeProcessHook, BeforeXmlCompareHook, processDir } from "./utils/idp";
-import { fromXml, toXml } from "../packages/transformer-leiden-plus/src";
+import { xmlToLeidenPlus, leidenPlusToXml } from "../packages/transformer-leiden-plus/src";
 
 const sourceDir = "test/leiden-js-idp-test-data/roundtrips/DDB_EpiDoc_XML";
 const ignoreReasons = {
@@ -114,7 +114,7 @@ const beforeCompare: BeforeXmlCompareHook = function(textFilePath, _myXml, origX
 
 
 const process = (title: string) =>
-    processDir(sourceDir, title, toXml, fromXml, ignoreReasons, beforeProcess, beforeCompare);
+    processDir(sourceDir, title, leidenPlusToXml, xmlToLeidenPlus, ignoreReasons, beforeProcess, beforeCompare);
 
 
 describe("aegyptus", function() { process(this.title); });

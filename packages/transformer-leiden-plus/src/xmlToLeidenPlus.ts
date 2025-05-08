@@ -1062,7 +1062,7 @@ function transformSupplied(elem: Element, output: string[], serializer?: XMLSeri
     }
 }
 
-export function fromXml(xml: Node | string, domParser?: DOMParserType, xmlSerializer?: XMLSerializerType): string {
+export function xmlToLeidenPlus(xml: Node | string, domParser?: DOMParserType, xmlSerializer?: XMLSerializerType): string {
     let root: Node | null = null;
     if (typeof xml === "string") {
         domParser = domParser ?? getDOMParser();

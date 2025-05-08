@@ -1,4 +1,4 @@
-export { TransformationError, ParserError } from "./from-xml/errors.js";
+export { TransformationError, ParserError } from "./xml-to-leiden/errors.js";
 export { 
     getOuterHtml, 
     getDOMParser,
@@ -10,4 +10,5 @@ export {
     Element,
     Document,
     DocumentFragment
-} from "./from-xml/dom.js";
+} from "./xml-to-leiden/dom.js";
+export { xmlToLeiden } from "./xml-to-leiden/transform.js";

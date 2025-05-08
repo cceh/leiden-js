@@ -1,21 +1,21 @@
 import * as chai from "chai";
 import chaiXml from "chai-xml";
 import { DOMParser, XMLSerializer } from "slimdom";
-import { toXml } from "../packages/transformer-leiden-trans/src/toXml.js";
-import { fromXml } from "../packages/transformer-leiden-trans/src/fromXml.js";
+import { leidenTransToXml } from "../packages/transformer-leiden-trans/src/leidenTransToXml";
+import { xmlToLeidenTrans } from "../packages/transformer-leiden-trans/src/xmlToLeidenTrans";
 
 chai.use(chaiXml);
 
 function testTransform(name, leiden, xml, topNode = "InlineContent") {
     it("Leiden → XML: " + (name ?? leiden), () => {
-        const resultXml = toXml(leiden, topNode);
+        const resultXml = leidenTransToXml(leiden, topNode);
         const wrappedXml = `<root>${resultXml}</root>`;
         const wrappedResultXml = `<root>${xml.replace(" xmlns:xml=\"http://www.w3.org/XML/1998/namespace\"", "")}</root>`;
         chai.expect(wrappedXml).to.equal(wrappedResultXml, `\n${leiden}\n`);
     });
 
     it("XML → Leiden: " + (name ?? xml), () => {
-        const resultLeiden = fromXml(xml, DOMParser, XMLSerializer);
+        const resultLeiden = xmlToLeidenTrans(xml, DOMParser, XMLSerializer);
         chai.expect(resultLeiden.normalize()).to.equal(leiden);
     });
 }

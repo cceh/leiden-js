@@ -46,7 +46,7 @@ function findNumber(input: string, node: TreeCursor) {
     return value;
 }
 
-export function toXml(input: string, topNode = "Document", root = parser.configure({ top: topNode }).parse(input)) {
+export function leidenPlusToXml(input: string, topNode = "Document", root = parser.configure({ top: topNode }).parse(input)) {
 
     const xml: string[] = [];
     let needsCloseEdition = false;

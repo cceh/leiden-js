@@ -2,15 +2,15 @@ import * as chai from "chai";
 import chaiXml from "chai-xml";
 // import { DOMParser, XMLSerializer } from "@xmldom/xmldom";
 import { DOMParser, XMLSerializer } from "slimdom";
-import { toXml } from "../packages/transformer-leiden-plus/src/toXml.js";
-import { fromXml } from "../packages/transformer-leiden-plus/src/fromXml.js";
+import { leidenPlusToXml } from "../packages/transformer-leiden-plus/src/leidenPlusToXml";
+import { xmlToLeidenPlus } from "../packages/transformer-leiden-plus/src/xmlToLeidenPlus";
 
 chai.use(chaiXml);
 
 
 function testTransform(name, leiden, xml, topNode = "InlineContent") {
     it("Leiden → XML: " + (name ?? leiden), () => {
-        const resultXml = toXml(leiden, topNode);
+        const resultXml = leidenPlusToXml(leiden, topNode);
         const wrappedXml = `<root>${resultXml}</root>`;
         const wrappedResultXml = `<root>${xml}</root>`;
         // chai.expect(wrappedXml, wrappedXml).xml.to.be.valid();
@@ -18,7 +18,7 @@ function testTransform(name, leiden, xml, topNode = "InlineContent") {
     });
 
     it("XML → Leiden: " + (name ?? xml), () => {
-        const resultLeiden = fromXml(xml, DOMParser, XMLSerializer);
+        const resultLeiden = xmlToLeidenPlus(xml, DOMParser, XMLSerializer);
         chai.expect(resultLeiden.normalize()).to.equal(leiden.normalize());
     });
 }
