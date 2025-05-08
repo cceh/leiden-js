@@ -13,6 +13,7 @@
     "test:idp:translation": "TS_NODE_PROJECT=./tsconfig.test.json mocha test/idp-translation.test.ts",
     "test:idp": "pnpm test:idp:get-data && pnpm test:idp:edition && pnpm test:idp:translation",
     "dev": "pnpm --parallel --filter \"dev-app^...\" watch & pnpm --filter dev-app start",
+    "dev:transformation-service": "pnpm --parallel --filter \"transformation-service^...\" watch & pnpm --filter transformation-service dev",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix"
   },
