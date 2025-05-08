@@ -3,7 +3,7 @@ import {
     Node,
     Element,
     DocumentFragment,
-    DOMParserType, XMLSerializerType, getDOMParser, ParserError, getXMLSerializer
+    DOMParserType, XMLSerializerType, getDOMParser, ParserError, getXMLSerializer, xmlToLeiden
 } from "@leiden-js/common/transformer";
 
 function transformElem(elem: Element, output: string[], serializer?: XMLSerializerType) {
@@ -175,49 +175,5 @@ function transform(node: Node | null, output: string[], serializer?: XMLSerializ
 }
 
 export function xmlToLeidenTrans(xml: Node | string, domParser?: DOMParserType, xmlSerializer?: XMLSerializerType): string {
-    let root: Node | null = null;
-    if (typeof xml === "string") {
-        domParser = domParser ?? getDOMParser();
-
-        if (domParser) {
-            const document = new domParser().parseFromString(`<WRAP>${xml}</WRAP>`, "text/xml");
-            const parserError = document.getElementsByTagName("parsererror")[0];
-            if (parserError) {
-                const errorText = parserError.textContent ?? "";
-                const line = errorText.match(/line (\d+)/)?.[1];
-                let column = errorText.match(/(?:column|character) (\d+)/)?.[1];
-
-                // If error is on line 1, adjust column for the <WRAP> tag
-                if (line && line === "1" && column) {
-                    const colNum = parseInt(column) - 6; // Subtract length of "<WRAP>"
-                    column = colNum > 0 ? colNum.toString() : "1";
-                }
-
-                throw new ParserError(
-                    errorText.replace(/<\/?WRAP>/g, ""),
-                    line ? parseInt(line) : undefined,
-                    column ? parseInt(column) : undefined
-                );
-            }
-
-            root = document.documentElement!.firstChild!;
-        } else {
-            throw new Error("A DOMParser must be provided when root is a string and no global DOMParser is available (such as in a browser environment).");
-        }
-    } else {
-        root = xml;
-    }
-
-    xmlSerializer = xmlSerializer ?? getXMLSerializer();
-    if (!xmlSerializer) {
-        console.warn("No XMLSerializer provided. Parse errors will not include source strings.");
-    }
-
-
-    const output: string[] = [];
-    while (root) {
-        transform(root, output, xmlSerializer);
-        root = root.nextSibling;
-    }
-    return output.join("");
+   return xmlToLeiden(xml, domParser, xmlSerializer, transform);
 }
