@@ -25,10 +25,12 @@
     "typescript": "^5.8.3"
   },
   "dependencies": {
-    "@codemirror/lint": "^6.8.5",
     "@leiden-js/common": "workspace:*",
     "@leiden-js/codemirror-lang-leiden-plus": "workspace:*",
     "@lezer/common": "^1.2.3"
+  },
+  "peerDependencies": {
+    "@codemirror/lint": "^6.8.5"
   },
   "files": ["dist"],
   "publishConfig": {

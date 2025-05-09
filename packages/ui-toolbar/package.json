@@ -25,11 +25,13 @@
     "typescript": "^5.8.3"
   },
   "dependencies": {
-    "@codemirror/state": "^6.5.2",
-    "@codemirror/view": "^6.36.5",
     "@floating-ui/dom": "^1.6.13",
     "@leiden-js/common": "workspace:*",
     "lit-html": "^3.2.1"
+  },
+  "peerDependencies": {
+    "@codemirror/state": "^6.5.2",
+    "@codemirror/view": "^6.36.5"
   },
   "files": ["dist"],
   "publishConfig": {
