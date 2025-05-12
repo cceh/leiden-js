@@ -35,9 +35,7 @@
     "@codemirror/language": "^6.11.0",
     "@codemirror/state": "^6.5.2"
   },
-  "files": ["dist"],
-  "publishConfig": {
-    "registry": "https://gitlab.dh.uni-koeln.de/api/v4/projects/726/packages/npm/",
-    "access": "public"
-  }
+  "files": [
+    "dist"
+  ]
 }

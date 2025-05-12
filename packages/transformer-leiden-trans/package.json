@@ -31,8 +31,7 @@
     "@leiden-js/parser-leiden-trans": "workspace:*",
     "@lezer/common": "^1.2.3"
   },
-  "files": ["dist"],
-  "publishConfig": {
-    "access": "public"
-  }
+  "files": [
+    "dist"
+  ]
 }

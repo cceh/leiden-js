@@ -39,9 +39,7 @@
     "@codemirror/search": "6.5.10",
     "@codemirror/autocomplete": "^6.18.6"
   },
-  "files": ["dist"],
-  "publishConfig": {
-    "registry": "https://gitlab.dh.uni-koeln.de/api/v4/projects/726/packages/npm/",
-    "access": "public"
-  }
+  "files": [
+    "dist"
+  ]
 }
