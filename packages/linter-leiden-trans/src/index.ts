@@ -1,5 +1,5 @@
 import { leidenBaseLinter, leidenLinterExtension, NodeLinter, unclosedExpressionCheck } from "@leiden-js/common/linter";
-import { TreeCursor } from "@lezer/common";
+import { Tree } from "@lezer/common";
 import { wrappingRules } from "@leiden-js/codemirror-lang-leiden-trans";
 import { Diagnostic } from "@codemirror/lint";
 
@@ -21,5 +21,5 @@ export const leidenTransNodeLinter: NodeLinter = (doc, node) => {
 };
 
 export const leidenTransLinter = leidenLinterExtension(leidenTransNodeLinter);
-export const lintLeidenTrans = (doc: string, rootCursor: TreeCursor): Diagnostic[] =>
-    leidenBaseLinter(doc, rootCursor, leidenTransNodeLinter);
+export const lintLeidenTrans = (doc: string, syntaxTree: Tree): Diagnostic[] =>
+    leidenBaseLinter(doc, syntaxTree.cursor(), leidenTransNodeLinter);

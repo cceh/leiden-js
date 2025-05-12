@@ -294,7 +294,7 @@ function leidenToXml(
     }
 
     try {
-        const lintResult = lint(content, parseTree.cursor());
+        const lintResult = lint(content, parseTree);
         const transformedContent = transform(content, topNode ?? "Document", parseTree);
 
         // Always return a success response with the transformed content
