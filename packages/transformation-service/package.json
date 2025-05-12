@@ -1,6 +1,6 @@
 {
   "name": "@leiden-js/transformation-service",
-  "version": "1.0.0",
+  "version": "1.0.3",
   "description": "JSON API service for transforming Leiden Plus and Leiden Translation to XML and vice-versa",
   "main": "./dist/index.cjs",
   "type": "module",

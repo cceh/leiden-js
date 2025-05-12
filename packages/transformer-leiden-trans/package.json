@@ -1,6 +1,6 @@
 {
   "name": "@leiden-js/transformer-leiden-trans",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "",
   "main": "./dist/index.cjs",
   "type": "module",
