@@ -101,8 +101,29 @@ function convertToLeiden(xml) {
     }
 }
 
+async function fetchExample(filename) {
+    const response = await fetch(`${import.meta.env.BASE_URL}examples/${filename}.txt`);
+    if (!response.ok) {
+        throw new Error(`Failed to fetch ${filename}: ${response.status} ${response.statusText}`);
+    }
+    return response.text();
+}
 
-// Set up language select button
+const examples = {
+    "leiden-plus.Document": "P. Koeln III 150",
+    "leiden-plus.SingleDiv": "P. Koeln XII 478 1-26",
+    "leiden-plus.SingleAb": "P. Koeln II 85",
+    "leiden-plus.BlockContent": "P. Koeln II 98",
+    "leiden-plus.InlineContent": "P. Koeln IX.366",
+    "leiden-trans.Document": "P. Enteux. 82",
+    "leiden-trans.SingleTranslation": "BGU II 584",
+    "leiden-trans.SingleDiv": "CdE 94 269",
+    "leiden-trans.SingleP": "BGU I 116 Kol. I",
+    "leiden-trans.BlockContent": "BGU II 537",
+    "leiden-trans.InlineContent": "BGU I 104"
+};
+
+// Set up language select
 const languageSelect = document.querySelector("#language-select");
 languageSelect.value = localStorage.getItem("leiden-variant") || "leiden-plus.Document";
 languageSelect.addEventListener("change", () => {
@@ -116,8 +137,23 @@ languageSelect.addEventListener("change", () => {
             insert: localStorage.getItem(`doc-${value}`)
         }
     });
+    exampleLabel.innerHTML = examples[languageSelect.value];
 });
 
+// Set up load example button
+const exampleLabel = document.querySelector("#example-label");
+exampleLabel.innerHTML = examples[languageSelect.value];
+const loadExampleButton = document.querySelector("#load-example-button");
+loadExampleButton.addEventListener("click", async () => {
+    const exampleContent = await fetchExample(languageSelect.value);
+    leidenEditorView.dispatch({
+        changes: {
+            from: 0,
+            to: leidenEditorView.state.doc.length,
+            insert: exampleContent
+        }
+    });
+});
 
 
 /* THEME */
