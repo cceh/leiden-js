@@ -1,4 +1,4 @@
-import express, { NextFunction, Request, Response } from "express";
+import express, { Express, NextFunction, Request, Response } from "express";
 import cors from "cors";
 import { fileURLToPath } from "url";
 import { parser as leidenPlusParser } from "@leiden-js/parser-leiden-plus";
@@ -222,7 +222,7 @@ interface ErrorResponse<D extends ErrorDetails = undefined> {
 }
 
 
-const app = express();
+const app: Express = express();
 const PORT = process.env.PORT || 3000;
 
 // Swagger configuration
