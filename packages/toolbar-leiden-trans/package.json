@@ -1,7 +1,7 @@
 {
   "name": "@leiden-js/toolbar-leiden-trans",
   "version": "1.0.3",
-  "description": "",
+  "description": "Leiden Translation editor toolbar for CodeMirror",
   "scripts": {
     "build": "rollup -c",
     "watch": "rollup -c -w"
@@ -17,7 +17,7 @@
   "types": "dist/index.d.ts",
   "sideEffects": false,
   "keywords": [],
-  "author": "",
+  "author": "Marcel Schaeben",
   "license": "ISC",
   "devDependencies": {
     "@rollup/plugin-typescript": "^12.1.2",

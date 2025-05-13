@@ -29,13 +29,13 @@
       "import": "./dist/codemirror-leiden/index.js"
     }
   },
-  "description": "",
+  "description": "Shared utilities for the leiden-js packages",
   "scripts": {
     "build": "tsup 'src/**/index.ts' --format cjs,esm --dts --sourcemap",
     "watch": "tsup 'src/**/index.ts' --format cjs,esm --dts --watch --sourcemap"
   },
   "keywords": [],
-  "author": "",
+  "author": "Marcel Schaeben",
   "license": "ISC",
   "devDependencies": {
     "tsup": "^8.4.0"

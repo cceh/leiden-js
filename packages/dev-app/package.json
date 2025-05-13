@@ -2,14 +2,14 @@
   "name": "@leiden-js/dev-app",
   "private": true,
   "version": "1.0.3",
-  "description": "",
+  "description": "Development and demo app for leiden-js",
   "main": "index.js",
   "scripts": {
     "start": "vite",
     "build": "vite build"
   },
   "keywords": [],
-  "author": "",
+  "author": "Marcel Schaeben",
   "license": "ISC",
   "devDependencies": {
     "vite": "6.3.3"

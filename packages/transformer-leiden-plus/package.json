@@ -1,7 +1,7 @@
 {
   "name": "@leiden-js/transformer-leiden-plus",
   "version": "1.0.3",
-  "description": "",
+  "description": "Transform Leiden+ to EpiDoc XML and vice-versa",
   "main": "./dist/index.cjs",
   "type": "module",
   "module": "./dist/index.js",
@@ -21,7 +21,7 @@
     "watch": "tsup src/index.ts --format cjs,esm --dts --watch --sourcemap"
   },
   "keywords": [],
-  "author": "",
+  "author": "Marcel Schaeben",
   "license": "ISC",
   "devDependencies": {
     "tsup": "^8.4.0"

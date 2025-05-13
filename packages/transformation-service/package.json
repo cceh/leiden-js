@@ -1,7 +1,7 @@
 {
   "name": "@leiden-js/transformation-service",
   "version": "1.0.3",
-  "description": "JSON API service for transforming Leiden Plus and Leiden Translation to XML and vice-versa",
+  "description": "JSON API service for transformation between Leiden+ (or Leiden Translation) and EpiDoc XML",
   "main": "./dist/index.cjs",
   "type": "module",
   "module": "./dist/index.js",
@@ -26,8 +26,8 @@
     "test": "TS_NODE_PROJECT=../../tsconfig.test.json mocha src/**/*.test.ts",
     "prepublishOnly": "npm run build"
   },
-  "author": "Leiden+ Project",
-  "license": "MIT",
+  "author": "Marcel Schaeben",
+  "license": "ISC",
   "devDependencies": {
     "@types/chai": "^5.2.1",
     "@types/chai-xml": "^0.3.6",

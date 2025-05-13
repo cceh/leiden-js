@@ -1,7 +1,7 @@
 {
   "name": "@leiden-js/parser-leiden-trans",
   "version": "1.0.3",
-  "description": "",
+  "description": "A Lezer based parser for Leiden Translation",
   "type": "module",
   "main": "dist/index.cjs",
   "module": "dist/index.js",
@@ -21,7 +21,7 @@
     "watch": "pnpm --parallel --filter {.} run /^watch:/"
   },
   "keywords": [],
-  "author": "",
+  "author": "Marcel Schaeben",
   "license": "ISC",
   "dependencies": {
     "@lezer/lr": "^1.4.2"

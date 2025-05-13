@@ -1,7 +1,7 @@
 {
   "name": "@leiden-js/ui-toolbar",
   "version": "1.0.3",
-  "description": "",
+  "description": "Components for building configurable editor toolbars for CodeMirror",
   "scripts": {
     "build": "rollup -c",
     "watch": "rollup -c -w"
@@ -17,7 +17,7 @@
   "types": "dist/index.d.ts",
   "sideEffects": false,
   "keywords": [],
-  "author": "",
+  "author": "Marcel Schaeben",
   "license": "ISC",
   "devDependencies": {
     "@rollup/plugin-typescript": "^12.1.2",
@@ -33,7 +33,5 @@
     "@codemirror/state": "^6.5.2",
     "@codemirror/view": "^6.36.5"
   },
-  "files": [
-    "dist"
-  ]
+  "files": ["dist"]
 }

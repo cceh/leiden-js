@@ -2,7 +2,7 @@
   "name": "leiden-js",
   "version": "1.0.3",
   "type": "module",
-  "description": "",
+  "description": "JavaScript tooling for the Leiden+ epigraphic markup language",
   "scripts": {
     "build": "pnpm -r build",
     "test:leiden-plus": "TS_NODE_PROJECT=./tsconfig.test.json mocha test/transform-leiden-plus.test.ts",
@@ -18,7 +18,7 @@
     "lint:fix": "eslint . --fix"
   },
   "keywords": [],
-  "author": "",
+  "author": "Marcel Schaeben",
   "license": "ISC",
   "private": true,
   "workspaces": [

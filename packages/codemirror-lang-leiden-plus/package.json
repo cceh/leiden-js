@@ -1,7 +1,7 @@
 {
   "name": "@leiden-js/codemirror-lang-leiden-plus",
   "version": "1.0.3",
-  "description": "",
+  "description": "CodeMirror language support for Leiden+",
   "scripts": {
     "build": "rollup -c",
     "watch": "rollup -c -w"
@@ -17,7 +17,7 @@
   "types": "dist/index.d.ts",
   "sideEffects": false,
   "keywords": [],
-  "author": "",
+  "author": "Marcel Schaeben",
   "license": "ISC",
   "devDependencies": {
     "@rollup/plugin-typescript": "^12.1.2",
