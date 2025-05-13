@@ -1,7 +1,7 @@
 @font-face {
     font-family: 'Cardo';
     src:    local('Cardo Italic'), local('Cardo-Italic'),
-            url('../assets/fonts/Cardo-Italic.woff2') format('woff2');
+            url('../../public/fonts/Cardo-Italic.woff2') format('woff2');
     font-weight: normal;
     font-style: italic;
     font-display: swap;
@@ -10,7 +10,7 @@
 @font-face {
     font-family: 'Cardo';
     src:    local('Cardo'), local('Cardo-Regular'),
-            url('../assets/fonts/Cardo-Regular.woff2') format('woff2');
+            url('../../public/fonts/Cardo-Regular.woff2') format('woff2');
     font-weight: normal;
     font-style: normal;
     font-display: swap;
@@ -19,7 +19,7 @@
 @font-face {
     font-family: 'Cardo';
     src:    local('Cardo Bold'), local('Cardo-Bold'),
-            url('../assets/fonts/Cardo-Bold.woff2') format('woff2');
+            url('../../public/fonts/Cardo-Bold.woff2') format('woff2');
     font-weight: bold;
     font-style: normal;
     font-display: swap;
