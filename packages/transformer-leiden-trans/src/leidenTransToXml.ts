@@ -114,7 +114,7 @@ export function leidenTransToXml(input: string, topNode = "Document", root = par
 
                 case "Foreign": {
                     node.lastChild(); // ForeignEnd
-                    node.lastChild(); // LanguageId
+                    node.firstChild(); // LanguageId
                     if (node.name === "LanguageId") {
                         xml.push(`<foreign xml:lang="${text(input, node)}">`);
                         node.parent(); // ForeignEnd

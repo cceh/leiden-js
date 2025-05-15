@@ -4,8 +4,9 @@ import { leidenTags as leiden } from "@leiden-js/common/language";
 
 export const leidenTranslationHighlighting: NodePropSource =  styleTags({
     "Translation/Delims": leiden.blockLevel1,
-    "Translation/*/LanguageId": [t.emphasis, t.strong, leiden.blockLevel1Attr],
+    "Translation/*/LanguageId": [t.emphasis, t.strong, leiden.blockLevel1Attr, leiden.id],
     "Div/Delims": leiden.blockLevel2,
+    "Div/N": [leiden.blockLevel2Attr, leiden.id],
     "P/Delims": leiden.blockLevel3,
     "LineNum/...": leiden.milestone,
     "LineNumBreak/...": leiden.milestone,
@@ -23,4 +24,6 @@ export const leidenTranslationHighlighting: NodePropSource =  styleTags({
     "App App/Delims App/Content/Text": leiden.app2,
     "AppType": [t.emphasis, leiden.app2Right],
     "AppResp": [t.emphasis, leiden.app2Left],
+
+    "RequiredSpace": [leiden.requiredSpace]
 });

@@ -176,6 +176,8 @@ export const leidenTags = {
     lowCertaintyMarker: Tag.define(t.regexp),
 
     unclear: Tag.define(t.annotation),
+    
+    requiredSpace: Tag.define()
 };
 
 export const leidenHighlightStyle = HighlightStyle.define([
@@ -396,7 +398,11 @@ export const leidenHighlightStyle = HighlightStyle.define([
         color: "#a11" },
 
     { tag: leidenTags.unclear,
-        opacity: 0.75 }
+        opacity: 0.75 },
+
+    { tag: leidenTags.requiredSpace,
+        fontFamily: "monospace",
+        borderBottom: "1px dotted color-mix(in srgb, currentColor 20%, transparent)" }
 ]);
 
 export const leidenHighlightStyleDark = HighlightStyle.define([
@@ -625,5 +631,9 @@ export const leidenHighlightStyleDark = HighlightStyle.define([
     { tag: leidenTags.supraline,
         fontStyle: "italic" },
     { tag: leidenTags.supralineUnderline,
-        fontStyle: "italic" }
+        fontStyle: "italic" },
+
+    { tag: leidenTags.requiredSpace,
+        fontFamily: "monospace",
+        borderBottom: "1px dotted color-mix(in srgb, currentColor 20%, transparent)" }
 ]);

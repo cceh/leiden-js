@@ -174,7 +174,8 @@ export function leidenPlusToXml(input: string, topNode = "Document", root = pars
                     break;
 
                 case "Foreign": {
-                    node.lastChild();
+                    node.lastChild(); // RequiredSpace
+                    node.prevSibling();
                     const foreignLangId = text(input, node).substring(2);
                     xml.push(`<foreign xml:lang="${foreignLangId}">`);
                     node.parent();
@@ -383,6 +384,11 @@ export function leidenPlusToXml(input: string, topNode = "Document", root = pars
 
                     // Build num element
                     xml.push("<num");
+
+                    if ((cursor.name as string) === "RequiredSpace") {
+                        cursor.nextSibling();
+                    }
+
                     if (cursor.name === "NumberSpecialValue") {
                         const value = text(input, cursor);
                         let numVal = text(input, cursor).substring(value.indexOf("=") + 1);
@@ -660,6 +666,9 @@ export function leidenPlusToXml(input: string, topNode = "Document", root = pars
 
                 case "Diacritical": {
                     node.firstChild(); // GapNumber, DiacriticUnclear, DiacritChar or "[" (LostNumber open)
+                    if (node.name === "RequiredSpace") {
+                        node.nextSibling();
+                    }
 
                     // Xsugar compatibility workaround
                     if (node.name === "LineBreakWrapped") {

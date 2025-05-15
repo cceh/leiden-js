@@ -22,7 +22,7 @@ divContent { Div (Whitespace | Div)* }
 blockContent { Whitespace? ((pContent divContent?) | divContent) }
 
 P { "<=" inline* "=>" }
-Div { "<D=." N { divWord } ( "." Subtype { divWord } )? space blockContent "=D>" }
+Div { "<D=." N { divWord } ( "." Subtype { divWord } )? RequiredSpace blockContent "=D>" }
 
 
 topLevelRules[@isGroup=topLevel] { LineNum | LineNumBreak | Erasure | Note | Foreign | Term | App | Gap }
@@ -47,11 +47,14 @@ Note { "/*" Content { noteWords+ } "*/" }
 Term { "<" Content { inline+ } ("~" LanguageId)? ~eq "=" Definition { termWords+ } ">"}
 
 ForeignEnd[group=Delims, openedBy="~|"] {
-   "|~" LanguageId space
+   "|~" LanguageId RequiredSpace
 }
 Foreign { "~|" Content { inline+ } ForeignEnd }
 
 App { "<:" Content { inline+ } "|" AppType? ":" AppResp { looseWords+ }? "|" ":>" }
+
+// Helper rule to identify syntactically significant leading or trailing spaces
+RequiredSpace { space }
 
 @tokens {
 

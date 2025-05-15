@@ -257,7 +257,7 @@ editorialCorrectionReadingContent { EditorialCorrectionReading | EditorialCorre
 // 
 // - ForeignEnd is defined in the @tokens section
 
-Foreign { "~|" inline+ ForeignEnd space }
+Foreign { "~|" inline+ ForeignEnd RequiredSpace }
 
 
 // Note: XSugar does not recognize line breaks (1. ) or Gaps (.4) inside SuppliedOmitted,
@@ -666,7 +666,7 @@ NumberSpecial {
     ("<#" inline* NumberSpecialValue "-" RangePart {  (Number | QuestionMark) } "#>")
 }
 
-tick { space ~tick "'" }
+tick { RequiredSpace ~tick "'" }
 NumberSpecialTick[@dynamicPrecedence=1] {
     // invokes the pattern with ' before = for tick numbers
     numberSpecialBase<~tick tick, inline+> |
@@ -711,7 +711,7 @@ Unclear { multiUnclear | singleUnclear }
 DiacritChar { single_char | single_latinChar | single_num | space }
 diacritical[@dynamicPrecedence=1] { // without @dynamicPrecedence this interferes with abbrev expansions e.g. "(abc d(¨) ef(g)) "
      Diacritical[@isGroup=topLevel] {
-        (space | LineBreakWrapped) (
+        (RequiredSpace | LineBreakWrapped) (
             // single char with single or double diacritic: " x(^)" or " x(^`)"
             ( ~diacrit DiacritChar  "("
             (
@@ -768,9 +768,9 @@ Filler { "*filler(" GlyphWord ")" QuestionMark? "*" }
 // followed by astring of alphanumerical characters.
 //
 // " (?)" annotation allowed as suffix (space required after).
- 
+
 Handshift {
-    "$" HandshiftHand CertLow? space
+    "$" HandshiftHand CertLow? RequiredSpace
 }
 
 
@@ -783,7 +783,7 @@ Handshift {
 // Space required after.
 
 Figure {
-    "#" FigureDesc space
+    "#" FigureDesc RequiredSpace
 }
 
 
@@ -885,7 +885,7 @@ lineNum[@dynamicPrecedence=1]<suffix> {
 // A pattern rule for prefixed "missing" patterns such as .4, .5-9, .vestig.ca.5lin(?).
 // - "(?) " allowed for each variant (space after required, e.g. ".1-3(?) ")
 prefixPattern<prefix, content> {
-    prefix content ~certLow CertLowSpace[@name=CertLow] { CertLow space }?
+    prefix content ~certLow CertLowSpace[@name=CertLow] { CertLow RequiredSpace }?
 }
 
 // -- Illegible characters
@@ -926,7 +926,7 @@ Vestige {
     // "vestig " (space after required)
     standalone { VestigStandalone[unit=character] { "vestig " } } |
     // "vestig(?) " 
-    standalone { VestigStandalone[unit=character] { "vestig" } CertLow space } |
+    standalone { VestigStandalone[unit=character] { "vestig" } CertLow RequiredSpace } |
     // the rest of the vestig patterns
     prefixPattern<vestigPrefix, GapNumberLines
                                     | GapNumberChars
@@ -1021,6 +1021,9 @@ Number { num ~lb }
 
 Infix[group=Delims]<infix> { infix }
 MultiInfix[group=Delims]<infix> { infix }
+
+// Helper rule to identify syntactically significant leading or trailing spaces
+RequiredSpace[group=Delims] { space }
 
 space { @extend<whitespace, " "> }
 newLine { @extend<whitespace, "\n"> }

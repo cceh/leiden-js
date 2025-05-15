@@ -40,6 +40,7 @@ export const leidenPlusHighlighting: NodePropSource = styleTags({
     "Foreign/LanguageId": [leiden.foreignLanguageId, leiden.id], // TODO: make visible in grammar
     "Foreign/Unclear Foreign/Supraline/SupralineUnclear": [leiden.foreign, leiden.unclear],
 
+
     "Abbrev Abbrev/Text! Abbrev/*/SupralineMacronContent": [leiden.abbrev],
     "Abbrev/Delims": [leiden.bracket, leiden.abbrev],
     "Abbrev/Unclear Abbrev/Supraline/SupralineUnclear": [leiden.abbrev, leiden.unclear],
@@ -184,11 +185,15 @@ export const leidenPlusHighlighting: NodePropSource = styleTags({
     "DiacritChar": [leiden.diacritChar],
     "Diacritical/Delims": [leiden.diacritParens, leiden.bracket],
 
-    "Figure!": leiden.figure,
-    "Handshift!": leiden.handshift,
+    "Figure Figure/FigureDesc": leiden.figure,
+
+    "Handshift Handshift/HandshiftHand": leiden.handshift,
+    "Handshift/CertLow": [leiden.handshift, leiden.lowCertaintyMarker],
+
+    "RequiredSpace": [leiden.handshift, leiden.requiredSpace],
 
     "CertLow": leiden.lowCertaintyMarker,
 
     "Orig Orig/OrigContent!": leiden.orig,
-    "Orig/Delims!": [leiden.orig, leiden.bracket]
+    "Orig/Delims!": [leiden.orig, leiden.bracket],
 });
