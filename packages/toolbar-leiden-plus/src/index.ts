@@ -514,17 +514,19 @@ export const leidenPlusToolbar: Extension[] = [
                         view.dispatch({
                             changes: availableRanges.map(range => {
                                 const text = view.state.doc.sliceString(range.from, range.to);
-                                const process = range.name === "Unclear" || range.name === "SupralineUnclear"
+                                const process = range.name === "Unclear" || range.name === "SupralineUnclear" || range.name === "DiacriticUnclear"
                                     ? removeCombiningMarks
                                     : addCombiningMarks;
                                 return { from: range.from, to: range.to, insert: process(text, 0x0323) };
                             })
                         });
                     },
-                    active: state.field(syntactialDiacritRanges).length > 0,
+                    active: state.field(syntactialDiacritRanges).filter(range => range.underdot).length > 0,
                     hoverAction: {
                         enter: (view) => {
-                            const availableRanges = view.state.field(syntactialDiacritRanges);
+                            const availableRanges =
+                                view.state.field(syntactialDiacritRanges)
+                                    .filter(range => range.underdot);
                             view.dispatch({ effects: [setPreviewHighlights.of(availableRanges)] });
                         },
                         leave: (view) => view.dispatch({ effects: [setPreviewHighlights.of([])] })
@@ -547,10 +549,11 @@ export const leidenPlusToolbar: Extension[] = [
                             })
                         });
                     },
-                    active: state.field(syntactialDiacritRanges).length > 0,
+                    active: state.field(syntactialDiacritRanges).filter(range => range.supraline).length > 0,
                     hoverAction: {
                         enter: (view) => {
-                            const availableRanges = view.state.field(syntactialDiacritRanges);
+                            const availableRanges = view.state.field(syntactialDiacritRanges)
+                                .filter(range => range.supraline);
                             view.dispatch({ effects: [setPreviewHighlights.of(availableRanges)] });
                         },
                         leave: (view) => view.dispatch({ effects: [setPreviewHighlights.of([])] })

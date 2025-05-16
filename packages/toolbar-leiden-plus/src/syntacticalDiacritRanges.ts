@@ -4,7 +4,9 @@ import { syntaxTree } from "@codemirror/language";
 interface SyntactialDiacritRange {
     name: string,
     from: number,
-    to: number
+    to: number,
+    underdot: boolean,
+    supraline: boolean
 }
 
 export const syntactialDiacritRanges = StateField.define<SyntactialDiacritRange[]>({
@@ -36,13 +38,25 @@ export const syntactialDiacritRanges = StateField.define<SyntactialDiacritRange[
                             name,
                             from: testFrom + match.index,
                             to: testFrom + match.index + match[0].length,
+                            underdot: true,
+                            supraline: true,
                         });
                     }
                 } else if (name === "Unclear" || name === "SupralineMacronContent" || name === "SupralineUnclear") {
                     ranges.push({
                         name,
                         from: Math.max(from, node.from),
-                        to: Math.min(to, node.to)
+                        to: Math.min(to, node.to),
+                        underdot: true,
+                        supraline: true
+                    });
+                } else if (name === "DiacriticUnclear" || name == "DiacritChar") {
+                    ranges.push({
+                        name,
+                        from: node.from,
+                        to: node.to,
+                        underdot: true,
+                        supraline: false
                     });
                 }
 
