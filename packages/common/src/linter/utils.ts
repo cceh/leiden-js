@@ -8,7 +8,7 @@ export function findDescendant(node: SyntaxNodeRef, name: string): SyntaxNodeRef
             foundNode = cursor.node;
             break;
         }
-    } while (cursor.next());
+    } while (cursor.next() && cursor.node.parent === node.node);
 
     return foundNode;
 }
