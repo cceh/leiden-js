@@ -14,5 +14,5 @@ export function findDescendant(node: SyntaxNodeRef, name: string): SyntaxNodeRef
 }
 
 export const nodeDescription = (nodeDescriptions: Record<string, string>, node: SyntaxNodeRef): string => {
-    return nodeDescriptions[node.type.id] || node.type.name;
+    return nodeDescriptions[node.type.name] || node.type.name;
 };
