@@ -885,7 +885,7 @@ lineNum[@dynamicPrecedence=1]<suffix> {
 // A pattern rule for prefixed "missing" patterns such as .4, .5-9, .vestig.ca.5lin(?).
 // - "(?) " allowed for each variant (space after required, e.g. ".1-3(?) ")
 prefixPattern<prefix, content> {
-    prefix content ~certLow CertLowSpace[@name=CertLow] { CertLow RequiredSpace }?
+    prefix content ~certLow CertLowSpace[@name=CertLow,group=SpaceRequired] { CertLow RequiredSpace }?
 }
 
 // -- Illegible characters
