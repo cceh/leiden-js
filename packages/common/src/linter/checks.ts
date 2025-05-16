@@ -1,6 +1,6 @@
 import { NodeProp, SyntaxNode, SyntaxNodeRef } from "@lezer/common";
 import { Diagnostic } from "@codemirror/lint";
-import { nodeDescription } from "./utils.js";
+import { findDescendant, nodeDescription } from "./utils.js";
 
 export const unclosedExpressionError = (nodeDescriptions: Record<string, string>) =>
     (node: SyntaxNodeRef, errPos: number, close: string): Diagnostic => {
@@ -24,7 +24,11 @@ export const unclosedExpressionCheck = (wrappingRules: string[], nodeDescription
             if (parent && wrappingRules.includes(parent.name)) {
                 const errorPos = node.node.from;
                 const closedBy = parent?.firstChild?.type.prop(NodeProp.closedBy);
-                if (parent && closedBy) {
+                const testNode = parent.node.lastChild?.type?.isError
+                    ? parent.node.lastChild?.prevSibling
+                    : parent.node.lastChild;
+
+                if (parent && closedBy && testNode?.name !== closedBy[0]) {
                     return [unclosedExpression(parent, errorPos, closedBy[0])];
                 }
             }
