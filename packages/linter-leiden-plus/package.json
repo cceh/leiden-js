@@ -4,7 +4,8 @@
   "description": "Basic Leiden+ linting for CodeMirror (or standalone)",
   "scripts": {
     "build": "rollup -c",
-    "watch": "rollup -c -w"
+    "watch": "rollup -c -w",
+    "test": "TS_NODE_PROJECT=./tsconfig.test.json mocha test/**/*.test.ts"
   },
   "type": "module",
   "main": "dist/index.cjs",
@@ -22,7 +23,13 @@
   "devDependencies": {
     "@rollup/plugin-typescript": "^12.1.2",
     "rollup": "^4.34.8",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "@leiden-js/parser-leiden-plus": "workspace:*",
+    "mocha": "^10.0.0",
+    "@types/mocha": "^10.0.0",
+    "chai": "^4.3.0",
+    "@types/chai": "^4.3.0",
+    "ts-node": "^10.9.0"
   },
   "dependencies": {
     "@leiden-js/common": "workspace:*",

@@ -1,18 +1,19 @@
-import { Diagnostic, linter } from "@codemirror/lint";
+import { linter } from "@codemirror/lint";
 import { syntaxTree } from "@codemirror/language";
 import { SyntaxNodeRef, TreeCursor } from "@lezer/common";
+import { LeidenDiagnostic } from "./types.js";
 
-export type NodeLinter = (doc: string, node: SyntaxNodeRef) => Diagnostic[] | undefined | null | void;
-export type LeidenLinter = (doc: string, rootCursor: TreeCursor, nodeLinter?: NodeLinter) => Diagnostic[];
+export type NodeLinter = (doc: string, node: SyntaxNodeRef) => LeidenDiagnostic[] | undefined | null | void;
+export type LeidenLinter = (doc: string, rootCursor: TreeCursor, nodeLinter?: NodeLinter) => LeidenDiagnostic[];
 
-export const leidenBaseLinter: LeidenLinter = (doc: string, rootCursor: TreeCursor, nodeLinter?: NodeLinter): Diagnostic[] => {
-    const diagnostics: Diagnostic[] = [];
+export const leidenBaseLinter: LeidenLinter = (doc: string, rootCursor: TreeCursor, nodeLinter?: NodeLinter): LeidenDiagnostic[] => {
+    const diagnostics: LeidenDiagnostic[] = [];
     let skip = false;
     rootCursor.iterate(node => {
         if (skip) {
-            return;
+            return false;
         }
-        const nodeDiagnostics: Diagnostic[] = [];
+        const nodeDiagnostics: LeidenDiagnostic[] = [];
 
         if (nodeLinter) {
             const result = nodeLinter(doc, node);
@@ -27,6 +28,7 @@ export const leidenBaseLinter: LeidenLinter = (doc: string, rootCursor: TreeCurs
                 to: node.to,
                 severity: "error",
                 message: "Syntax error",
+                code: "SYNTAX_ERROR"
             });
         }
 
@@ -38,6 +40,7 @@ export const leidenBaseLinter: LeidenLinter = (doc: string, rootCursor: TreeCurs
     });
     return diagnostics;
 };
+
 
 export const leidenLinterExtension = (nodeLinter?: NodeLinter) =>
     linter(view => leidenBaseLinter(view.state.doc.toString(), syntaxTree(view.state).cursor(), nodeLinter));

@@ -8,7 +8,7 @@
     "module": "ESNext",
     "target": "ESNext",
     "moduleResolution": "Bundler",
-    "types": ["node", "mocha"]
+    "types": ["node", "mocha", "chai"]
   },
   "ts-node": {
     "esm": true,

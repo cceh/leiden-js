@@ -1,0 +1,10 @@
+{
+  "extends": "../../tsconfig.test.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@leiden-js/*": ["../../packages/*/src"]
+    }
+  },
+  "include": ["test/**/*", "src/**/*"]
+}

@@ -175,8 +175,8 @@ export function leidenPlusToXml(input: string, topNode = "Document", root = pars
 
                 case "Foreign": {
                     node.lastChild(); // RequiredSpace
-                    node.prevSibling();
-                    const foreignLangId = text(input, node).substring(2);
+                    node.prevSibling(); // LanguageId
+                    const foreignLangId = text(input, node);
                     xml.push(`<foreign xml:lang="${foreignLangId}">`);
                     node.parent();
                     break;
@@ -854,6 +854,7 @@ export function leidenPlusToXml(input: string, topNode = "Document", root = pars
                     return false;
                 }
                 case "GlyphContent":
+                case "LanguageId":
                 case "LanguageIdSpec":
                 case "Citation":
                 case "NumberSpecialValue":

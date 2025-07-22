@@ -23,7 +23,6 @@
     "build": "tsup src/index.ts --format cjs,esm --dts --sourcemap",
     "dev": "tsx watch src/index.ts",
     "start": "node ./bin/leiden-transformation-service.js",
-    "test": "TS_NODE_PROJECT=../../tsconfig.test.json mocha src/**/*.test.ts",
     "prepublishOnly": "npm run build"
   },
   "author": "Marcel Schaeben",

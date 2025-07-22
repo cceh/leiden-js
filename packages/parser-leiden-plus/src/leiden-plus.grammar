@@ -255,10 +255,8 @@ editorialCorrectionReadingContent { EditorialCorrectionReading | EditorialCorre
 //
 // e.g.:  "~|γενήσεται|~grc " (space after language id required)
 // 
-// - ForeignEnd is defined in the @tokens section
 
-Foreign { "~|" inline+ ForeignEnd RequiredSpace }
-
+Foreign { "~|" inline+ "|~" LanguageId RequiredSpace }
 
 // Note: XSugar does not recognize line breaks (1. ) or Gaps (.4) inside SuppliedOmitted,
 // parses them as text
@@ -1101,13 +1099,10 @@ newLine { @extend<whitespace, "\n"> }
     "*"[group=Delims, closedBy="*", openedBy="* *filler("]
     "*filler("[group=Delims, closedBy="*"]
 
-    "~|"[group=Delims, closedBy=ForeignEnd]
-    ForeignEnd[group=Delims, openedBy="~|"] {
-        "|~" LanguageId
-    }
+    "~|"[group=Delims, closedBy="|~"]
+    "|~"[group=Delims, openedBy="~|"]
 
-
-    @precedence {  ForeignEnd, "|" }
+    // @precedence {  "|~", "|" }
 
     @precedence { "/", "lost", "vac", ",", digits }
 
