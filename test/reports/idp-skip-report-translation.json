@@ -1,7 +1,9 @@
 {
-  "idpDataCommit": "b64326413763ec72e54ae7afcca195585ed1875b",
-  "timestamp": "2025-07-23T13:04:24.996Z",
+  "idpDataCommit": "4c41f8f79df6819fe7d07ac48735fe8ba03ae6b8",
+  "timestamp": "2025-07-23T13:39:30.126Z",
   "skippedFiles": {
+    "test/leiden-js-idp-test-data/roundtrips/HGV_trans_EpiDoc/1000277.xml": "includes `<gap>`, does not work in XSugar",
+    "test/leiden-js-idp-test-data/roundtrips/HGV_trans_EpiDoc/1000279.xml": "includes `<gap>`, does not work in XSugar",
     "test/leiden-js-idp-test-data/roundtrips/HGV_trans_EpiDoc/10038.xml": "includes `<gap>`, does not work in XSugar",
     "test/leiden-js-idp-test-data/roundtrips/HGV_trans_EpiDoc/1022.xml": "includes `<gap>`, does not work in XSugar",
     "test/leiden-js-idp-test-data/roundtrips/HGV_trans_EpiDoc/10359.xml": "includes `<gap>`, does not work in XSugar",
@@ -35,6 +37,7 @@
     "test/leiden-js-idp-test-data/roundtrips/HGV_trans_EpiDoc/115581.xml": "includes `<gap>`, does not work in XSugar",
     "test/leiden-js-idp-test-data/roundtrips/HGV_trans_EpiDoc/11620.xml": "includes `<gap>`, does not work in XSugar",
     "test/leiden-js-idp-test-data/roundtrips/HGV_trans_EpiDoc/11629.xml": "includes `<gap>`, does not work in XSugar",
+    "test/leiden-js-idp-test-data/roundtrips/HGV_trans_EpiDoc/11689.xml": "includes `<gap>`, does not work in XSugar",
     "test/leiden-js-idp-test-data/roundtrips/HGV_trans_EpiDoc/11735.xml": "includes `<gap>`, does not work in XSugar",
     "test/leiden-js-idp-test-data/roundtrips/HGV_trans_EpiDoc/118375.xml": "includes `<gap>`, does not work in XSugar",
     "test/leiden-js-idp-test-data/roundtrips/HGV_trans_EpiDoc/118687.xml": "includes `<gap>`, does not work in XSugar",
@@ -135,6 +138,7 @@
     "test/leiden-js-idp-test-data/roundtrips/HGV_trans_EpiDoc/14870.xml": "includes `<gap>`, does not work in XSugar",
     "test/leiden-js-idp-test-data/roundtrips/HGV_trans_EpiDoc/1517.xml": "includes `<gap>`, does not work in XSugar",
     "test/leiden-js-idp-test-data/roundtrips/HGV_trans_EpiDoc/154395.xml": "includes `<gap>`, does not work in XSugar",
+    "test/leiden-js-idp-test-data/roundtrips/HGV_trans_EpiDoc/154396.xml": "includes `<gap>`, does not work in XSugar",
     "test/leiden-js-idp-test-data/roundtrips/HGV_trans_EpiDoc/16583.xml": "includes `<gap>`, does not work in XSugar",
     "test/leiden-js-idp-test-data/roundtrips/HGV_trans_EpiDoc/16830.xml": "includes `<gap>`, does not work in XSugar",
     "test/leiden-js-idp-test-data/roundtrips/HGV_trans_EpiDoc/16832.xml": "includes `<gap>`, does not work in XSugar",
@@ -506,6 +510,7 @@
     "test/leiden-js-idp-test-data/roundtrips/HGV_trans_EpiDoc/25927.xml": "includes `<gap>`, does not work in XSugar",
     "test/leiden-js-idp-test-data/roundtrips/HGV_trans_EpiDoc/25928.xml": "includes `<gap>`, does not work in XSugar",
     "test/leiden-js-idp-test-data/roundtrips/HGV_trans_EpiDoc/26062.xml": "includes `<gap>`, does not work in XSugar",
+    "test/leiden-js-idp-test-data/roundtrips/HGV_trans_EpiDoc/26945.xml": "includes `<gap>`, does not work in XSugar",
     "test/leiden-js-idp-test-data/roundtrips/HGV_trans_EpiDoc/27515.xml": "includes `<gap>`, does not work in XSugar",
     "test/leiden-js-idp-test-data/roundtrips/HGV_trans_EpiDoc/27638.xml": "includes `<gap>`, does not work in XSugar",
     "test/leiden-js-idp-test-data/roundtrips/HGV_trans_EpiDoc/27728.xml": "includes `<gap>`, does not work in XSugar",
@@ -551,6 +556,7 @@
     "test/leiden-js-idp-test-data/roundtrips/HGV_trans_EpiDoc/28993.xml": "includes `<gap>`, does not work in XSugar",
     "test/leiden-js-idp-test-data/roundtrips/HGV_trans_EpiDoc/28994.xml": "includes `<gap>`, does not work in XSugar",
     "test/leiden-js-idp-test-data/roundtrips/HGV_trans_EpiDoc/28996.xml": "includes `<gap>`, does not work in XSugar",
+    "test/leiden-js-idp-test-data/roundtrips/HGV_trans_EpiDoc/29221.xml": "includes `<gap>`, does not work in XSugar",
     "test/leiden-js-idp-test-data/roundtrips/HGV_trans_EpiDoc/29253.xml": "includes `<gap>`, does not work in XSugar",
     "test/leiden-js-idp-test-data/roundtrips/HGV_trans_EpiDoc/29409.xml": "includes `<gap>`, does not work in XSugar",
     "test/leiden-js-idp-test-data/roundtrips/HGV_trans_EpiDoc/2982.xml": "includes `<gap>`, does not work in XSugar",
@@ -821,6 +827,7 @@
     "test/leiden-js-idp-test-data/roundtrips/HGV_trans_EpiDoc/65664.xml": "includes `<gap>`, does not work in XSugar",
     "test/leiden-js-idp-test-data/roundtrips/HGV_trans_EpiDoc/65797.xml": "includes `<gap>`, does not work in XSugar",
     "test/leiden-js-idp-test-data/roundtrips/HGV_trans_EpiDoc/68619.xml": "includes `<gap>`, does not work in XSugar",
+    "test/leiden-js-idp-test-data/roundtrips/HGV_trans_EpiDoc/69045.xml": "includes `<gap>`, does not work in XSugar",
     "test/leiden-js-idp-test-data/roundtrips/HGV_trans_EpiDoc/693.xml": "includes `<gap>`, does not work in XSugar",
     "test/leiden-js-idp-test-data/roundtrips/HGV_trans_EpiDoc/69880.xml": "includes `<gap>`, does not work in XSugar",
     "test/leiden-js-idp-test-data/roundtrips/HGV_trans_EpiDoc/69903.xml": "includes `<gap>`, does not work in XSugar",
@@ -1057,7 +1064,9 @@
     "test/leiden-js-idp-test-data/roundtrips/HGV_trans_EpiDoc/957987.xml": "includes `<gap>`, does not work in XSugar",
     "test/leiden-js-idp-test-data/roundtrips/HGV_trans_EpiDoc/957988.xml": "includes `<gap>`, does not work in XSugar",
     "test/leiden-js-idp-test-data/roundtrips/HGV_trans_EpiDoc/957989.xml": "includes `<gap>`, does not work in XSugar",
+    "test/leiden-js-idp-test-data/roundtrips/HGV_trans_EpiDoc/9588.xml": "includes `<gap>`, does not work in XSugar",
     "test/leiden-js-idp-test-data/roundtrips/HGV_trans_EpiDoc/958944.xml": "includes `<gap>`, does not work in XSugar",
+    "test/leiden-js-idp-test-data/roundtrips/HGV_trans_EpiDoc/9670.xml": "includes `<gap>`, does not work in XSugar",
     "test/leiden-js-idp-test-data/roundtrips/HGV_trans_EpiDoc/971734.xml": "includes `<gap>`, does not work in XSugar",
     "test/leiden-js-idp-test-data/roundtrips/HGV_trans_EpiDoc/971735.xml": "includes `<gap>`, does not work in XSugar",
     "test/leiden-js-idp-test-data/roundtrips/HGV_trans_EpiDoc/971736.xml": "includes `<gap>`, does not work in XSugar",
@@ -1163,6 +1172,8 @@
     "test/leiden-js-idp-test-data/roundtrips/HGV_trans_EpiDoc/998648.xml": "includes `<gap>`, does not work in XSugar",
     "test/leiden-js-idp-test-data/roundtrips/HGV_trans_EpiDoc/998649.xml": "includes `<gap>`, does not work in XSugar",
     "test/leiden-js-idp-test-data/roundtrips/HGV_trans_EpiDoc/99875.xml": "includes `<gap>`, does not work in XSugar",
-    "test/leiden-js-idp-test-data/roundtrips/HGV_trans_EpiDoc/99915.xml": "includes `<gap>`, does not work in XSugar"
+    "test/leiden-js-idp-test-data/roundtrips/HGV_trans_EpiDoc/99915.xml": "includes `<gap>`, does not work in XSugar",
+    "test/leiden-js-idp-test-data/roundtrips/HGV_trans_EpiDoc/999484.xml": "includes `<gap>`, does not work in XSugar",
+    "test/leiden-js-idp-test-data/roundtrips/HGV_trans_EpiDoc/999605.xml": "includes `<gap>`, does not work in XSugar"
   }
 }

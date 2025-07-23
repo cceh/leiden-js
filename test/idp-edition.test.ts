@@ -83,6 +83,7 @@ const ignoreReasons = {
     "o.waqfa.76": "XSugar produces incorrect Leiden: the `ε͂` in `<hi rend=\"supraline\">χε͂</hi>` is rendered as `χ̄ε̄͂̄͂` (the χ̄ gets the perispomeni and the ε gets three macrons)",
     "p.koeln.17.654": "Xsugar roundtrip produces incorrect XML (`<add place=\"above\"><add place=\"above\">`) instead of `<add place=\"below\">`)",
     "p.louvre.3.239": "XSugar produces incorrect XML for `δ̣̄ύ̣̄ο̣̄` (splits up underline unclear sequence)",
+    "o.wilck.779": "lb 5: Invalid additional `|alt|` infix inside editorial correction (XSugar produces an additional rdg with text 'alt')",
 };
 
 const beforeProcess: BeforeProcessHook = function(textFilePath, textFileContent) {
@@ -355,6 +356,7 @@ describe("p.kramer", function() { process(this.title); });
 describe("p.kroll", function() { process(this.title); });
 describe("p.kron", function() { process(this.title); });
 describe("p.kru", function() { process(this.title); });
+describe("p.kynopolites", function() { process(this.title); });
 describe("p.laur", function() { process(this.title); });
 describe("p.leeds.mus", function() { process(this.title); });
 describe("p.leid.inst", function() { process(this.title); });
@@ -496,7 +498,6 @@ describe("sb", function() { process(this.title); });
 describe("sb.kopt", function() { process(this.title); });
 describe("short.texts", function() { process(this.title); });
 describe("simblos", function() { process(this.title); });
-// describe("sosol", function() { process(this.title); }); (currently empty)
 describe("stud.pal", function() { process(this.title); });
 describe("symboslo", function() { process(this.title); });
 describe("t.alb", function() { process(this.title); });
@@ -509,5 +510,6 @@ describe("travmem", function() { process(this.title); });
 describe("tyche", function() { process(this.title); });
 describe("upz", function() { process(this.title); });
 describe("vdi", function() { process(this.title); });
+describe("vigchr", function() { process(this.title); });
 describe("zpe", function() { process(this.title); });
 describe("zrg", function() { process(this.title); });
