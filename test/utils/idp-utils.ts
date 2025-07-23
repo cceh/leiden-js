@@ -9,6 +9,21 @@ interface IgnoreReasons {
     [key: string]: string;
 }
 
+// Initialize global skip reasons registry
+declare global {
+    var skipReasons: Record<string, string> | undefined;
+}
+global.skipReasons = global.skipReasons || {};
+
+// Reusable skip function
+export function skipWithReason(context: Mocha.Context, filePath: string, reason: string): void {
+    console.log(`Ignoring ${filePath}, ${reason}`);
+    // Store XML path directly to avoid conversion in reporter
+    const xmlPath = filePath.replace(/\.txt$/, '.xml');
+    global.skipReasons![xmlPath] = reason;
+    context.skip();
+}
+
 // Types for the hook functions that can skip tests
 export type BeforeProcessHook = (this: Mocha.Context, textFilePath: string, textFileContent: string) => void;
 export type BeforeXmlCompareHook = (this: Mocha.Context, textFilePath: string, myXml: string, origXml: string) => void;
@@ -64,8 +79,7 @@ export function processDir(
 
             // Check ignore list first
             if (ignore.includes(basename)) {
-                console.log(`Ignoring ${textFile}, reason:\n${ignoreReasons[basename]}`);
-                this.skip();
+                skipWithReason(this, textFile, `reason: ${ignoreReasons[basename]}`);
                 return;
             }
 
