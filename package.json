@@ -10,6 +10,7 @@
     "test:packages": "pnpm --recursive test",
     "test": "pnpm run test:leiden-plus && pnpm run test:leiden-trans && pnpm run test:packages",
     "test:idp:get-data": "git submodule update --init --depth 1 test/leiden-js-idp-test-data",
+    "test:idp:get-data:head": "git submodule update --init --remote --depth 1 test/leiden-js-idp-test-data",
     "test:idp:edition": "TS_NODE_PROJECT=./tsconfig.test.json mocha test/idp-edition.test.ts",
     "test:idp:translation": "TS_NODE_PROJECT=./tsconfig.test.json mocha test/idp-translation.test.ts",
     "test:idp": "pnpm test:idp:get-data && pnpm test:idp:edition && pnpm test:idp:translation",

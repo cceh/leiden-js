@@ -1,46 +1,44 @@
-name: Test
-
+name: Test with current IDP data
 on:
-  push:
-    branches:
-      - main
-  pull_request:
+  repository_dispatch:
+    types: [idp-test-data-updated]
+  workflow_dispatch:
+
 
 jobs:
-  test:
+  test-current-idp-data:
     runs-on: ubuntu-latest
-    outputs:
-      idp-data-key: ${{ steps.submodule-hash.outputs.hash }}
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          submodules: false
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
         with:
           version: 10
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: '20'
           cache: 'pnpm'
 
       - name: Install dependencies
         run: pnpm install
 
+      - name: Cache build output
+        uses: actions/cache@v4
+        with:
+          path: packages/
+          key: build-${{ github.sha }}
+
       - name: Build packages
         run: pnpm build
 
-      - name: Test Leiden+
-        run: pnpm test:leiden-plus
-
-      - name: Test Leiden Translation
-        run: pnpm test:leiden-trans
-
-      - name: Get IDP Data
-        run: pnpm test:idp:get-data
+      - name: Get current IDP Data
+        run: pnpm test:idp:get-data:head
 
       - name: IDP tests – edition
         run: pnpm test:idp:edition
