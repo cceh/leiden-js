@@ -53,39 +53,39 @@ const activeNodeHighlightViewPlugin = ViewPlugin.fromClass(class implements Plug
         const selection = view.state.selection.main;
         const config = view.state.facet(nodeHighlightConfig);
 
-
-        let selectionHighlighted: SyntaxNode | null = null;
-        if (selection.empty) {
-            const pos = selection.from;
+        const findHighlightableNode = (pos: number): SyntaxNode | null => {
             const tree = syntaxTree(view.state);
             let node: SyntaxNode | null = tree.resolveInner(pos, 1);
 
-            // Check if we found a valid node
             while (node) {
                 if (node && node.to - node.from > 0) {
                     if (config.nodeNames.includes(node.name) || node.type.is("topLevel")) {
-                        decorations.push(highlightMark.range(node.from, node.to));
-                        selectionHighlighted = node;
-                        break;
+                        // Don't highlight if the last child is an error node
+                        if (node.lastChild && node.lastChild.type.isError) {
+                            node = node.parent;
+                            continue;
+                        }
+                        return node;
                     }
                 }
                 node = node.parent;
+            }
+            return null;
+        };
+
+        let selectionHighlighted: SyntaxNode | null = null;
+        if (selection.empty) {
+            selectionHighlighted = findHighlightableNode(selection.from);
+            if (selectionHighlighted) {
+                decorations.push(highlightMark.range(selectionHighlighted.from, selectionHighlighted.to));
             }
         }
 
         const hoverPos = view.state.field(hoverState);
         if (hoverPos >= 0) {
-            const tree = syntaxTree(view.state);
-            let node: SyntaxNode | null = tree.resolveInner(hoverPos, 1);
-
-            while (node) {
-                if (config.nodeNames.includes(node.type.name) || node.type.is("topLevel")) {
-                    if (node !== selectionHighlighted) {
-                        decorations.push(highlightMark.range(node.from, node.to));
-                    }
-                    break;
-                }
-                node = node.parent;
+            const hoverNode = findHighlightableNode(hoverPos);
+            if (hoverNode && hoverNode !== selectionHighlighted) {
+                decorations.push(highlightMark.range(hoverNode.from, hoverNode.to));
             }
         }
 
