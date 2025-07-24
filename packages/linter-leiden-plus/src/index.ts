@@ -7,7 +7,6 @@ import {
     LeidenDiagnostic
 } from "@leiden-js/common/linter";
 import { Tree } from "@lezer/common";
-import { Diagnostic } from "@codemirror/lint";
 import { lintForeign } from "./foreign.js";
 import { lintNumberSpecial, lintNumberSpecialNonParserErrors } from "./numberSpecial.js";
 import { lintAbbrev } from "./abbrev.js";

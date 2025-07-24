@@ -10,7 +10,8 @@ export default defineConfig([
         "packages/parser-*/types/",
         "packages/parser-*/src/parser.*",
         "test/leiden-js-idp-test-data",
-        ".mocharc.cjs"
+        "**/.mocharc.cjs",
+        "test/utils/idp-skip-reporter.cjs",
     ]),
     { files: ["**/*.{js,mjs,cjs,ts}"] },
     { files: ["**/*.{js,mjs,cjs,ts}"], languageOptions: { globals: globals.browser } },

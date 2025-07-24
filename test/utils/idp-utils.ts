@@ -11,7 +11,7 @@ interface IgnoreReasons {
 
 // Initialize global skip reasons registry
 declare global {
-    var skipReasons: Record<string, string> | undefined;
+    let skipReasons: Record<string, string> | undefined;
 }
 global.skipReasons = global.skipReasons || {};
 
@@ -19,7 +19,7 @@ global.skipReasons = global.skipReasons || {};
 export function skipWithReason(context: Mocha.Context, filePath: string, reason: string): void {
     console.log(`Ignoring ${filePath}, ${reason}`);
     // Store XML path directly to avoid conversion in reporter
-    const xmlPath = filePath.replace(/\.txt$/, '.xml');
+    const xmlPath = filePath.replace(/\.txt$/, ".xml");
     global.skipReasons![xmlPath] = reason;
     context.skip();
 }

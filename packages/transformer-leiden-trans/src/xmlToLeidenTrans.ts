@@ -3,7 +3,7 @@ import {
     Node,
     Element,
     DocumentFragment,
-    DOMParserType, XMLSerializerType, getDOMParser, ParserError, getXMLSerializer, xmlToLeiden
+    DOMParserType, XMLSerializerType, xmlToLeiden
 } from "@leiden-js/common/transformer";
 
 function transformElem(elem: Element, output: string[], serializer?: XMLSerializerType) {
