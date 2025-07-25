@@ -1,6 +1,6 @@
 {
   "name": "@leiden-js/parser-leiden-plus",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "A Lezer based parser for Leiden+",
   "type": "module",
   "main": "dist/index.cjs",

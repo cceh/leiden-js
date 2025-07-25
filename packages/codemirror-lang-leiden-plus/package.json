@@ -1,6 +1,6 @@
 {
   "name": "@leiden-js/codemirror-lang-leiden-plus",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "CodeMirror language support for Leiden+",
   "scripts": {
     "build": "rollup -c",

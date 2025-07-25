@@ -1,6 +1,6 @@
 {
   "name": "@leiden-js/codemirror-leiden-trans",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Pre-configured CodeMirror setup for Leiden Translation",
   "scripts": {
     "build": "rollup -c",

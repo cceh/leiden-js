@@ -1,6 +1,6 @@
 {
   "name": "leiden-js",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "type": "module",
   "description": "JavaScript tooling for the Leiden+ epigraphic markup language",
   "scripts": {
@@ -20,7 +20,11 @@
     "dev": "pnpm --parallel --filter \"dev-app^...\" watch & pnpm --filter dev-app start",
     "dev:transformation-service": "pnpm --parallel --filter \"transformation-service^...\" watch & pnpm --filter transformation-service dev",
     "lint": "eslint .",
-    "lint:fix": "eslint . --fix"
+    "lint:fix": "eslint . --fix",
+    "publish:npm": "pnpm -r publish --registry https://registry.npmjs.org/ --access public",
+    "publish:gitlab": "pnpm -r publish --registry https://gitlab.dh.uni-koeln.de/api/v4/projects/726/packages/npm/",
+    "publish:all": "pnpm run publish:gitlab && pnpm run publish:npm"
+
   },
   "keywords": [],
   "author": "Marcel Schaeben",

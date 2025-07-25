@@ -1,6 +1,6 @@
 {
   "name": "@leiden-js/linter-leiden-plus",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Basic Leiden+ linting for CodeMirror (or standalone)",
   "scripts": {
     "build": "rollup -c",
