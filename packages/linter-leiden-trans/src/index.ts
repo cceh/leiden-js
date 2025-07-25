@@ -16,7 +16,10 @@ export const leidenTransNodeLinter: NodeLinter = (doc, node) => {
     if (node.type.isError) {
         const parent = node.node.parent;
 
-        return checkUnclosedExpression(node, parent);
+        const unclosedCheckResult = checkUnclosedExpression(node, parent);
+        if (unclosedCheckResult) {
+            return unclosedCheckResult.map(d => ({ ...d, code: "UNCLOSED_EXPRESSION" }));
+        }
     }
 };
 

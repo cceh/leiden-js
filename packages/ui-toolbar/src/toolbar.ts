@@ -29,7 +29,7 @@ const updateCMColors = (view: EditorView) => requestAnimationFrame(() => {
 });
 
 export class Toolbar implements Panel {
-    private openTimeout: number | undefined;
+    private openTimeout: ReturnType<typeof setTimeout> | undefined;
     private menuRefs = new Map();
     private readonly menuContainer: HTMLElement;
 

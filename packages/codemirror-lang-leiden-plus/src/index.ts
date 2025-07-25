@@ -42,7 +42,7 @@ export const leidenPlusLanguage = (config?: LeidenPlusLanguageConfig) =>
             autocomplete: (context: CompletionContext) => {
                 return completeFromList(
                     Object.values(snippets).map(
-                        snippetDef =>
+                        (snippetDef) =>
                             snippetCompletion(snippetDef.template, snippetDef.completion)
                     )
                 )(context);

@@ -4,26 +4,31 @@
   "type": "module",
   "exports": {
     "./linter": {
+      "source": "./src/linter/index.ts",
       "types": "./dist/linter/index.d.ts",
       "require": "./dist/linter/index.cjs",
       "import": "./dist/linter/index.js"
     },
     "./transformer": {
+      "source": "./src/transformer/index.ts",
       "types": "./dist/transformer/index.d.ts",
       "require": "./dist/transformer/index.cjs",
       "import": "./dist/transformer/index.js"
     },
     "./language": {
+      "source": "./src/language/index.ts",
       "types": "./dist/language/index.d.ts",
       "require": "./dist/language/index.cjs",
       "import": "./dist/language/index.js"
     },
     "./util": {
+      "source": "./src/util/index.ts",
       "types": "./dist/util/index.d.ts",
       "require": "./dist/util/index.cjs",
       "import": "./dist/util/index.js"
     },
     "./codemirror-leiden": {
+      "source": "./src/codemirror-leiden/index.ts",
       "types": "./dist/codemirror-leiden/index.d.ts",
       "require": "./dist/codemirror-leiden/index.cjs",
       "import": "./dist/codemirror-leiden/index.js"
@@ -31,14 +36,16 @@
   },
   "description": "Shared utilities for the leiden-js packages",
   "scripts": {
-    "build": "tsup 'src/**/index.ts' --format cjs,esm --dts --sourcemap",
-    "watch": "tsup 'src/**/index.ts' --format cjs,esm --dts --watch --sourcemap"
+    "build": "rollup -c",
+    "watch": "rollup -c -w"
   },
   "keywords": [],
   "author": "Marcel Schaeben",
   "license": "ISC",
   "devDependencies": {
-    "tsup": "^8.4.0"
+    "rollup": "^4.34.8",
+    "rollup-plugin-typescript2": "^0.36.0",
+    "typescript": "^5.8.3"
   },
   "dependencies": {
     "@lezer/common": "^1.2.3",
