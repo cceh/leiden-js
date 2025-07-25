@@ -3,47 +3,18 @@ import { xmlToLeidenPlus, leidenPlusToXml } from "../packages/transformer-leiden
 
 const sourceDir = "test/leiden-js-idp-test-data/roundtrips/DDB_EpiDoc_XML";
 const ignoreReasons = {
-    "analpap.28.31_1": "lb attribute order in IDP XML wrong",
     "apf.63.167": "XSugar produces wrong XML: `(θ̄(ε)ῷ̄)` produces `<hi rend=\"supraline\">ῶ</hi>`ͅ with accent on the `>`",
-    "apf.68.121": "`lb` attribute order in IDP XML wrong",
-    "bacps.33.38_1": "`lb` attribute order in IDP XML wrong",
-    "bgu.1.14": "`lost.ca.6lin`: wrong attribute order in IDP XML",
     "bgu.1.68": "Contains Editorial Correction with single Reg but multi-marker `||ed||`. IN Xsugar this is handled through round-trip conversion.",
     "bgu.11.2019": "Xsugar produces wrong XML due to supraline character with combining diacrit",
     "bgu.12.2139": "Xsugar produces wrong XML due to supraline character with combining diacrit (lb 11)",
-    "bgu.16.2592": "Wrong attribute order in IDP XML, lbs 7 and 10",
-    "bgu.2.630": "Wrong attribute order in IDP XML, edition div and several gaps",
     "bgu.5.1210": "lb 170 – `ὰ̣̓̀ `: three combining characters AND unclear! XSugar produces wrong XML.",
-    "bgu.6.1219": "Wrong attribute order in IDP XML, gap in `lb` 41",
-    "bgu.7.1664": "Wrong attribute order in IDP XML, gap in `lb` 11",
-    "bgu.8.1759": "Wrong attribute order in IDP XML, gap in `lb` 11",
     "bgu.20.2859": "Invalid Leiden from XSugar: there's a underdot on the newline/lf character (`lb` 8/9)!",
-    "c.ep.lat.2": "Outdated / wrong XML in IDP",
-    "c.ep.lat.219": "Outdated / wrong XML in IDP",
-    "chla.11.505": "Outdated / wrong XML in IDP",
-    "chla.41.1203": "Wrong attribute order in IDP XML",
-    "chla.9.383": "Wrong attribute order in IDP XML: milestones",
     "chr.wilck.134": "editorial correction inside reg of editorial correction (`lb` 8, `<:πατριδιαθεσιν|ed|<:πατρι διάθεσιν, l. πατρικῇ διαθέσει:>=PN C. Balamoshev:>`). Xsugar does not error but produces a SuppliedOmitted with contents wrapped in colons instead.",
     // "apf.58.236": "Illegible inside SuppliedLost, does not really make sense, also probably typo: [.7 ]. What is probably meant is [.7]",
     // "apf.62.110": "Illegible inside SuppliedLost: [.2,]",
-    "chr.wilck.228": "Outdated / wrong XML in IDP",
-    "cpr.13.4": "Wrong attribute order in IDP XML (edition `div`)",
-    "cpr.15.29": "Wrong attribute order in IDP XML (many instances)",
-    "cpr.18.20": "Outdated / wrong XML in IDP",
     "cpr.4.79": "Outdated / wrong XML in IDP",
     "cpr.4.87": "Outdated / wrong XML in IDP",
     "cpr.4.52": "error in XML/Leiden: Editorial correction without infix",
-    "o.amst.11": "Wrong attribute order in IDP XML (edition `div`, `gap` in `lb` 1)",
-    "o.berenike.2.178": "Wrong attribute order in IDP XML (supplied in lb 4)",
-    "o.bodl.2.1913": "Wrong attribute order in IDP XML (gap in lb 1)",
-    "o.bodl.2.1918": "Wrong attribute order in IDP XML (gap in lb 1)",
-    "o.bodl.2.426": "Outdated / wrong XML in IDP (lb 7)",
-    "o.claud.1.33": "Outdated / wrong XML in IDP (lb 4)",
-    "o.deiss.11": "Wrong attribute order in IDP XML (edition `div`)",
-    "o.deiss.12": "Wrong attribute order in IDP XML (edition `div`)",
-    "o.did.63": "Outdated / wrong XML in IDP (lb 8, lb 9)",
-    "o.dime.1.86": "Outdated / wrong XML in IDP (lb 2)",
-    "o.dime.1.88": "Outdated / wrong XML in IDP (lb 2)",
     "o.frange.704": "Error in IDP: reg in `3. ⲁ̅ⲣⲓ ⲧ<:ἀγάπη=grc|reg|ⲁⲅⲁⲡⲏ||reg||ⲁⲕⲁⲡⲏ:>`",
     "o.krok.1.41": "Wrong XSugar output: renders `[--------]` as supplied-lost `----` + paragrphos, should be supplied-lost horizontal rule",
     "p.bad.2.42": "error in XML/Leiden: Editorial correction without infix (`<:προσωπί̣τ̣ι̣[ο]ν:>`)",
@@ -58,7 +29,6 @@ const ignoreReasons = {
     "p.hamb.3.222": "error in IDP: correction without infix (lb 19, `<:περισκάψιν, l. περισκάψειν:>`)",
     "p.heid.11.488": "Xsugar produces wrong XML due to supraline character with combining diacrit (lb 1)",
     "p.heid.kopt.21": "In IDP XML, there is a add above nested inside add above. XSugar converts this to one add below (`// xyz \\\\`), and back to XML as one add below. So probably outdated XML and what is meant is one add below.",
-    "p.herm.landl.I": "Wrong attribute order in IDB XML (gaps in lb 51, lb 476)",
     "p.koeln.14.579a": "XSugar breaks a supraline sequence after the greek one half sign (`𐅵`). This is probably a bug in XSugar.",
     "p.kru.92": "error in IDP: correction without infix (lb 46)",
     "p.lips.1.27": "error in IDP: Editorial Correction with two `|ed|` infixes (lb 27)",
@@ -97,9 +67,7 @@ const beforeProcess: BeforeProcessHook = function(textFilePath, textFileContent)
 };
 
 const beforeCompare: BeforeXmlCompareHook = function(textFilePath, _myXml, origXml) {
-    if (origXml.includes("break=\"no\" rend=\"indent\"")) {
-        skipWithReason(this, textFilePath, "(xml->leiden) `lb` attribute order in IDP XML wrong");
-    } else if (/>\p{Mark}+/u.test(origXml)) {
+    if (/>\p{Mark}+/u.test(origXml)) {
         skipWithReason(this, textFilePath, "(xml->leiden) contains combing mark on non-word character (XSugar problem with diacritics)");
     } else if (/\u2028/.test(origXml)) {
         skipWithReason(this, textFilePath, "(xml->leiden) contains line separator character (XSugar problem with line separator)");

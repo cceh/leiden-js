@@ -1,6 +1,6 @@
 {
-  "idpDataCommit": "4c41f8f79df6819fe7d07ac48735fe8ba03ae6b8",
-  "timestamp": "2025-07-23T13:39:30.126Z",
+  "idpDataCommit": "914f8a4160bde384b3e9bedbda5d8792700a7c68",
+  "timestamp": "2025-07-25T08:29:47.717Z",
   "skippedFiles": {
     "test/leiden-js-idp-test-data/roundtrips/HGV_trans_EpiDoc/1000277.xml": "includes `<gap>`, does not work in XSugar",
     "test/leiden-js-idp-test-data/roundtrips/HGV_trans_EpiDoc/1000279.xml": "includes `<gap>`, does not work in XSugar",
