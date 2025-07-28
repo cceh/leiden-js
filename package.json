@@ -28,7 +28,7 @@
   },
   "keywords": [],
   "author": "Marcel Schaeben",
-  "license": "ISC",
+  "license": "MIT",
   "private": true,
   "workspaces": [
     "packages/*"

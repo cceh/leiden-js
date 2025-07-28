@@ -22,7 +22,7 @@
   },
   "keywords": [],
   "author": "Marcel Schaeben",
-  "license": "ISC",
+  "license": "MIT",
   "devDependencies": {
     "tsup": "^8.4.0"
   },

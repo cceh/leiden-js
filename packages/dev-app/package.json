@@ -10,7 +10,7 @@
   },
   "keywords": [],
   "author": "Marcel Schaeben",
-  "license": "ISC",
+  "license": "MIT",
   "devDependencies": {
     "vite": "6.3.3"
   },
