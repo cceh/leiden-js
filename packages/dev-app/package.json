@@ -2,6 +2,7 @@
   "name": "@leiden-js/dev-app",
   "private": true,
   "version": "1.0.4",
+  "type": "module",
   "description": "Development and demo app for leiden-js",
   "main": "index.js",
   "scripts": {
@@ -12,7 +13,7 @@
   "author": "Marcel Schaeben",
   "license": "MIT",
   "devDependencies": {
-    "vite": "6.3.3"
+    "vite": "7.0.6"
   },
   "dependencies": {
     "@codemirror/lang-xml": "^6.1.0",

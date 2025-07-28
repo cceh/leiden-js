@@ -14,7 +14,7 @@ export function lintForeign(parent: SyntaxNode, doc: string): LeidenDiagnostic[]
         if (foreignEnd) {
             const precedingChars = getPrecedingContext(doc, foreignEnd.from);
             const matchWithContext = `${precedingChars}${doc.slice(foreignEnd.from, foreignEnd.to)}`;
-            const spaceIfRequired = doc.at(foreignEnd.to) === " " ? "" : " ";
+            const spaceIfRequired = doc[foreignEnd.to] === " " ? "" : " ";
             return [{
                 from: foreignEnd.from,
                 to: foreignEnd.to,
