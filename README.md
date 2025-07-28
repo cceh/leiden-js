@@ -327,6 +327,9 @@ pnpm test:idp
 
 ## Acknowledgements
 
+Developed at the [Cologne Center for eHumanities (CCeH)](https://cceh.uni-koeln.de/) as part of the project [*Corpus der griechischen Papyrustexte
+administrativen Inhalts aus dem ptolemäischen Ägypten* (CPAP)](https://cpap-project.de/).
+
 This project includes code derived from [jinn-codemirror](https://github.com/JinnElements/jinn-codemirror)
 (Copyright © 2022 JinnTec GmbH).
 
