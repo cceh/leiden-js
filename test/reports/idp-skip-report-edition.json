@@ -1,6 +1,6 @@
 {
-  "idpDataCommit": "914f8a4160bde384b3e9bedbda5d8792700a7c68",
-  "timestamp": "2025-07-25T08:29:45.206Z",
+  "idpDataCommit": "5004bac5edda034f1d6c5ee29975163476b35fb1",
+  "timestamp": "2025-07-28T13:41:30.452Z",
   "skippedFiles": {
     "test/leiden-js-idp-test-data/roundtrips/DDB_EpiDoc_XML/apf/apf.63/apf.63.167.xml": "reason: XSugar produces wrong XML: `(θ̄(ε)ῷ̄)` produces `<hi rend=\"supraline\">ῶ</hi>`ͅ with accent on the `>`",
     "test/leiden-js-idp-test-data/roundtrips/DDB_EpiDoc_XML/basp/basp.49/basp.49.124.xml": "(xml->leiden) contains line separator character (XSugar problem with line separator)",

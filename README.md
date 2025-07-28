@@ -267,13 +267,10 @@ XSugar output.
 
 ### Test Coverage
 
-Based on the complete dataset from `idp.data` (commit f9aa4d4f6aee94edcdbdc8853a24d5cefa325d57):
+Based on the complete dataset from `idp.data` (commit 5004bac5edda034f1d6c5ee29975163476b35fb1):
 
-- **Edition texts**: 68,919 total files, with 1,055 files excluded due to XSugar limitations
-- **Translation texts**: 2,188 total files, with 1,362 files excluded due to XSugar limitations
-
-The lower success rate for translations reflects the experimental nature of translation markup in the IDP dataset, with
-many files containing constructs that XSugar cannot yet handle reliably.
+- **Edition texts**: 68.926 total files, with 1.021 files excluded due to XSugar limitations
+- **Translation texts**: 2.188 total files, with 1.362 files excluded due to XSugar limitations
 
 ### Excluded Files
 
