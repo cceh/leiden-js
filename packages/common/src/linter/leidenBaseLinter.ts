@@ -1,7 +1,7 @@
 import { linter } from "@codemirror/lint";
 import { syntaxTree } from "@codemirror/language";
 import { SyntaxNodeRef, TreeCursor } from "@lezer/common";
-import { LeidenDiagnostic } from "./types.js";
+import { CodemirrorLintConfig, LeidenDiagnostic } from "./types.js";
 
 export type NodeLinter = (doc: string, node: SyntaxNodeRef) => LeidenDiagnostic[] | undefined | null | void;
 export type LeidenLinter = (doc: string, rootCursor: TreeCursor, nodeLinter?: NodeLinter) => LeidenDiagnostic[];
@@ -42,5 +42,5 @@ export const leidenBaseLinter: LeidenLinter = (doc: string, rootCursor: TreeCurs
 };
 
 
-export const leidenLinterExtension = (nodeLinter?: NodeLinter) =>
-    linter(view => leidenBaseLinter(view.state.doc.toString(), syntaxTree(view.state).cursor(), nodeLinter));
+export const leidenLinterExtension = (nodeLinter?: NodeLinter, config?: CodemirrorLintConfig) =>
+    linter(view => leidenBaseLinter(view.state.doc.toString(), syntaxTree(view.state).cursor(), nodeLinter), config);

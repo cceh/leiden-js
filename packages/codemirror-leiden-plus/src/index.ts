@@ -20,7 +20,7 @@ export const leidenPlus = (config?: LeidenPlusConfig): Extension => {
         leidenPlusLanguage(config?.languageConfig),
         leidenPlusToolbar,
 
-        ...(mergedConfig?.lint ? [leidenPlusLinter] : []),
+        ...(mergedConfig?.lint ? [leidenPlusLinter(typeof mergedConfig.lint === "object" ? mergedConfig.lint : undefined)] : []),
         ...(mergedConfig?.highlightActiveNode ? [highlightActiveNode] : []),
 
         lineNumbers(),

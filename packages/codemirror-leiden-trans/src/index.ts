@@ -21,7 +21,7 @@ export const leidenTranslation = (config?: LeidenTransConfig): Extension => {
         leidenTranslationLanguage(mergedConfig.languageConfig),
         leidenTranslationToolbar,
 
-        ...(mergedConfig?.lint ? [leidenTransLinter] : []),
+        ...(mergedConfig?.lint ? [leidenTransLinter(typeof mergedConfig.lint === "object" ? mergedConfig.lint : undefined)] : []),
         ...(mergedConfig?.highlightActiveNode ? [highlightActiveNode] : []),
 
         lineNumbers(),

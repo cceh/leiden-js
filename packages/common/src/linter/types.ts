@@ -1,7 +1,7 @@
-import { Diagnostic } from "@codemirror/lint";
+import { Diagnostic, linter } from "@codemirror/lint";
 
-// Extended CodeMirror Diagnostic interface that includes an error code
-// for better error identification in tests
+export type CodemirrorLintConfig = Parameters<typeof linter>[1];
+
 export interface LeidenDiagnostic extends Diagnostic {
     code: string;
 }

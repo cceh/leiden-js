@@ -4,7 +4,7 @@ import {
     leidenLinterExtension,
     NodeLinter,
     unclosedExpressionCheck,
-    LeidenDiagnostic
+    LeidenDiagnostic, CodemirrorLintConfig
 } from "@leiden-js/common/linter";
 import { Tree } from "@lezer/common";
 import { lintForeign } from "./foreign.js";
@@ -150,7 +150,7 @@ export const leidenPlusNodeLinter: NodeLinter = (doc, node) => {
             return lintNumberSpecial(errorParent.parent!.parent!, doc, errorNode);
         }
 
-        // Then: Node specific checks
+        // Then: ode specific checks
         switch (errorParent.name) {
             case "Handshift":
                 return lintHandshift(errorParent, doc);
@@ -165,6 +165,6 @@ export const leidenPlusNodeLinter: NodeLinter = (doc, node) => {
     }
 };
 
-export const leidenPlusLinter = leidenLinterExtension(leidenPlusNodeLinter);
+export const leidenPlusLinter = (config?: CodemirrorLintConfig) => leidenLinterExtension(leidenPlusNodeLinter, config);
 export const lintLeidenPlus = (doc: string, syntaxTree: Tree): LeidenDiagnostic[] =>
     leidenBaseLinter(doc, syntaxTree.cursor(), leidenPlusNodeLinter);
