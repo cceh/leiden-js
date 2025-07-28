@@ -1,6 +1,6 @@
 {
   "name": "leiden-js",
-  "version": "1.0.4",
+  "version": "0.0.0",
   "type": "module",
   "description": "JavaScript tooling for the Leiden+ epigraphic markup language",
   "scripts": {

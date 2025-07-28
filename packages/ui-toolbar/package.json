@@ -1,6 +1,6 @@
 {
   "name": "@leiden-js/ui-toolbar",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Components for building configurable editor toolbars for CodeMirror",
   "scripts": {
     "build": "rollup -c",

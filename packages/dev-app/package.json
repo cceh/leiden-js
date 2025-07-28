@@ -1,7 +1,7 @@
 {
   "name": "@leiden-js/dev-app",
   "private": true,
-  "version": "1.0.4",
+  "version": "1.0.5",
   "type": "module",
   "description": "Development and demo app for leiden-js",
   "main": "index.js",
