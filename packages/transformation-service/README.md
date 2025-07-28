@@ -1,4 +1,7 @@
-# Leiden Transformation Service
+# @leiden-js/transformation-service
+
+> Part of [leiden-js](https://github.com/cceh/leiden-js), a set of packages for working with the Leiden notation systems
+> used in epigraphic digital editing within JavaScript environments.
 
 REST API service for bidirectional transformation between Leiden notation and XML.
 
@@ -48,7 +51,7 @@ pnpm install
 # Run the service (from this package directory)
 pnpm start
 
-# Development mode with auto-restart
+# Development server with auto-restart
 pnpm dev
 ```
 
@@ -101,3 +104,8 @@ Error response:
   }
 }
 ```
+
+## Related Packages
+
+- [`@leiden-js/transformer-leiden-plus`](https://github.com/cceh/leiden-js/tree/main/packages/transformer-leiden-plus) - Leiden+ transformer used in this package
+- [`@leiden-js/transformer-leiden-trans`](https://github.com/cceh/leiden-js/tree/main/packages/transformer-leiden-trans) - Leiden Translation transformer used in this package
