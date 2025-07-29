@@ -53,17 +53,7 @@ export function removeCertLow(target: CommandTarget, parentNode: SyntaxNode) {
         return false;
     }
 
-    const { from } = certLow;
-    let { to } = certLow;
-    const nodeName = parentNode.name;
-    if (certLowAtomicNodes.includes(nodeName)) {
-        const isStandaloneVestige = parentNode.getChild("VestigStandalone");
-        if (nodeName !== "Handshift" && nodeName !== "Diacritical" && !isStandaloneVestige) {
-            to = to + 1;
-        }
-    }
-
-    return deleteRange(target, { from, to });
+    return deleteRange(target, certLow);
 }
 
 export function findClosestCertLowAncestor(state: EditorState) {
