@@ -1,6 +1,6 @@
 {
   "name": "@leiden-js/toolbar-leiden-plus",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Leiden+ editor toolbar for CodeMirror",
   "scripts": {
     "build": "rollup -c",

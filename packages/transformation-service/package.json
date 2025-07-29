@@ -1,6 +1,6 @@
 {
   "name": "@leiden-js/transformation-service",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "JSON API service for transformation between Leiden+ (or Leiden Translation) and EpiDoc XML",
   "main": "./dist/index.cjs",
   "type": "module",
