@@ -234,6 +234,10 @@ window.leidenEditorView = new EditorView({
                         if (!isTreeNodeClick) {
                             highlightCurrentNodeInTree(update.state);
                         }
+                        // Update debug info on selection change
+                        if (update.selectionSet) {
+                            updateDebugInfo(update.view);
+                        }
                     });
                 }
             }
