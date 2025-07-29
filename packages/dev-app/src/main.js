@@ -24,7 +24,7 @@ import "./styles/cardo.css";
 import { oneDarkTheme } from "@codemirror/theme-one-dark";
 import { leidenPlus } from "@leiden-js/codemirror-leiden-plus";
 
-import { clearParseTree, highlightCurrentNodeInTree, initTreeView, updateDebugInfo, updateParseTree } from "./treeView";
+import { clearParseTree, highlightCurrentNodeInTree, initTreeView, selectTreeNodeAnnotation, updateDebugInfo, updateParseTree } from "./treeView";
 import { leidenTranslation } from "@leiden-js/codemirror-leiden-trans";
 
 
@@ -229,7 +229,11 @@ window.leidenEditorView = new EditorView({
                     func(async () => {
                         forceParsing(leidenEditorView, leidenEditorView.state.selection.main.head);
                         await updateParseTree(update.view);
-                        highlightCurrentNodeInTree(update.state);
+                        // Skip highlighting if the selection came from clicking a tree node
+                        const isTreeNodeClick = update.transactions.some(tr => tr.annotation(selectTreeNodeAnnotation) === true);
+                        if (!isTreeNodeClick) {
+                            highlightCurrentNodeInTree(update.state);
+                        }
                     });
                 }
             }
