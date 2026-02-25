@@ -48,7 +48,7 @@ const ignoreReasons = {
     "sb.26.16570": "error in IDP: correction without infix (lb 66)",
     "sb.26.16813": "Xsugar error: milestone `----` inside add right note recognized (lb 22, lb 26)",
     "sb.28.17044": "Xsugar produces wrong XML due to supraline character with combining diacrits (lb 15)",
-    "stud.pal.3(2).1.63": "error in IDP: macron on line feed character",
+    "stud.pal.3.2ed.1.63": "error in IDP: macron on line feed character",
     "stud.pal.22.55r": "error in IDP: Editorial Correction with two `|ed|` infixes (lb 1)",
     "o.waqfa.76": "XSugar produces incorrect Leiden: the `ε͂` in `<hi rend=\"supraline\">χε͂</hi>` is rendered as `χ̄ε̄͂̄͂` (the χ̄ gets the perispomeni and the ε gets three macrons)",
     "p.koeln.17.654": "Xsugar roundtrip produces incorrect XML (`<add place=\"above\"><add place=\"above\">`) instead of `<add place=\"below\">`)",
